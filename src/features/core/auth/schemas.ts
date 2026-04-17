@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { userRoleValues } from "@/features/core/auth/tables";
+
+import { userRoleValues } from "@/drizzle/schemas/auth";
 
 export const phoneSchema = z.string().trim().min(7, "authTranslations.validation.phoneMin").max(16, "authTranslations.validation.phoneMax");
 export const otpSchema = z.string().trim().regex(/^[0-9]{6}$/u, "authTranslations.validation.otpSixDigits");

@@ -1,4 +1,4 @@
-export const LOCALE_COOKIE_NAME = "_EXAMPLE_LOCALE"; // Change if needed
+export const LOCALE_COOKIE_NAME = "NEXT_LOCALE"; // Change if needed
 
 export type ParamOptions = {
     date?: Record<string, Intl.DateTimeFormatOptions>;

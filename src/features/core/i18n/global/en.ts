@@ -1,17 +1,4 @@
-import landingEn from "@/app/(landing-pages)/_components/_translations/landing-en";
-import layoutEn from "@/app/(landing-pages)/_layout/_translations/layout-en";
-import aboutEn from "@/app/(landing-pages)/about/_translations/about-en";
-import contactEn from "@/app/(landing-pages)/contact/_translations/contact-en";
-import cookiesEn from "@/app/(landing-pages)/cookies/_translations/cookies-en";
-import featuresEn from "@/app/(landing-pages)/features/_translations/features-en";
-import pricingEn from "@/app/(landing-pages)/pricing/_translations/pricing-en";
-import privacyEn from "@/app/(landing-pages)/privacy/_translations/privacy-en";
-import refundEn from "@/app/(landing-pages)/refund/_translations/refund-en";
-import skillsEn from "@/app/(landing-pages)/skills/_translations/skills-en";
-import termsEn from "@/app/(landing-pages)/terms/_translations/terms-en";
-import dataTableEn from "@/components/data-table/i18n/data-table-en";
 import authEn from "@/features/core/auth/translations/auth-en";
-import usersEn from "@/features/users/i18n/users-en";
 import { dt, type LanguageMessages } from "../lib";
 
 export default {
@@ -229,17 +216,4 @@ export default {
     },
   }),
   ...authEn,
-  ...dataTableEn,
-  ...usersEn,
-  ...landingEn,
-  ...layoutEn,
-  ...aboutEn,
-  ...featuresEn,
-  ...skillsEn,
-  ...pricingEn,
-  ...contactEn,
-  ...refundEn,
-  ...termsEn,
-  ...privacyEn,
-  ...cookiesEn,
 } as const satisfies LanguageMessages;

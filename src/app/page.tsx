@@ -2,6 +2,7 @@ import Image from "next/image";
 
 import { ClientGreeting } from "@/app/_providers/client";
 import { ThemeToggle } from "@/components/general/theme-toggel";
+import { LanguageSwitcher } from "@/features/core/i18n/react";
 import { HydrateClient } from "@/integrations/trpc/server";
 
 export default function Home() {
@@ -16,6 +17,7 @@ export default function Home() {
         priority
       />
       <ThemeToggle />
+      <LanguageSwitcher />
       <HydrateClient>
         <ClientGreeting />
       </HydrateClient>

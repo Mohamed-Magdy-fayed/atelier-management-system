@@ -1,7 +1,11 @@
+import "./globals.css";
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
-import "./globals.css";
+import { cookies } from "next/headers";
+import { Suspense } from "react";
 import { Providers } from "@/app/_providers";
+import { LOCALE_COOKIE_NAME } from "@/features/core/i18n/lib";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -22,26 +26,36 @@ export const metadata: Metadata = {
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
+    <Suspense>
+      <Suspended>{children}</Suspended>
+    </Suspense>
+  );
+}
+
+async function Suspended({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const locale = cookieStore.get(LOCALE_COOKIE_NAME)?.value || "en";
+
+  return (
     <html
-      lang="en"
+      lang={locale}
+      dir={locale === "ar" ? "rtl" : "ltr"}
       className={cn(
-        "h-full",
-        "antialiased",
+        "h-full antialiased font-sans",
         geistSans.variable,
         geistMono.variable,
-        "font-sans",
         inter.variable,
       )}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
+        <Providers locale={locale}>{children}</Providers>
       </body>
     </html>
   );

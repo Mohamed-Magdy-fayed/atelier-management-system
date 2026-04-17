@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import {
   createContext,
   type ReactNode,
@@ -9,10 +10,9 @@ import {
   useTransition,
 } from "react";
 
-import { Button } from "@/components/ui/button";
 import { Swap, SwapOff, SwapOn } from "@/components/ui/swap";
-import { setLocaleCookie } from "@/features/core/i18n/actions";
 import { mainTranslations } from "@/features/core/i18n/global";
+import { useTRPC } from "@/integrations/trpc/client";
 import { createI18n, type LanguageMessages } from "./lib";
 
 const TranslationContext = createContext({
@@ -63,16 +63,19 @@ export function useTranslation<
 
   const [isPending, startTransition] = useTransition();
 
+  const trpc = useTRPC();
+  const { mutate: toggleLocale } = useMutation(
+    trpc.i18n.toggleLocale.mutationOptions(),
+  );
+
   const setLocale = (newLocale: string) => {
-    // 1. Optimistically update the client-side state immediately.
     const newDir = newLocale === "ar" ? "rtl" : "ltr";
     document.dir = newDir;
     document.documentElement.setAttribute("dir", newDir);
     context.setLocale(newLocale);
 
-    // 2. Call the server action in a transition to avoid blocking UI.
     startTransition(() => {
-      setLocaleCookie(newLocale);
+      toggleLocale();
     });
   };
 
@@ -89,18 +92,13 @@ export function LanguageSwitcher() {
   const { locale, setLocale } = useTranslation();
 
   return (
-    <Button
-      render={
-        <Swap
-          animation="scale"
-          onSwappedChange={(val) => setLocale(val ? "en" : "ar")}
-          swapped={locale === "en"}
-        >
-          <SwapOn>AR</SwapOn>
-          <SwapOff>EN</SwapOff>
-        </Swap>
-      }
-      variant="ghost"
-    />
+    <Swap
+      animation="flip"
+      onSwappedChange={(val) => setLocale(val ? "en" : "ar")}
+      swapped={locale === "en"}
+    >
+      <SwapOn>AR</SwapOn>
+      <SwapOff>EN</SwapOff>
+    </Swap>
   );
 }

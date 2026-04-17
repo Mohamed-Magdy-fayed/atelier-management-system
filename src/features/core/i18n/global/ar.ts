@@ -1,17 +1,4 @@
-import landingAr from "@/app/(landing-pages)/_components/_translations/landing-ar";
-import layoutAr from "@/app/(landing-pages)/_layout/_translations/layout-ar";
-import aboutAr from "@/app/(landing-pages)/about/_translations/about-ar";
-import contactAr from "@/app/(landing-pages)/contact/_translations/contact-ar";
-import cookiesAr from "@/app/(landing-pages)/cookies/_translations/cookies-ar";
-import featuresAr from "@/app/(landing-pages)/features/_translations/features-ar";
-import pricingAr from "@/app/(landing-pages)/pricing/_translations/pricing-ar";
-import privacyAr from "@/app/(landing-pages)/privacy/_translations/privacy-ar";
-import refundAr from "@/app/(landing-pages)/refund/_translations/refund-ar";
-import skillsAr from "@/app/(landing-pages)/skills/_translations/skills-ar";
-import termsAr from "@/app/(landing-pages)/terms/_translations/terms-ar";
-import dataTableAr from "@/components/data-table/i18n/data-table-ar";
 import authAr from "@/features/core/auth/translations/auth-ar";
-import usersAr from "@/features/users/i18n/users-ar";
 import { dt, type LanguageMessages } from "../lib";
 
 export default {
@@ -227,17 +214,4 @@ export default {
     },
   }),
   ...authAr,
-  ...dataTableAr,
-  ...usersAr,
-  ...landingAr,
-  ...layoutAr,
-  ...aboutAr,
-  ...featuresAr,
-  ...skillsAr,
-  ...pricingAr,
-  ...contactAr,
-  ...refundAr,
-  ...termsAr,
-  ...privacyAr,
-  ...cookiesAr,
 } as const satisfies LanguageMessages;

@@ -3,13 +3,16 @@ import { cookies } from "next/headers";
 import superjson from "superjson";
 import z, { ZodError } from "zod";
 
+import { db } from "@/drizzle";
 import { getUserSession } from "@/features/core/auth/core";
+import { getT } from "@/features/core/i18n/server";
 
 export const createTRPCContext = async () => {
     const cookieStore = await cookies();
     const session = await getUserSession(cookieStore);
+    const { t } = await getT();
 
-    return { session, cookies: cookieStore };
+    return { session, cookies: cookieStore, t, db };
 };
 
 const t = initTRPC
