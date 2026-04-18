@@ -75,7 +75,7 @@ export function useTranslation<
     context.setLocale(newLocale);
 
     startTransition(() => {
-      toggleLocale();
+      toggleLocale({ newLocale });
     });
   };
 

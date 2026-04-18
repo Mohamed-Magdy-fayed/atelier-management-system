@@ -16,17 +16,17 @@ export const appRouter = createTRPCRouter({
             };
         }),
     i18n: {
-        toggleLocale: baseProcedure.mutation(({ ctx }) => {
-            const currentLocale = ctx.cookies.get(LOCALE_COOKIE_NAME)?.value || "en";
-            const newLocale = currentLocale === "en" ? "ar" : "en";
-            ctx.cookies.set(LOCALE_COOKIE_NAME, newLocale, {
-                path: "/",
-                httpOnly: true,
-                sameSite: "lax",
-            });
+        toggleLocale: baseProcedure
+            .input(z.object({ newLocale: z.string() }))
+            .mutation(({ ctx, input: { newLocale } }) => {
+                ctx.cookies.set(LOCALE_COOKIE_NAME, newLocale, {
+                    path: "/",
+                    httpOnly: true,
+                    sameSite: "lax",
+                });
 
-            return { newLocale };
-        }),
+                return { newLocale };
+            }),
 
         getLocale: baseProcedure.query(({ ctx }) => {
             const currentLocale = ctx.cookies.get(LOCALE_COOKIE_NAME)?.value || "en";
