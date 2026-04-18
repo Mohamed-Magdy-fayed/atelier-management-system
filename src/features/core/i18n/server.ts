@@ -10,3 +10,13 @@ export async function getT() {
     const locale = cookieStore.get(LOCALE_COOKIE_NAME)?.value || "en";
     return createI18n(mainTranslations, locale, "en");
 }
+
+export async function setLocaleCookie(locale: string) {
+    const cookieStore = await cookies();
+    cookieStore.set(LOCALE_COOKIE_NAME, locale);
+}
+
+export async function getLocaleCookie() {
+    const cookieStore = await cookies();
+    return cookieStore.get(LOCALE_COOKIE_NAME)?.value || "en";
+}

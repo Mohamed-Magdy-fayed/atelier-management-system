@@ -33,7 +33,7 @@ import {
     beginPhoneChangeSchema,
     confirmPhoneChangeSchema,
 } from "@/features/core/auth/schemas";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 
 type Step = "begin" | "confirm";
 

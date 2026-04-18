@@ -4,6 +4,12 @@ import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/drizzle";
+
+import {
+    type OAuthProvider,
+    UserCredentialsTable,
+    UsersTable,
+} from "@/drizzle/schema";
 import { getOAuthClient } from "@/features/core/auth/core";
 import { authError, normalizeEmail } from "@/features/core/auth/core/helpers";
 import {
@@ -12,27 +18,14 @@ import {
     hashPassword,
 } from "@/features/core/auth/core/passwordHasher";
 import {
-    createSession,
-    removeSession,
-} from "@/features/core/auth/core/session";
-import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
-import {
     customerDetailsStepSchema,
     signInSchema,
-    signUpSchema,
 } from "@/features/core/auth/schemas";
-import {
-    type OAuthProvider,
-    UserCredentialsTable,
-    UsersTable,
-} from "@/features/core/auth/tables";
 import type {
     AuthState,
     PartialUser,
     TypedResponse,
 } from "@/features/core/auth/types";
-import { getT } from "@/features/core/i18n/actions";
-import { assertPhoneVerified } from "@/integrations/whatsapp/otp";
 
 export async function signInAction(
     input: unknown,

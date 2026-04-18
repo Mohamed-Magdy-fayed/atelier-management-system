@@ -35,7 +35,7 @@ import {
 	type OAuthProvider,
 	oAuthProviderValues,
 } from "@/features/core/auth/tables/user-oauth-accounts-table";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 
 function deriveStep(
 	searchParams: URLSearchParams,

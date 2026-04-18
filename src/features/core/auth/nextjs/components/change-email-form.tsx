@@ -23,7 +23,7 @@ import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { beginEmailChangeAction } from "@/features/core/auth/nextjs/actions";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { changeEmailSchema } from "@/features/core/auth/schemas";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 
 export function ChangeEmailForm() {
 	const { t } = useTranslation();

@@ -37,8 +37,8 @@ import { EmailVerificationNotice } from "@/features/core/auth/nextjs/components/
 import { OAuthConnections } from "@/features/core/auth/nextjs/components/oauth-connections";
 import { PasskeyManager } from "@/features/core/auth/nextjs/components/passkey-manager";
 import { ProfileForm } from "@/features/core/auth/nextjs/components/profile-form";
-import { useTheme } from "@/features/core/color-theme/theme-provider";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTheme } from "@/features/core/color-theme/client";
+import { useTranslation } from "@/features/core/i18n/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function AuthManager({ trigger }: { trigger: React.ReactElement }) {

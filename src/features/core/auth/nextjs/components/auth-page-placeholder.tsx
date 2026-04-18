@@ -2,7 +2,7 @@
 
 import { FingerprintPattern, LockIcon, ShieldCheckIcon } from "lucide-react";
 import { Lead } from "@/components/ui/typography";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 
 export function AuthPlaceholder() {
     const { t } = useTranslation();

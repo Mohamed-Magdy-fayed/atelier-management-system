@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { LoadingSwap } from "@/components/ui/loading-swap";
 import { signOutAction } from "@/features/core/auth/nextjs/actions";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 
 type ButtonLikeProps = React.ComponentProps<typeof Button>;
 

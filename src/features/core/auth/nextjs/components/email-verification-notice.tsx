@@ -7,7 +7,7 @@ import { Status, StatusIndicator, StatusLabel } from "@/components/ui/status";
 import { H3, P } from "@/components/ui/typography";
 import { beginEmailVerificationAction } from "@/features/core/auth/nextjs/actions";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 
 export function EmailVerificationNotice({
     isVerified,

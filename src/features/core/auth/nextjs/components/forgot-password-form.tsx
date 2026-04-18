@@ -9,7 +9,7 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { FieldGroup } from "@/components/ui/field";
 import { requestPasswordResetAction } from "@/features/core/auth/nextjs/actions";
 import { passwordResetRequestSchema } from "@/features/core/auth/schemas";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 
 export function ForgotPasswordForm() {
     const { t } = useTranslation();

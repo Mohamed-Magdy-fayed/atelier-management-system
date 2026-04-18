@@ -30,7 +30,7 @@ import {
 	type OAuthProvider,
 	oAuthProviderValues,
 } from "@/features/core/auth/tables";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 
 export function SignInForm() {
 	const { t } = useTranslation();

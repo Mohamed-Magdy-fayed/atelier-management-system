@@ -13,7 +13,7 @@ import {
 import {
     changePasswordSchema as changePasswordFormSchema,
 } from "@/features/core/auth/schemas";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 import { cn } from "@/lib/utils";
 
 export function ChangePasswordForm({

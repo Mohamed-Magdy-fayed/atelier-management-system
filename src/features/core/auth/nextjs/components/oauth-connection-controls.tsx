@@ -8,7 +8,7 @@ import {
     oAuthSignIn,
 } from "@/features/core/auth/nextjs/actions";
 import type { OAuthProvider } from "@/features/core/auth/tables/user-oauth-accounts-table";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 
 type OAuthConnectionControlsProps = {
     provider: OAuthProvider;

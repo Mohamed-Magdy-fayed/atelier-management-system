@@ -2,10 +2,11 @@ import "./globals.css";
 
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
-import { cookies } from "next/headers";
 import { Suspense } from "react";
+
 import { Providers } from "@/app/_providers";
-import { LOCALE_COOKIE_NAME } from "@/features/core/i18n/lib";
+import { getThemeCookie } from "@/features/core/color-theme/server";
+import { getLocaleCookie } from "@/features/core/i18n/server";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -39,8 +40,8 @@ export default async function RootLayout({
 }
 
 async function Suspended({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const locale = cookieStore.get(LOCALE_COOKIE_NAME)?.value || "en";
+  const locale = await getLocaleCookie();
+  const theme = await getThemeCookie();
 
   return (
     <html
@@ -51,11 +52,12 @@ async function Suspended({ children }: { children: React.ReactNode }) {
         geistSans.variable,
         geistMono.variable,
         inter.variable,
+        theme,
       )}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <Providers locale={locale}>{children}</Providers>
+        <Providers locale={locale} theme={theme}>{children}</Providers>
       </body>
     </html>
   );

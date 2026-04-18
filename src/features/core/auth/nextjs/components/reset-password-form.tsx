@@ -17,7 +17,7 @@ import {
 import { LoadingSwap } from "@/components/ui/loading-swap";
 import { resetPasswordAction } from "@/features/core/auth/nextjs/actions";
 import { passwordResetSubmissionSchema } from "@/features/core/auth/schemas";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 
 export function ResetPasswordForm({
     initialPhone = "",

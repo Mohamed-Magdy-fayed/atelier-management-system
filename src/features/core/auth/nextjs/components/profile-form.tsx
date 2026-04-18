@@ -10,7 +10,7 @@ import { FieldGroup, FieldSet } from "@/components/ui/field";
 import { updateProfileNameAction } from "@/features/core/auth/nextjs/actions";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { updateProfileSchema } from "@/features/core/auth/schemas";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 
 export function ProfileForm({ callback }: { callback?: () => void }) {
     const { t } = useTranslation();

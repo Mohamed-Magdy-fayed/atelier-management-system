@@ -12,7 +12,7 @@ import {
     updateBranchAction,
 } from "@/features/core/auth/nextjs/actions";
 import { createBranchSchema } from "@/features/core/auth/schemas";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 import { cn } from "@/lib/utils";
 
 type FormValues = z.infer<typeof createBranchSchema>;

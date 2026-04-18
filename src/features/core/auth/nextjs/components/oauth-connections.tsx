@@ -5,7 +5,7 @@ import { Status, StatusIndicator, StatusLabel } from "@/components/ui/status";
 import { H3, H4 } from "@/components/ui/typography";
 import { listOAuthConnectionsAction } from "@/features/core/auth/nextjs/actions";
 import type { OAuthConnection } from "@/features/core/auth/types";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 import { OAuthConnectionControls } from "./oauth-connection-controls";
 
 function formatDate(value: Date | null) {

@@ -11,7 +11,7 @@ import {
     listPasskeysAction,
 } from "@/features/core/auth/nextjs/actions/passkey";
 import type { PasskeyListItem } from "@/features/core/auth/types";
-import { useTranslation } from "@/features/core/i18n/react";
+import { useTranslation } from "@/features/core/i18n/client";
 
 export function PasskeyManager() {
     const { t } = useTranslation();

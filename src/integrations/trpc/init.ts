@@ -6,6 +6,7 @@ import z, { ZodError } from "zod";
 import { db } from "@/drizzle";
 import { getUserSession } from "@/features/core/auth/core";
 import { getT } from "@/features/core/i18n/server";
+import { handleDatabaseError } from "./db-error";
 
 export const createTRPCContext = async () => {
     const cookieStore = await cookies();
@@ -45,8 +46,18 @@ const authMiddleware = t.middleware(({ ctx, next }) => {
     });
 });
 
+const databaseErrorMiddleware = t.middleware(async ({ next }) => {
+    try {
+        return await next();
+    } catch (err) {
+        throw handleDatabaseError(err);
+    }
+});
+
 export const createTRPCRouter = t.router;
 export const createCallerFactory = t.createCallerFactory;
 
-export const baseProcedure = t.procedure;
-export const protectedProcedure = t.procedure.use(authMiddleware);
+export const baseProcedure = t.procedure.use(databaseErrorMiddleware);
+export const protectedProcedure = t.procedure
+    .use(authMiddleware)
+    .use(databaseErrorMiddleware);
