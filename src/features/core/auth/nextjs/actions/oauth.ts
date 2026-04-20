@@ -4,18 +4,18 @@ import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/drizzle";
-import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
 import {
     type OAuthProvider,
     oAuthProviderValues,
     UserCredentialsTable,
     UserOAuthAccountsTable,
-} from "@/features/core/auth/tables";
+} from "@/drizzle/schema";
+import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
 import type {
     OAuthConnection,
     TypedResponse,
 } from "@/features/core/auth/types";
-import { getT } from "@/features/core/i18n/actions";
+import { getT } from "@/features/core/i18n/server";
 
 const providerSchema = z.enum(oAuthProviderValues);
 

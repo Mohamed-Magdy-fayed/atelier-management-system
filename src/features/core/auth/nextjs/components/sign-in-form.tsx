@@ -6,7 +6,7 @@ import {
 } from "@simplewebauthn/browser";
 import { ArrowLeftIcon, FingerprintIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { Activity, useEffect, useRef, useState, useTransition } from "react";
+import { Activity, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { useAppForm } from "@/components/forms/hooks";
@@ -18,55 +18,42 @@ import {
 	FieldSet,
 } from "@/components/ui/field";
 import { H1, Muted } from "@/components/ui/typography";
+import { type OAuthProvider, oAuthProviderValues } from "@/drizzle/schema";
 import {
 	beginPasskeyAuthenticationAction,
 	completePasskeyAuthenticationAction,
 	oAuthSignIn,
 	signInAction,
 } from "@/features/core/auth/nextjs/actions";
+import FormAlert from "@/features/core/auth/nextjs/components/form-alert";
 import { useOauthProviderIcon } from "@/features/core/auth/nextjs/components/useOauthProviderIcon";
 import { signInSchema } from "@/features/core/auth/schemas";
-import {
-	type OAuthProvider,
-	oAuthProviderValues,
-} from "@/features/core/auth/tables";
 import { useTranslation } from "@/features/core/i18n/client";
 
 export function SignInForm() {
 	const { t } = useTranslation();
-	const [step, setStep] = useState<"phone" | "password">("phone");
-	const [isPending, startPending] = useTransition();
-	const [error, setError] = useState<string | null>(null);
+	const [isPending, startTransition] = useTransition();
+	const [step, setStep] = useState<"email" | "password">("email");
 	const searchParams = useSearchParams();
 	const getOauthProviderIcon = useOauthProviderIcon();
-	const resetToastShownRef = useRef(false);
-
-	useEffect(() => {
-		if (searchParams.get("reset") !== "success") return;
-		if (resetToastShownRef.current) return;
-
-		resetToastShownRef.current = true;
-		toast.success(t("authTranslations.passwordReset.reset.success"));
-	}, [searchParams, t]);
 
 	const form = useAppForm({
-		defaultValues: { phone: "", password: "" },
+		defaultValues: { email: "", password: "" },
 		validators: { onSubmit: signInSchema },
 		onSubmit: async ({ value }) => {
-			startPending(async () => {
-				setError(null);
+			startTransition(async () => {
 				const result = await signInAction(value);
 				if (result?.isError) {
-					setError(result.message);
+					toast.error(result.message);
 				}
 			});
 		},
 	});
 
 	async function handlePasskeySignIn() {
-		const phone = form.getFieldValue("phone");
-		if (!phone) {
-			toast.error(t("authTranslations.passkeys.auth.error.phoneRequired"));
+		const email = form.getFieldValue("email");
+		if (!email) {
+			toast.error(t("authTranslations.passkeys.auth.error.emailRequired"));
 			return;
 		}
 
@@ -75,10 +62,10 @@ export function SignInForm() {
 			return;
 		}
 
-		startPending(async () => {
+		startTransition(async () => {
 			let assertion: AuthenticationResponseJSON | null = null;
 			try {
-				const beginResult = await beginPasskeyAuthenticationAction(phone);
+				const beginResult = await beginPasskeyAuthenticationAction(email);
 
 				if (beginResult.isError) {
 					toast.error(beginResult.message);
@@ -98,7 +85,7 @@ export function SignInForm() {
 				toast.error(t("authTranslations.passkeys.auth.error.generic"));
 				return;
 			}
-			await completePasskeyAuthenticationAction(phone, assertion);
+			await completePasskeyAuthenticationAction(email, assertion);
 		});
 	}
 
@@ -106,10 +93,10 @@ export function SignInForm() {
 		await oAuthSignIn(provider);
 	}
 
-	async function handleContinuePhone() {
-		const phone = form.getFieldValue("phone");
-		if (!phone) {
-			toast.error(t("authTranslations.signIn.phoneRequired"));
+	async function handleContinueEmail() {
+		const email = form.getFieldValue("email");
+		if (!email) {
+			toast.error(t("authTranslations.signIn.emailRequired"));
 			return;
 		}
 		setStep("password");
@@ -122,19 +109,19 @@ export function SignInForm() {
 		}, 100);
 	}
 
-	function handleBackToPhone() {
-		setStep("phone");
+	function handleBackToEmail() {
+		setStep("email");
 	}
 
-	const isPhoneStep = step === "phone";
+	const isEmailStep = step === "email";
 
 	return (
 		<form
 			className="space-y-4"
 			onSubmit={(e) => {
 				e.preventDefault();
-				if (step === "phone") {
-					handleContinuePhone();
+				if (step === "email") {
+					handleContinueEmail();
 				} else {
 					form.handleSubmit();
 				}
@@ -145,32 +132,11 @@ export function SignInForm() {
 				<Muted>{t("authTranslations.signIn.description")}</Muted>
 			</div>
 
-			{error && (
-				<FieldDescription
-					aria-live="assertive"
-					className="text-center text-destructive!"
-					role="alert"
-				>
-					{error}
-				</FieldDescription>
-			)}
 			{searchParams.get("error") != null && (
-				<FieldDescription
-					aria-live="assertive"
-					className="text-center text-destructive!"
-					role="alert"
-				>
-					{searchParams.get("error")}
-				</FieldDescription>
+				<FormAlert message={searchParams.get("error") || ""} />
 			)}
 			{searchParams.get("oauthError") != null && (
-				<FieldDescription
-					aria-live="assertive"
-					className="text-center text-destructive!"
-					role="alert"
-				>
-					{searchParams.get("oauthError")}
-				</FieldDescription>
+				<FormAlert message={searchParams.get("oauthError") || ""} />
 			)}
 
 			{oAuthProviderValues.length > 0 && (
@@ -196,12 +162,13 @@ export function SignInForm() {
 			</FieldSeparator>
 
 			<FieldSet className="grid gap-4" disabled={isPending}>
-				<Activity mode={isPhoneStep ? "visible" : "hidden"}>
-					<form.AppField name="phone">
+				<Activity mode={isEmailStep ? "visible" : "hidden"}>
+					<form.AppField name="email">
 						{(field) => (
-							<field.MobileField
+							<field.EmailField
 								autoFocus
-								label={t("authTranslations.signIn.phoneLabel")}
+								placeholder="example@mail.com"
+								label={t("authTranslations.signIn.emailLabel")}
 							/>
 						)}
 					</form.AppField>
@@ -209,14 +176,14 @@ export function SignInForm() {
 					<Button
 						className="w-full"
 						disabled={isPending}
-						onClick={handleContinuePhone}
+						onClick={handleContinueEmail}
 						type="button"
 					>
 						{t("authTranslations.signIn.continue")}
 					</Button>
 				</Activity>
 
-				<Activity mode={isPhoneStep ? "hidden" : "visible"}>
+				<Activity mode={isEmailStep ? "hidden" : "visible"}>
 					<form.AppField name="password">
 						{(field) => (
 							<field.PasswordField
@@ -234,7 +201,7 @@ export function SignInForm() {
 					<div className="flex items-center gap-2">
 						<Button
 							disabled={isPending}
-							onClick={handleBackToPhone}
+							onClick={handleBackToEmail}
 							type="button"
 							variant="outline"
 						>

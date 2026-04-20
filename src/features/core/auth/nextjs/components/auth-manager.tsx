@@ -5,56 +5,42 @@ import {
     LockKeyhole,
     LogOut,
     MailIcon,
-    MoonIcon,
-    PhoneIcon,
     ShieldBanIcon,
-    SunIcon,
     UserIcon,
 } from "lucide-react";
 import { Activity, startTransition, useState } from "react";
 
-import { UserCard } from "@/app/(system-pages)/_components/sidebar/user-card";
-import { Button } from "@/components/ui/button";
+import { ResponsiveDialog } from "@/components/general/responsive-dialog";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuGroup,
     DropdownMenuItem,
-    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Status, StatusIndicator } from "@/components/ui/status";
-import { Swap, SwapOff, SwapOn } from "@/components/ui/swap";
 import { signOutAction } from "@/features/core/auth/nextjs/actions";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { ChangeEmailForm } from "@/features/core/auth/nextjs/components/change-email-form";
 import { ChangePasswordForm } from "@/features/core/auth/nextjs/components/change-password-form";
-import { ChangePhoneForm } from "@/features/core/auth/nextjs/components/change-phone-form";
 import { EmailVerificationNotice } from "@/features/core/auth/nextjs/components/email-verification-notice";
 import { OAuthConnections } from "@/features/core/auth/nextjs/components/oauth-connections";
 import { PasskeyManager } from "@/features/core/auth/nextjs/components/passkey-manager";
 import { ProfileForm } from "@/features/core/auth/nextjs/components/profile-form";
-import { useTheme } from "@/features/core/color-theme/client";
-import { useTranslation } from "@/features/core/i18n/client";
+import { ThemeToggle } from "@/features/core/color-theme/client";
+import { LanguageToggle, useTranslation } from "@/features/core/i18n/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function AuthManager({ trigger }: { trigger: React.ReactElement }) {
-    const { t, setLocale, locale } = useTranslation();
-    const { theme, setTheme } = useTheme();
+    const { t } = useTranslation();
     const { isAuthenticated, session } = useAuth();
     const isMobile = useIsMobile();
 
     const [openDialog, setOpenDialog] = useState<
-        | "profile"
-        | "phone"
-        | "email"
-        | "password"
-        | "oauth"
-        | "passkeys"
-        | undefined
+        "profile" | "email" | "password" | "oauth" | "passkeys" | undefined
     >();
 
     if (!isAuthenticated) return <Skeleton className="h-12 w-full" />;
@@ -69,12 +55,6 @@ export function AuthManager({ trigger }: { trigger: React.ReactElement }) {
                 open={openDialog === "profile"}
             >
                 <ProfileForm callback={() => setOpenDialog(undefined)} />
-            </ResponsiveDialog>
-            <ResponsiveDialog
-                onOpenChange={(open) => setOpenDialog(open ? "phone" : undefined)}
-                open={openDialog === "phone"}
-            >
-                <ChangePhoneForm onDone={() => setOpenDialog(undefined)} />
             </ResponsiveDialog>
             <ResponsiveDialog
                 onOpenChange={(open) => setOpenDialog(open ? "email" : undefined)}
@@ -120,21 +100,11 @@ export function AuthManager({ trigger }: { trigger: React.ReactElement }) {
                     sideOffset={4}
                 >
                     <DropdownMenuGroup>
-                        <DropdownMenuLabel className="p-0 font-normal">
-                            <UserCard />
-                        </DropdownMenuLabel>
-                    </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuGroup>
-                        <DropdownMenuItem onSelect={() => setOpenDialog("profile")}>
+                        <DropdownMenuItem onClick={() => setOpenDialog("profile")}>
                             <UserIcon />
                             {t("authTranslations.profile.title")}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setOpenDialog("phone")}>
-                            <PhoneIcon />
-                            {t("authTranslations.profile.phone.change")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setOpenDialog("email")}>
+                        <DropdownMenuItem onClick={() => setOpenDialog("email")}>
                             <MailIcon />
                             {!hasEmail
                                 ? t("authTranslations.profile.email.add")
@@ -147,65 +117,33 @@ export function AuthManager({ trigger }: { trigger: React.ReactElement }) {
                                 </Status>
                             )}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setOpenDialog("password")}>
+                        <DropdownMenuItem onClick={() => setOpenDialog("password")}>
                             <ShieldBanIcon />
                             {t("authTranslations.profile.password.createOrChange", {
                                 isChange: session?.hasPassword ? "true" : "false",
                             })}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setOpenDialog("oauth")}>
+                        <DropdownMenuItem onClick={() => setOpenDialog("oauth")}>
                             <ListTreeIcon />
                             {t("authTranslations.oauth.manage")}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => setOpenDialog("passkeys")}>
+                        <DropdownMenuItem onClick={() => setOpenDialog("passkeys")}>
                             <LockKeyhole />
                             {t("authTranslations.passkeys.manage")}
                         </DropdownMenuItem>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
-                    <DropdownMenuGroup className="grid grid-cols-2 gap-2">
-                        <Button
-                            nativeButton={false}
-                            render={
-                                <Swap
-                                    animation="rotate"
-                                    onSwappedChange={(val) => {
-                                        startTransition(() => {
-                                            setTheme(val ? "dark" : "light");
-                                        });
-                                    }}
-                                    swapped={theme === "dark"}
-                                >
-                                    <SwapOn>
-                                        <MoonIcon />
-                                    </SwapOn>
-                                    <SwapOff>
-                                        <SunIcon />
-                                    </SwapOff>
-                                </Swap>
-                            }
-                            variant="outline"
-                        />
-                        <Button
-                            nativeButton={false}
-                            render={
-                                <Swap
-                                    animation="scale"
-                                    onSwappedChange={(val) => setLocale(val ? "en" : "ar")}
-                                    swapped={locale === "en"}
-                                >
-                                    <SwapOn>AR</SwapOn>
-                                    <SwapOff>EN</SwapOff>
-                                </Swap>
-                            }
-                            variant="outline"
-                        />
+                    <DropdownMenuGroup>
+                        <ButtonGroup className="*:flex-1 w-full">
+                            <ThemeToggle />
+                            <LanguageToggle />
+                        </ButtonGroup>
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                         onClick={() =>
-                            startTransition(() => {
-                                signOutAction();
+                            startTransition(async () => {
+                                await signOutAction();
                             })
                         }
                         variant="destructive"

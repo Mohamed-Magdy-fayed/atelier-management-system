@@ -17,18 +17,18 @@ import { and, desc, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+
 import { db } from "@/drizzle";
-import { env } from "@/env/server";
-import { createSession } from "@/features/core/auth/core";
-import { normalizeEmail } from "@/features/core/auth/core/helpers";
-import { hashTokenValue } from "@/features/core/auth/core/token";
-import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
-import { phoneSchema } from "@/features/core/auth/schemas";
 import {
     BiometricCredentialsTable,
     UsersTable,
     UserTokensTable,
-} from "@/features/core/auth/tables";
+} from "@/drizzle/schema";
+import { env } from "@/env/server";
+import { createUserSession } from "@/features/core/auth/core";
+import { hashTokenValue } from "@/features/core/auth/core/token";
+import { validateInput } from "@/features/core/auth/nextjs/actions/helpers";
+import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
 import type {
     AuthenticationOptionsResult,
     PartialUser,
@@ -36,7 +36,7 @@ import type {
     RegistrationOptionsResult,
     TypedResponse,
 } from "@/features/core/auth/types";
-import { getT } from "@/features/core/i18n/actions";
+import { getT } from "@/features/core/i18n/server";
 
 const PASSKEY_CHALLENGE_TTL_MS = 1000 * 60 * 10;
 const EXPECTED_ORIGIN = new URL(env.BASE_URL).origin;
@@ -156,20 +156,14 @@ async function revokeChallengeToken(tokenId: string) {
 }
 
 export async function beginPasskeyAuthenticationAction(
-    rawPhone: z.infer<typeof phoneSchema>,
+    rawEmail: z.infer<typeof z.email>,
 ): Promise<AuthenticationOptionsResult> {
     const { t } = await getT();
-    const parsedPhone = phoneSchema.safeParse(rawPhone);
-    if (!parsedPhone.success) {
-        return {
-            isError: true,
-            message: t("authTranslations.passkeys.auth.error.userNotFound"),
-        };
-    }
+    const email = await validateInput(z.email(), rawEmail);
 
     type UserWithPasskeys = Pick<
         typeof UsersTable.$inferSelect,
-        "id" | "phone"
+        "id" | "email"
     > & {
         biometricCredentials: Array<
             Pick<
@@ -180,8 +174,8 @@ export async function beginPasskeyAuthenticationAction(
     };
 
     const user = (await db.query.UsersTable.findFirst({
-        columns: { id: true, phone: true },
-        where: eq(UsersTable.phone, parsedPhone.data),
+        columns: { id: true, email: true },
+        where: eq(UsersTable.email, email),
         with: {
             biometricCredentials: {
                 columns: { credentialId: true, transports: true },
@@ -229,7 +223,7 @@ export async function beginPasskeyAuthenticationAction(
         operation: "passkey-authentication",
     });
 
-    return { isError: false, options, phone: user.phone };
+    return { isError: false, options, email: user.email };
 }
 
 export async function beginPasskeyRegistrationAction(): Promise<RegistrationOptionsResult> {
@@ -306,14 +300,14 @@ export async function beginPasskeyRegistrationAction(): Promise<RegistrationOpti
 }
 
 export async function completePasskeyAuthenticationAction(
-    rawPhone: z.infer<typeof phoneSchema>,
+    rawEmail: z.infer<typeof z.email>,
     rawAssertion: z.infer<typeof authResponseSchema>,
 ): Promise<TypedResponse<PartialUser>> {
     const { t } = await getT();
-    const parsedPhone = phoneSchema.safeParse(rawPhone);
+    const email = await validateInput(z.email(), rawEmail);
+    const assertion = await validateInput(authResponseSchema, rawAssertion);
 
-    const parsedAssertion = authResponseSchema.safeParse(rawAssertion);
-    if (!parsedPhone.success || !parsedAssertion.success) {
+    if (!email || !assertion) {
         return {
             isError: true,
             message: t("authTranslations.passkeys.auth.error.userNotFound"),
@@ -322,7 +316,7 @@ export async function completePasskeyAuthenticationAction(
 
     type UserWithAuthenticationPasskeys = Pick<
         typeof UsersTable.$inferSelect,
-        "id" | "phone" | "role"
+        "id" | "email" | "role"
     > & {
         biometricCredentials: Array<
             Pick<
@@ -339,8 +333,8 @@ export async function completePasskeyAuthenticationAction(
     };
 
     const user = (await db.query.UsersTable.findFirst({
-        columns: { id: true, phone: true, role: true },
-        where: eq(UsersTable.phone, parsedPhone.data),
+        columns: { id: true, email: true, role: true },
+        where: eq(UsersTable.email, email),
         with: {
             biometricCredentials: {
                 columns: {
@@ -385,7 +379,7 @@ export async function completePasskeyAuthenticationAction(
     }
 
     const credential = user.biometricCredentials.find(
-        (item) => item.credentialId === parsedAssertion.data.id,
+        (item) => item.credentialId === assertion.id,
     );
 
     if (!credential) {
@@ -406,7 +400,7 @@ export async function completePasskeyAuthenticationAction(
     };
 
     const verification = await verifyAuthenticationResponse({
-        response: parsedAssertion.data,
+        response: assertion,
         expectedChallenge: challenge.challenge,
         expectedOrigin: EXPECTED_ORIGIN,
         expectedRPID: rpId,
@@ -443,7 +437,7 @@ export async function completePasskeyAuthenticationAction(
         .set({ lastSignInAt: new Date() })
         .where(eq(UsersTable.id, user.id));
 
-    await createSession(user, await cookies());
+    await createUserSession(user, await cookies());
 
     redirect("/");
 }

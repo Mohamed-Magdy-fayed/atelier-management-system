@@ -48,7 +48,7 @@ async function Suspended({ children }: { children: React.ReactNode }) {
       lang={locale}
       dir={locale === "ar" ? "rtl" : "ltr"}
       className={cn(
-        "h-full antialiased font-sans",
+        "antialiased font-sans",
         geistSans.variable,
         geistMono.variable,
         inter.variable,
@@ -56,7 +56,7 @@ async function Suspended({ children }: { children: React.ReactNode }) {
       )}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body>
         <Providers locale={locale} theme={theme}>{children}</Providers>
       </body>
     </html>

@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { env } from "@/env/server";
 import { OAuthClient } from "./base";
 
@@ -21,7 +22,7 @@ export function createGoogleOAuthClient() {
 				picture: z.url().optional(),
 			}),
 
-			parser: (user) => ({ id: user.sub, name: user.name, email: user.email }),
+			parser: (user) => ({ id: user.sub, name: user.name, email: user.email, imageUrl: user.picture }),
 		},
 	});
 }

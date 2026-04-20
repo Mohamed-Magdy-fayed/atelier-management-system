@@ -127,6 +127,7 @@ export default {
   getStarted: "Get Started",
   premium: "Premium",
   error: "An error occurred {error}. Please try again later.",
+  errorTitle: "Error!",
   success: "Operation successful!",
   loading: "Loading...",
   tour: {

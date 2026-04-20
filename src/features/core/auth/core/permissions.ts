@@ -1,4 +1,4 @@
-import type { UserRole } from "@/features/core/auth/tables";
+import type { UserRole } from "@/drizzle/schema";
 import type { PartialUser } from "@/features/core/auth/types";
 
 export type DefaultAction = "view" | "update" | "create" | "delete";
@@ -55,6 +55,9 @@ export const rolesPermissions = {
     users: {
       view: (user: PartialUser, data: PartialUser) => user.id === data.id,
       update: (user: PartialUser, data: PartialUser) => user.id === data.id,
+    },
+    screens: {
+      view: (_, data: { screenKey: ScreenKey }) => data.screenKey === "my-account"
     },
   },
 } as const satisfies RolesWithPermissions;

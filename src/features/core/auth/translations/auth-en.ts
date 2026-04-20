@@ -37,7 +37,7 @@ export default {
         emailPlaceholder: "name@example.com",
         signIn: {
             title: "Sign In",
-            description: "Enter your mobile to sign in",
+            description: "Enter your email to sign in",
             success: "You have successfully signed in",
             tooltip: "Sign in",
             continueWith: "Or continue with",
@@ -48,8 +48,8 @@ export default {
             termsOfService: "Terms of Service",
             privacyPolicy: "Privacy Policy",
             imageAlt: "Sign in background",
-            phoneLabel: "Phone number",
-            phoneRequired: "Phone number is required",
+            emailLabel: "Email",
+            emailRequired: "Email is required",
             passwordLabel: "Password",
             forgotPassword: "Forgot password?",
             toSignUp: "Sign Up",
@@ -78,7 +78,7 @@ export default {
             description: "Fill your data below to sign up.",
             error: {
                 generic: "Unable to create account",
-                duplicate: "Account already exists for this phone number, please sign in instead",
+                duplicate: "Account already exists for this email, please sign in instead",
                 invalidInvite: "Invalid or expired invitation",
             },
             nameLabel: "Name",
@@ -88,6 +88,7 @@ export default {
             toSignIn: "Sign In",
             submit: "Sign Up",
             submitting: "Creating account...",
+            welcome: "Hi there, {name}!",
             phoneStepDescription: "Enter your phone number to get started.",
             otpStepDescription: "Enter the verification code sent to your phone.",
             detailsStepDescription: "Complete your account details.",
@@ -133,11 +134,11 @@ export default {
                 button: "Sign in with passkey",
                 pending: "Waiting for passkey...",
                 error: {
-                    phoneRequired: "Enter your phone number to sign in with a passkey.",
+                    emailRequired: "Enter your email to sign in with a passkey.",
                     unsupported: "Passkeys aren't supported in this browser yet.",
                     cancelled: "Passkey sign-in was cancelled.",
                     generic: "Unable to sign in with passkey.",
-                    userNotFound: "No active account found for this phone number.",
+                    userNotFound: "No active account found for this email.",
                     noCredentials: "No passkeys are registered for this account.",
                     invalidChallenge: "Passkey sign-in challenge has expired.",
                     credentialMismatch: "This passkey does not match our records.",
@@ -203,9 +204,9 @@ export default {
                 success: "Password updated. You can sign in with your new password.",
             },
             request: {
-                success: "If that phone number exists, we just sent a reset code.",
-                invalidPhone: "Enter a valid phone number",
-                phoneError:
+                success: "If that email exists, we just sent a reset code.",
+                invalidEmail: "Enter a valid email",
+                emailError:
                     "We couldn't send the reset code. Please try again shortly.",
             },
         },

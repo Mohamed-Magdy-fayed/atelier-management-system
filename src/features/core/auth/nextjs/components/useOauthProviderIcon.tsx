@@ -1,5 +1,5 @@
 import Image from "next/image";
-import type { OAuthProvider } from "@/features/core/auth/tables";
+import type { OAuthProvider } from "@/drizzle/schema";
 
 export function useOauthProviderIcon() {
     return function getProviderIcon(provider: OAuthProvider) {

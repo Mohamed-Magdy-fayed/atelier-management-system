@@ -1,6 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getInitials } from "@/features/core/auth/core/helpers";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 
 export function UserAvatar() {
@@ -10,7 +11,7 @@ export function UserAvatar() {
     return (
         <Avatar>
             <AvatarImage src={session.user.imageUrl || "https://github.com/shadcn.png"} alt={session.user.name || "User Name"} />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarFallback>{session.user.name && getInitials(session.user.name)}</AvatarFallback>
         </Avatar>
     );
 }

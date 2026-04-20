@@ -1,7 +1,7 @@
 import type z from "zod";
 
+import type { OAuthProvider, User } from "@/drizzle/schema";
 import type { FullBranch } from "@/features/core/auth/nextjs/actions";
-import type { OAuthProvider, User } from "@/features/core/auth/tables";
 import type {
     createBranchSchema,
     sessionSchema,
@@ -18,7 +18,7 @@ export type AuthState =
     }
     | {
         isAuthenticated: true;
-        session: { user: User, hasPassword: boolean };
+        session: { user: User; hasPassword: boolean };
     };
 export type BranchState =
     | {
@@ -45,7 +45,7 @@ export type Cookies = {
         },
     ) => void;
     get: (key: string) => { name: string; value: string } | undefined;
-    delete: (key: string, options?: { path?: string }) => void;
+    delete: (key: string) => void;
 };
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
@@ -126,6 +126,6 @@ export type AuthenticationOptionsResult =
     | {
         isError: false;
         options: PublicKeyCredentialRequestOptionsJSON;
-        phone: string | null;
+        email: string | null;
     }
     | { isError: true; message: string };

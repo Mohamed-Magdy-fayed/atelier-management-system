@@ -1,5 +1,9 @@
 import type { PropsWithChildren } from "react";
 
+import { Toaster } from "@/components/ui/sonner";
+import { getAuth, getBranches } from "@/features/core/auth/nextjs/actions";
+import { AuthProvider } from "@/features/core/auth/nextjs/components/auth-provider";
+import { BranchProvider } from "@/features/core/auth/nextjs/components/branch-provider";
 import { ThemeProvider } from "@/features/core/color-theme/client";
 import type { Theme } from "@/features/core/color-theme/server";
 import { TranslationProvider } from "@/features/core/i18n/client";
@@ -10,11 +14,21 @@ type ProvidersProps = PropsWithChildren<{
     theme: Theme;
 }>;
 
-export function Providers({ children, locale, theme }: ProvidersProps) {
+export async function Providers({ children, locale, theme }: ProvidersProps) {
+    const authState = await getAuth();
+    const branchsState = authState.session?.user.id ? await getBranches(authState.session.user.id) : null;
+
     return (
         <ThemeProvider theme={theme}>
             <TranslationProvider defaultLocale={locale} fallbackLocale="en">
-                <TRPCReactProvider>{children}</TRPCReactProvider>
+                <AuthProvider value={authState}>
+                    <BranchProvider value={branchsState}>
+                        <TRPCReactProvider>
+                            {children}
+                            <Toaster />
+                        </TRPCReactProvider>
+                    </BranchProvider>
+                </AuthProvider>
             </TranslationProvider>
         </ThemeProvider>
     );

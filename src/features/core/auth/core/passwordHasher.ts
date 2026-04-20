@@ -1,4 +1,4 @@
-import crypto from "crypto"
+import crypto from "node:crypto"
 
 export function hashPassword(password: string, salt: string): Promise<string> {
 	return new Promise((resolve, reject) => {

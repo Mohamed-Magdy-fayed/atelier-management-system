@@ -3,13 +3,13 @@
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "@/drizzle";
+import { UsersTable } from "@/drizzle/schema";
 import {
     customerOtpStepSchema,
     customerPhoneStepSchema,
 } from "@/features/core/auth/schemas";
-import { UsersTable } from "@/features/core/auth/tables";
 import type { TypedResponse } from "@/features/core/auth/types";
-import { getT } from "@/features/core/i18n/actions";
+import { getT } from "@/features/core/i18n/server";
 import { sendPhoneOtp, verifyPhoneOtp } from "@/integrations/whatsapp/otp";
 
 export async function sendSignUpOtpAction(

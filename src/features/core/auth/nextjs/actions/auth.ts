@@ -3,10 +3,11 @@
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { db } from "@/drizzle";
 
+import { db } from "@/drizzle";
 import {
     type OAuthProvider,
+    type User,
     UserCredentialsTable,
     UsersTable,
 } from "@/drizzle/schema";
@@ -18,33 +19,31 @@ import {
     hashPassword,
 } from "@/features/core/auth/core/passwordHasher";
 import {
-    customerDetailsStepSchema,
-    signInSchema,
-} from "@/features/core/auth/schemas";
+    createUserSession,
+    removeUserFromSession,
+} from "@/features/core/auth/core/session";
+import { validateInput } from "@/features/core/auth/nextjs/actions/helpers";
+import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
+import { signInSchema, signUpSchema } from "@/features/core/auth/schemas";
 import type {
     AuthState,
     PartialUser,
     TypedResponse,
 } from "@/features/core/auth/types";
+import { getT } from "@/features/core/i18n/server";
 
 export async function signInAction(
-    input: unknown,
+    rawInput: unknown,
 ): Promise<TypedResponse<{ user: PartialUser }>> {
     const { t } = await getT();
-    const parsed = signInSchema.safeParse(input);
-    if (!parsed.success) {
-        return {
-            isError: true,
-            message: t("authTranslations.error.credentials"),
-        };
-    }
+    const { password, email } = await validateInput(signInSchema, rawInput);
 
-    const { phone, password } = parsed.data;
+    const normalizedEmail = normalizeEmail(email);
 
     try {
         const user = await db.query.UsersTable.findFirst({
             columns: { id: true, role: true },
-            where: eq(UsersTable.phone, phone),
+            where: eq(UsersTable.email, normalizedEmail),
             with: {
                 credentials: { columns: { passwordHash: true, passwordSalt: true } },
             },
@@ -74,7 +73,7 @@ export async function signInAction(
             };
         }
 
-        await createSession(user, await cookies());
+        await createUserSession(user, await cookies());
     } catch (error) {
         return authError(error);
     }
@@ -83,33 +82,21 @@ export async function signInAction(
 }
 
 export async function signUpAction(
-    input: unknown,
-): Promise<TypedResponse<{ user: PartialUser }>> {
+    rawData: unknown,
+): Promise<TypedResponse<{ user: Pick<User, "id" | "name" | "role"> }>> {
     const { t } = await getT();
-    const parsed = customerDetailsStepSchema.safeParse(input);
-    if (!parsed.success) {
-        return {
-            isError: true,
-            message: t("authTranslations.error.badRequest"),
-        };
-    }
+    const { email, name, password, phone } = await validateInput(
+        signUpSchema,
+        rawData,
+    );
 
-    try {
-        await assertPhoneVerified(parsed.data.phone, parsed.data.verificationId);
-    } catch {
-        return {
-            isError: true,
-            message: t("authTranslations.signUp.error.generic"),
-        };
-    }
+    const normalizedEmail = normalizeEmail(email);
 
-    const email = normalizeEmail(parsed.data.email);
-
-    const result: TypedResponse<{ user: PartialUser }> = await db.transaction(
-        async (trx) => {
+    const result: TypedResponse<{ user: Pick<User, "id" | "name" | "role"> }> =
+        await db.transaction(async (trx) => {
             const existing = await trx.query.UsersTable.findFirst({
                 columns: { id: true },
-                where: eq(UsersTable.email, email),
+                where: eq(UsersTable.email, normalizedEmail),
             });
 
             if (existing) {
@@ -120,20 +107,19 @@ export async function signUpAction(
             }
 
             const salt = generateSalt();
-            const passwordHash = await hashPassword(parsed.data.password, salt);
+            const passwordHash = await hashPassword(password, salt);
 
             const [user] = await trx
                 .insert(UsersTable)
                 .values({
-                    name: parsed.data.name,
-                    email,
-                    phone: parsed.data.phone,
+                    name,
+                    email: normalizedEmail,
+                    phone,
                     role: "customer",
-                    createdBy: "sign-up",
+                    createdBy: "self-signup",
                 })
                 .returning({
                     id: UsersTable.id,
-                    email: UsersTable.email,
                     name: UsersTable.name,
                     role: UsersTable.role,
                 });
@@ -152,11 +138,10 @@ export async function signUpAction(
             });
 
             return { isError: false, user };
-        },
-    );
+        });
 
     if (result.isError) return { isError: true, message: result.message };
-    await createSession(result.user, await cookies());
+    await createUserSession(result.user, await cookies());
 
     redirect("/");
 }
@@ -166,31 +151,25 @@ export async function oAuthSignIn(provider: OAuthProvider) {
     redirect(oAuthClient.createAuthUrl(await cookies()));
 }
 
-export async function signOutAction(): Promise<TypedResponse<{}>> {
+export async function signOutAction(): Promise<TypedResponse<void>> {
     const cookieStore = await cookies();
-    removeSession({
-        delete: (name: string) => {
-            cookieStore.delete(name);
-        },
-    });
+    await removeUserFromSession(cookieStore);
     redirect("/sign-in");
 }
 
 export async function getAuth(): Promise<AuthState> {
-    const fullUser = await getCurrentUser({
-        withFullUser: true,
-    });
-    if (!fullUser) return { isAuthenticated: false, session: null };
+    const user = await getCurrentUser({ withFullUser: true });
+    if (!user) return { isAuthenticated: false, session: null };
 
     const userCredentials = await db.query.UserCredentialsTable.findFirst({
-        where: eq(UserCredentialsTable.userId, fullUser.id),
+        where: eq(UserCredentialsTable.userId, user.id),
         columns: { expiresAt: true },
     });
 
     return {
         isAuthenticated: true,
         session: {
-            user: fullUser,
+            user,
             hasPassword: !!(
                 userCredentials &&
                 (!userCredentials.expiresAt || userCredentials.expiresAt > new Date())

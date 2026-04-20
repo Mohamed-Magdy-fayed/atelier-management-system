@@ -5,8 +5,9 @@ import {
 	type ReactNode,
 	useTransition,
 } from "react";
+
 import { Button } from "@/components/ui/button";
-import { LoadingSwap } from "@/components/ui/loading-swap";
+import { Spinner } from "@/components/ui/spinner";
 import { signOutAction } from "@/features/core/auth/nextjs/actions";
 import { useTranslation } from "@/features/core/i18n/client";
 
@@ -43,14 +44,10 @@ export function SignOutButton({
 			onClick={handleSignOut}
 			size={size}
 			variant={variant}
+			data-icon="inline-start"
 			{...buttonProps}
 		>
-			<LoadingSwap
-				className="flex items-center justify-center gap-2"
-				isLoading={!!disabled || isLoading}
-			>
-				{children ?? t("authTranslations.signOut")}
-			</LoadingSwap>
+			{isLoading ? <Spinner /> : (children ?? t("authTranslations.signOut"))}
 		</Button>
 	);
 }

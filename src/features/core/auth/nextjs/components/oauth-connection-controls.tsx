@@ -3,11 +3,11 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import type { OAuthProvider } from "@/drizzle/schema";
 import {
     disconnectOAuthAccountAction,
     oAuthSignIn,
 } from "@/features/core/auth/nextjs/actions";
-import type { OAuthProvider } from "@/features/core/auth/tables/user-oauth-accounts-table";
 import { useTranslation } from "@/features/core/i18n/client";
 
 type OAuthConnectionControlsProps = {
@@ -41,7 +41,6 @@ export function OAuthConnectionControls({
 
             toast.success(t("authTranslations.oauth.connections.disconnectSuccess"));
             onDisconnected?.(provider);
-
         });
     }
 

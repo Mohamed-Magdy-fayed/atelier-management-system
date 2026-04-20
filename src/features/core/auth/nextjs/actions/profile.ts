@@ -4,22 +4,24 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import type { z } from "zod";
+
 import { db } from "@/drizzle";
-import { refreshSession } from "@/features/core/auth/core";
+import { UserCredentialsTable, UsersTable } from "@/drizzle/schema";
+import { updateUserSessionExpiration } from "@/features/core/auth/core";
 import {
     comparePasswords,
     generateSalt,
     hashPassword,
 } from "@/features/core/auth/core/passwordHasher";
+import { validateInput } from "@/features/core/auth/nextjs/actions/helpers";
 import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
 import {
     changePasswordSchema,
     createPasswordSchema,
     updateProfileSchema,
 } from "@/features/core/auth/schemas";
-import { UserCredentialsTable, UsersTable } from "@/features/core/auth/tables";
 import type { TypedResponse } from "@/features/core/auth/types";
-import { getT } from "@/features/core/i18n/actions";
+import { getT } from "@/features/core/i18n/server";
 
 export async function updateProfileNameAction(
     rawInput: z.infer<typeof updateProfileSchema>,
@@ -55,15 +57,9 @@ export async function changePasswordAction(
     const { t } = await getT();
     const { id: userId } = await getCurrentUser({ redirectIfNotFound: true });
 
-    const parsed = changePasswordSchema.safeParse(rawInput);
-    if (!parsed.success) {
-        return {
-            isError: true,
-            message: t("authTranslations.profile.error.invalidInput"),
-        };
-    }
+    const parsed = await validateInput(changePasswordSchema, rawInput);
 
-    const { currentPassword, newPassword } = parsed.data;
+    const { currentPassword, newPassword } = parsed;
 
     const credentials = await db.query.UserCredentialsTable.findFirst({
         columns: { passwordHash: true, passwordSalt: true },
@@ -104,7 +100,7 @@ export async function changePasswordAction(
         })
         .where(eq(UserCredentialsTable.userId, userId));
 
-    await refreshSession(await cookies());
+    await updateUserSessionExpiration(await cookies());
 
     return {
         isError: false,
@@ -151,7 +147,7 @@ export async function createPasswordAction(
         lastChangedAt: now,
     });
 
-    await refreshSession(await cookies());
+    await updateUserSessionExpiration(await cookies());
 
     return {
         isError: false,

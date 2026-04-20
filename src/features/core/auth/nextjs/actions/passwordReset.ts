@@ -1,29 +1,29 @@
 "use server";
 
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { and, eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import type { z } from "zod";
+
 import { db } from "@/drizzle";
-import { env } from "@/env/server";
+import {
+    UserCredentialsTable,
+    UsersTable,
+    UserTokensTable,
+} from "@/drizzle/schema";
+import { normalizeEmail } from "@/features/core/auth/core/helpers";
 import {
     generateSalt,
     hashPassword,
 } from "@/features/core/auth/core/passwordHasher";
 import { hashTokenValue } from "@/features/core/auth/core/token";
+import { validateInput } from "@/features/core/auth/nextjs/actions/helpers";
+import { sendPasswordResetCodeEmail } from "@/features/core/auth/nextjs/emails";
 import {
     passwordResetRequestSchema,
     passwordResetSubmissionSchema,
 } from "@/features/core/auth/schemas";
-import {
-    UserCredentialsTable,
-    UsersTable,
-    UserTokensTable,
-} from "@/features/core/auth/tables";
 import type { TypedResponse } from "@/features/core/auth/types";
-import { getT } from "@/features/core/i18n/actions";
-import { rateLimitOTP, toChatId } from "@/integrations/whatsapp/otp";
-import { sendText } from "@/integrations/whatsapp/wapilot-api";
+import { getT } from "@/features/core/i18n/server";
 
 const PASSWORD_RESET_OTP_LENGTH = 6;
 const PASSWORD_RESET_OTP_TTL_MS = 1000 * 60 * 10; // 10 minutes
@@ -35,36 +35,36 @@ function generateResetOtp() {
         .padStart(PASSWORD_RESET_OTP_LENGTH, "0");
 }
 
-function hashPasswordResetOtp(phone: string, otp: string) {
-    return hashTokenValue(`${phone}:${otp}`);
+function hashPasswordResetOtp(normalizedEmail: string, otp: string) {
+    return hashTokenValue(`${normalizedEmail}:${otp}`);
 }
 
 export async function requestPasswordResetAction(
     rawInput: z.infer<typeof passwordResetRequestSchema>,
 ): Promise<TypedResponse<{}>> {
     const { t } = await getT();
-    const parsed = passwordResetRequestSchema.safeParse(rawInput);
-    if (!parsed.success) {
+    const { email } = await validateInput(passwordResetRequestSchema, rawInput);
+
+    const normalizedEmail = normalizeEmail(email);
+    if (!normalizedEmail || !normalizedEmail.includes("@")) {
         return {
             isError: true,
-            message: t("authTranslations.passwordReset.request.invalidPhone"),
+            message: t("authTranslations.passwordReset.request.invalidEmail"),
         };
     }
 
-    await rateLimitOTP(parsed.data.phone);
-
     const user = await db.query.UsersTable.findFirst({
-        columns: { id: true, phone: true, name: true },
-        where: eq(UsersTable.phone, parsed.data.phone),
+        columns: { id: true, email: true, name: true },
+        where: eq(UsersTable.email, normalizedEmail),
     });
 
     // Avoid account enumeration
-    if (!user || !user.phone) {
-        redirect(`/reset-password?phone=${encodeURIComponent(parsed.data.phone)}`);
+    if (!user) {
+        return { isError: false };
     }
 
     const otp = generateResetOtp();
-    const tokenHash = hashPasswordResetOtp(parsed.data.phone, otp);
+    const tokenHash = hashPasswordResetOtp(normalizedEmail, otp);
     const expiresAt = new Date(Date.now() + PASSWORD_RESET_OTP_TTL_MS);
 
     await db.transaction(async (trx) => {
@@ -83,19 +83,19 @@ export async function requestPasswordResetAction(
             type: "password_reset",
             expiresAt,
             metadata: {
-                phone: parsed.data.phone,
+                email: user.email,
+                normalizedEmail,
+                otpLength: PASSWORD_RESET_OTP_LENGTH,
             },
         });
     });
 
     try {
-        await sendText({
-            instanceId: env.WAPILOT_INSTANCE_ID,
-            token: env.WAPILOT_API_TOKEN,
-            params: {
-                chat_id: toChatId(parsed.data.phone),
-                text: `Your password reset code is: ${otp}\n\nThis code expires in 10 minutes.`,
-            },
+        await sendPasswordResetCodeEmail({
+            to: user.email,
+            name: user.name,
+            code: otp,
+            expiresInMinutes: Math.floor(PASSWORD_RESET_OTP_TTL_MS / (1000 * 60)),
         });
     } catch {
         // Best-effort cleanup to prevent dangling usable tokens
@@ -104,26 +104,21 @@ export async function requestPasswordResetAction(
             .where(eq(UserTokensTable.tokenHash, tokenHash));
         return {
             isError: true,
-            message: t("authTranslations.passwordReset.request.phoneError"),
+            message: t("authTranslations.passwordReset.request.emailError"),
         };
     }
 
-    redirect(`/reset-password?phone=${encodeURIComponent(parsed.data.phone)}`);
+    return { isError: false };
 }
 
 export async function resetPasswordAction(
     rawInput: unknown,
 ): Promise<TypedResponse<{}>> {
     const { t } = await getT();
-    const parsed = passwordResetSubmissionSchema.safeParse(rawInput);
-    if (!parsed.success) {
-        return {
-            isError: true,
-            message: t("authTranslations.passwordReset.reset.invalidCode"),
-        };
-    }
+    const { email, otp, password } = await validateInput(passwordResetSubmissionSchema, rawInput);
 
-    const tokenHash = hashPasswordResetOtp(parsed.data.phone, parsed.data.otp);
+    const normalizedEmail = normalizeEmail(email);
+    const tokenHash = hashPasswordResetOtp(normalizedEmail, otp);
     const now = new Date();
 
     const tokenRecord = await db.query.UserTokensTable.findFirst({
@@ -152,10 +147,13 @@ export async function resetPasswordAction(
     }
 
     const metadata = (tokenRecord.metadata ?? {}) as {
-        phone?: unknown;
+        normalizedEmail?: unknown;
     };
-    const tokenPhone = typeof metadata.phone === "string" ? metadata.phone : null;
-    if (tokenPhone && tokenPhone !== parsed.data.phone) {
+    const tokenEmail =
+        typeof metadata.normalizedEmail === "string"
+            ? metadata.normalizedEmail
+            : null;
+    if (tokenEmail && tokenEmail !== normalizedEmail) {
         return {
             isError: true,
             message: t("authTranslations.passwordReset.reset.invalidCode"),
@@ -163,11 +161,11 @@ export async function resetPasswordAction(
     }
 
     const user = await db.query.UsersTable.findFirst({
-        columns: { id: true, phone: true },
+        columns: { id: true, email: true },
         where: eq(UsersTable.id, tokenRecord.userId ?? ""),
     });
 
-    if (!user || !user.phone || user.phone !== parsed.data.phone) {
+    if (!user || normalizeEmail(user.email) !== normalizedEmail) {
         return {
             isError: true,
             message: t("authTranslations.passwordReset.reset.invalidCode"),
@@ -175,7 +173,7 @@ export async function resetPasswordAction(
     }
 
     const salt = generateSalt();
-    const passwordHash = await hashPassword(parsed.data.password, salt);
+    const passwordHash = await hashPassword(password, salt);
 
     try {
         await db.transaction(async (trx) => {
@@ -216,5 +214,5 @@ export async function resetPasswordAction(
         };
     }
 
-    redirect("/sign-in?reset=success");
+    return { isError: false };
 }

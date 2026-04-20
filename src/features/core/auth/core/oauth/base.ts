@@ -1,9 +1,8 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import { z } from "zod";
+import type { OAuthProvider } from "@/drizzle/schema";
 import { env } from "@/env/server";
-import type { OAuthProvider } from "@/features/core/auth/tables";
 import type { Cookies } from "@/features/core/auth/types";
-import { createGithubOAuthClient } from "./github";
 import { createGoogleOAuthClient } from "./google";
 
 const STATE_COOKIE_KEY = "oAuthState";
@@ -22,7 +21,7 @@ export class OAuthClient<T> {
 	};
 	private readonly userInfo: {
 		schema: z.ZodSchema<T>;
-		parser: (data: T) => { id: string; email: string; name: string };
+		parser: (data: T) => { id: string; email: string; name: string, imageUrl?: string };
 	};
 	private readonly tokenSchema = z.object({
 		access_token: z.string(),
@@ -139,8 +138,6 @@ export function getOAuthClient(provider: OAuthProvider) {
 	switch (provider) {
 		case "google":
 			return createGoogleOAuthClient();
-		case "github":
-			return createGithubOAuthClient();
 		default:
 			throw new Error(`Invalid provider: ${provider satisfies never}`);
 	}

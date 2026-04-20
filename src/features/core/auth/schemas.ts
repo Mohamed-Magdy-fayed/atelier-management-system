@@ -1,57 +1,57 @@
 import { z } from "zod";
 
 import { userRoleValues } from "@/drizzle/schemas/auth";
+import { translationKey } from "@/features/core/i18n/global";
 
-export const phoneSchema = z.string().trim().min(7, "authTranslations.validation.phoneMin").max(16, "authTranslations.validation.phoneMax");
-export const otpSchema = z.string().trim().regex(/^[0-9]{6}$/u, "authTranslations.validation.otpSixDigits");
+export const otpSchema = z.string().trim().regex(/^[0-9]{6}$/u, translationKey("authTranslations.validation.otpSixDigits"));
 export const passwordSchema = z
-	.string().min(6, "authTranslations.passwordMinLength")
+	.string().min(6, translationKey("authTranslations.passwordMinLength"))
 	.superRefine((value, ctx) => {
 		if (!/[a-z]/.test(value)) {
 			ctx.addIssue({
 				code: "custom",
-				message: "authTranslations.passwordLowercase",
+				message: translationKey("authTranslations.passwordLowercase"),
 			});
 		}
 
 		if (!/[A-Z]/.test(value)) {
 			ctx.addIssue({
 				code: "custom",
-				message: "authTranslations.passwordUppercase",
+				message: translationKey("authTranslations.passwordUppercase"),
 			});
 		}
 
 		if (!/[0-9]/.test(value)) {
 			ctx.addIssue({
 				code: "custom",
-				message: "authTranslations.passwordNumber",
+				message: translationKey("authTranslations.passwordNumber"),
 			});
 		}
 
 		if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
 			ctx.addIssue({
 				code: "custom",
-				message: "authTranslations.passwordSpecialChar",
+				message: translationKey("authTranslations.passwordSpecialChar"),
 			});
 		}
 	});
 
 export const signInSchema = z.object({
-	phone: phoneSchema,
-	password: z.string().min(6, "authTranslations.passwordMinLength"),
+	email: z.email(translationKey("authTranslations.validation.invalidEmail")),
+	password: z.string().min(6, translationKey("authTranslations.passwordMinLength")),
 });
 
 export const signUpSchema = z.object({
 	name: z.string(),
-	email: z.email(),
+	email: z.email(translationKey("authTranslations.validation.invalidEmail")),
 	phone: z.string(),
 	password: passwordSchema,
 });
 
 export const changeEmailSchema = z
 	.object({
-		newEmail: z.email("authTranslations.validation.invalidEmail"),
-		confirmEmail: z.email("authTranslations.validation.invalidEmail"),
+		newEmail: z.email(translationKey("authTranslations.validation.invalidEmail")),
+		confirmEmail: z.email(translationKey("authTranslations.validation.invalidEmail")),
 		// Some accounts (OAuth-only) may not have a password set.
 		// Keep the value as a string (possibly empty) so it matches form inputs.
 		currentPassword: z.string(),
@@ -61,19 +61,10 @@ export const changeEmailSchema = z
 			ctx.addIssue({
 				code: "custom",
 				path: ["confirmEmail"],
-				message: "authTranslations.emailMismatch",
+				message: translationKey("authTranslations.emailMismatch"),
 			});
 		}
 	});
-
-export const beginPhoneChangeSchema = z.object({
-	phone: phoneSchema,
-});
-
-export const confirmPhoneChangeSchema = z.object({
-	phone: phoneSchema,
-	otp: otpSchema,
-});
 
 export const sessionSchema = z.object({
 	sessionId: z.string(),
@@ -85,10 +76,10 @@ export const sessionSchema = z.object({
 });
 
 export const passwordResetRequestSchema = z.object({
-	phone: phoneSchema,
+	email: z.email(translationKey("authTranslations.validation.invalidEmail")),
 });
 export const passwordResetSubmissionSchema = z.object({
-	phone: phoneSchema,
+	email: z.email(translationKey("authTranslations.validation.invalidEmail")),
 	otp: otpSchema,
 	password: passwordSchema,
 });
@@ -135,21 +126,4 @@ export const createBranchSchema = z.object({
 
 export const updateBranchSchema = createBranchSchema.extend({
 	branchId: z.uuid(),
-});
-
-export const customerPhoneStepSchema = z.object({
-	phone: phoneSchema,
-});
-
-export const customerOtpStepSchema = z.object({
-	phone: phoneSchema,
-	otp: otpSchema,
-});
-
-export const customerDetailsStepSchema = z.object({
-	phone: phoneSchema,
-	verificationId: z.uuid(),
-	name: z.string().min(1, "authTranslations.required"),
-	email: z.union([z.email("authTranslations.validation.invalidEmail"), z.literal("")]),
-	password: passwordSchema,
 });

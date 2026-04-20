@@ -3,23 +3,26 @@
 import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/drizzle";
+import {
+    UserCredentialsTable,
+    UsersTable,
+    UserTokensTable,
+} from "@/drizzle/schema";
 import { env } from "@/env/server";
 import { comparePasswords } from "@/features/core/auth/core";
 import { normalizeEmail } from "@/features/core/auth/core/helpers";
-import { createTokenValue, hashTokenValue } from "@/features/core/auth/core/token";
+import {
+    createTokenValue,
+    hashTokenValue,
+} from "@/features/core/auth/core/token";
 import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
 import {
     sendEmailChangeVerification,
     sendEmailVerificationEmail,
 } from "@/features/core/auth/nextjs/emails";
 import { changeEmailSchema } from "@/features/core/auth/schemas";
-import {
-    UserCredentialsTable,
-    UsersTable,
-    UserTokensTable,
-} from "@/features/core/auth/tables";
 import type { TypedResponse } from "@/features/core/auth/types";
-import { getT } from "@/features/core/i18n/actions";
+import { getT } from "@/features/core/i18n/server";
 
 const EMAIL_TOKEN_TTL_MS = 1000 * 60 * 60 * 24;
 const verifyEmailTokenSchema = z.object({ token: z.string().min(1) });
@@ -77,7 +80,7 @@ export async function beginEmailVerificationAction(): Promise<
 
     try {
         await sendEmailVerificationEmail({
-            email: user.email,
+            to: user.email,
             verificationUrl,
         });
     } catch {
@@ -199,12 +202,14 @@ export async function beginEmailChangeAction(
     try {
         if (currentEmail) {
             await sendEmailChangeVerification({
-                email: parsed.data.newEmail,
+                to: parsed.data.newEmail,
+                name: user.name,
+                currentEmail,
                 verificationUrl,
             });
         } else {
             await sendEmailVerificationEmail({
-                email: parsed.data.newEmail,
+                to: parsed.data.newEmail,
                 verificationUrl,
             });
         }

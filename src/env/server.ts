@@ -13,8 +13,21 @@ export const env = createEnv({
     REDIS_URL: z.string().min(1),
     REDIS_TOKEN: z.string().min(1),
 
+    OAUTH_REDIRECT_URL_BASE: z.url(),
+    JWT_SECRET_KEY: z.string().min(32),
+    GOOGLE_CLIENT_ID: z.string().min(1),
+    GOOGLE_CLIENT_SECRET: z.string().min(1),
+
     WAPILOT_INSTANCE_ID: z.string().min(1),
     WAPILOT_API_TOKEN: z.string().min(1),
+
+    SMTP_HOST: z.string().min(1).optional(),
+    SMTP_PORT: z.coerce.number().int().positive().optional(),
+    SMTP_USER: z.string().min(1).optional(),
+    SMTP_PASSWORD: z.string().min(1).optional(),
+    SMTP_SECURE: z.enum(["true", "false"]).optional(),
+    SMTP_FROM_EMAIL: z.email().optional(),
+    SMTP_FROM_NAME: z.string().min(1).optional(),
 
     NODE_ENV: z
       .enum(["development", "test", "production"])

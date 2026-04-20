@@ -13,7 +13,7 @@ import {
 import { createdAt, updatedAt } from "@/drizzle/schemas/helpers";
 import { UsersTable } from "./users-table";
 
-export const oAuthProviderValues = ["google", "github"] as const;
+export const oAuthProviderValues = ["google"] as const;
 export type OAuthProvider = (typeof oAuthProviderValues)[number];
 export const oAuthProviderEnum = pgEnum("oauth_provider", oAuthProviderValues);
 

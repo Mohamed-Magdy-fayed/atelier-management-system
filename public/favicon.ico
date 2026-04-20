@@ -1,0 +1,29 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="megzTitle megzDesc">
+  <title id="megzTitle">Megz circuit monogram</title>
+  <desc id="megzDesc">Orange gradient letter M composed of angular strokes with circuit nodes on a transparent background.</desc>
+  <defs>
+    <linearGradient id="megzStroke" x1="20" y1="10" x2="100" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F97316" />
+      <stop offset="0.35" stop-color="#F97316" />
+      <stop offset="1" stop-color="#F97316" />
+    </linearGradient>
+    <linearGradient id="megzInner" x1="40" y1="20" x2="80" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F97316" stop-opacity="0.9" />
+      <stop offset="1" stop-color="#F97316" stop-opacity="0.8" />
+    </linearGradient>
+  </defs>
+  <path d="M28 92V32C28 29.7909 29.7909 28 32 28H43.5C44.9004 28 46.2188 28.7369 46.9688 29.9443L60 50L73.0312 29.9443C73.7812 28.7369 75.0996 28 76.5 28H88C90.2091 28 92 29.7909 92 32V92C92 94.2091 90.2091 96 88 96H82C79.7909 96 78 94.2091 78 92V56.5L67.2993 73.4554C65.9676 75.6081 63.0324 75.6081 61.7007 73.4554L51 56.5V92C51 94.2091 49.2091 96 47 96H36C33.7909 96 32 94.2091 32 92Z" stroke="url(#megzStroke)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M44 32H48L60 52L72 32H76L60 60L44 32Z" fill="url(#megzInner)" opacity="0.85" />
+  <g stroke="url(#megzStroke)" stroke-width="6" stroke-linecap="round">
+    <line x1="24" y1="42" x2="14" y2="42" />
+    <line x1="24" y1="82" x2="12" y2="82" />
+    <line x1="96" y1="42" x2="106" y2="42" />
+    <line x1="96" y1="82" x2="108" y2="82" />
+  </g>
+  <g fill="#0F0F0F" stroke="url(#megzStroke)" stroke-width="3">
+    <circle cx="12" cy="42" r="5" />
+    <circle cx="12" cy="82" r="5" />
+    <circle cx="108" cy="42" r="5" />
+    <circle cx="108" cy="82" r="5" />
+  </g>
+</svg>

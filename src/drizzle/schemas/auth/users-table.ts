@@ -32,7 +32,7 @@ export const UsersTable = pgTable(
 	"users",
 	{
 		id,
-		email: varchar({ length: 256 }),
+		email: varchar({ length: 256 }).notNull(),
 		name: varchar({ length: 256 }),
 		phone: varchar({ length: 16 }),
 		imageUrl: varchar({ length: 512 }),

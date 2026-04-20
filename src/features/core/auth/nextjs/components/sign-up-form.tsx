@@ -1,377 +1,144 @@
 "use client";
 
-import { ArrowLeftIcon, RefreshCwIcon } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { useAppForm } from "@/components/forms/hooks";
+
+import { useAppForm } from "@/components/forms";
 import { Button } from "@/components/ui/button";
 import {
 	FieldDescription,
 	FieldSeparator,
 	FieldSet,
 } from "@/components/ui/field";
-import {
-	InputOTP,
-	InputOTPGroup,
-	InputOTPSeparator,
-	InputOTPSlot,
-} from "@/components/ui/input-otp";
-import { H1, Muted } from "@/components/ui/typography";
-import {
-	oAuthSignIn,
-	sendSignUpOtpAction,
-	signUpAction,
-	verifySignUpOtpAction,
-} from "@/features/core/auth/nextjs/actions";
+import { type OAuthProvider, oAuthProviderValues } from "@/drizzle/schema";
+import { oAuthSignIn, signUpAction } from "@/features/core/auth/nextjs/actions";
+import FormAlert from "@/features/core/auth/nextjs/components/form-alert";
 import { useOauthProviderIcon } from "@/features/core/auth/nextjs/components/useOauthProviderIcon";
-import {
-	customerDetailsStepSchema,
-	customerOtpStepSchema,
-	customerPhoneStepSchema,
-} from "@/features/core/auth/schemas";
-import {
-	type OAuthProvider,
-	oAuthProviderValues,
-} from "@/features/core/auth/tables/user-oauth-accounts-table";
+import { signUpSchema } from "@/features/core/auth/schemas";
 import { useTranslation } from "@/features/core/i18n/client";
-
-function deriveStep(
-	searchParams: URLSearchParams,
-): "phone" | "otp" | "details" {
-	if (searchParams.get("vid")) return "details";
-	if (searchParams.get("phone")) return "otp";
-	return "phone";
-}
 
 export function SignUpForm() {
 	const { t } = useTranslation();
-	const router = useRouter();
-	const searchParams = useSearchParams();
-	const getOauthProviderIcon = useOauthProviderIcon();
+
 	const [isPending, startTransition] = useTransition();
 
-	const step = deriveStep(searchParams);
-	const phone = searchParams.get("phone") ?? "";
-	const verificationId = searchParams.get("vid") ?? "";
+	const searchParams = useSearchParams();
+	const getOauthProviderIcon = useOauthProviderIcon();
 
-	// Step 1: Phone form
-	const phoneForm = useAppForm({
-		defaultValues: { phone: "" },
-		validators: { onSubmit: customerPhoneStepSchema },
-		onSubmit: async ({ value }) => {
-			startTransition(async () => {
-				try {
-					const result = await sendSignUpOtpAction({ phone: value.phone });
-					if (result.isError) {
-						toast.error(
-							result.message ?? t("authTranslations.signUp.error.generic"),
-						);
-						return;
-					}
-					const params = new URLSearchParams(searchParams);
-					params.set("phone", value.phone);
-					router.push(`/sign-up?${params.toString()}`);
-				} catch (error) {
-					toast.error(
-						error instanceof Error
-							? error.message
-							: t("authTranslations.signUp.error.generic"),
-					);
-				}
-			});
-		},
-	});
-
-	// Step 2: OTP form
-	const otpForm = useAppForm({
-		defaultValues: { phone, otp: "" },
-		validators: { onSubmit: customerOtpStepSchema },
-		onSubmit: async ({ value }) => {
-			startTransition(async () => {
-				try {
-					const result = await verifySignUpOtpAction({
-						phone: value.phone,
-						otp: value.otp,
-					});
-					if (result.isError) {
-						toast.error(
-							result.message ?? t("authTranslations.signUp.error.generic"),
-						);
-						return;
-					}
-					const params = new URLSearchParams(searchParams);
-					params.set("vid", result.verificationId);
-					router.push(`/sign-up?${params.toString()}`);
-				} catch (error) {
-					toast.error(
-						error instanceof Error
-							? error.message
-							: t("authTranslations.signUp.error.generic"),
-					);
-				}
-			});
-		},
-	});
-
-	async function handleResendOtp() {
-		startTransition(async () => {
-			try {
-				const result = await sendSignUpOtpAction({ phone });
-				if (result.isError) {
-					toast.error(
-						result.message ?? t("authTranslations.signUp.error.generic"),
-					);
-					return;
-				}
-				toast.success(t("authTranslations.signUp.otpResent"));
-			} catch (error) {
-				toast.error(
-					error instanceof Error
-						? error.message
-						: t("authTranslations.signUp.error.generic"),
-				);
-			}
-		});
-	}
-
-	// Step 3: Details form
-	const detailsForm = useAppForm({
+	const form = useAppForm({
 		defaultValues: {
-			phone,
-			verificationId,
 			name: "",
+			phone: "",
 			email: "",
 			password: "",
 		},
-		validators: { onSubmit: customerDetailsStepSchema },
-		onSubmit: async ({ value }) => {
-			startTransition(async () => {
-				await signUpAction({
-					...value,
-					phone,
-					verificationId,
-				});
+		validators: {
+			onSubmit: signUpSchema,
+		},
+		onSubmit: ({ value }) => {
+			toast.promise(signUpAction(value), {
+				loading: t("authTranslations.signUp.submitting"),
+				success: (res) =>
+					!res.isError
+						? t("authTranslations.signUp.welcome", { name: res.user.name })
+						: t("error", { error: res.message }),
 			});
 		},
 	});
 
 	async function handleOAuthClick(provider: OAuthProvider) {
-		await oAuthSignIn(provider);
+		startTransition(() => {
+			oAuthSignIn(provider);
+		});
 	}
 
 	return (
-		<div className="space-y-4">
+		<form
+			onSubmit={(e) => {
+				e.preventDefault();
+				form.handleSubmit();
+			}}
+			className="space-y-4 p-6 md:p-8"
+		>
 			<div className="space-y-2 text-center">
-				<H1>{t("authTranslations.signUp.title")}</H1>
-				<Muted>
-					{step === "otp" && t("authTranslations.signUp.otpStepDescription")}
-					{step === "details" &&
-						t("authTranslations.signUp.detailsStepDescription")}
-				</Muted>
+				<h1 className="font-semibold text-3xl tracking-tight">
+					{t("authTranslations.signUp.title")}
+				</h1>
+				<p className="text-muted-foreground text-sm">
+					{t("authTranslations.signUp.description")}
+				</p>
 			</div>
 
 			{searchParams.get("error") && (
-				<FieldDescription
-					aria-live="assertive"
-					className="text-center text-destructive!"
-					role="alert"
-				>
-					{searchParams.get("error")}
-				</FieldDescription>
+				<FormAlert message={searchParams.get("error") || ""} />
 			)}
 
-			{/* Step 1: Phone number */}
-			{step === "phone" && (
-				<>
-					<div className="grid gap-2">
-						{oAuthProviderValues.map((provider) => (
-							<Button
-								className="h-11 w-full justify-center gap-2"
-								disabled={isPending}
-								key={provider}
-								onClick={async () => await handleOAuthClick(provider)}
-								type="button"
-								variant="outline"
-							>
-								{getOauthProviderIcon(provider)}
-								<span className="font-medium text-sm capitalize">
-									{provider}
-								</span>
-							</Button>
-						))}
-					</div>
-					{oAuthProviderValues.length > 0 && (
-						<>
-							<FieldSeparator className="mb-2 *:data-[slot=field-separator-content]:bg-card">
-								{t("authTranslations.signIn.continueWith")}
-							</FieldSeparator>
-						</>
+			{oAuthProviderValues.length > 0 && (
+				<div className="grid gap-2">
+					{oAuthProviderValues.map((provider) => (
+						<Button
+							className="h-11 w-full justify-center gap-2"
+							disabled={isPending}
+							key={provider}
+							onClick={async () => await handleOAuthClick(provider)}
+							type="button"
+							variant="outline"
+						>
+							{getOauthProviderIcon(provider)}
+							<span className="font-medium text-sm capitalize">{provider}</span>
+						</Button>
+					))}
+				</div>
+			)}
+
+			<FieldSeparator className="mb-2 *:data-[slot=field-separator-content]:bg-card">
+				{t("authTranslations.signIn.continueWith")}
+			</FieldSeparator>
+
+			<FieldSet className="grid gap-2" disabled={isPending}>
+				<form.AppField name="name">
+					{({ StringField }) => (
+						<StringField label={t("authTranslations.signUp.nameLabel")} />
 					)}
+				</form.AppField>
 
-					<form
-						onSubmit={(e) => {
-							e.preventDefault();
-							phoneForm.handleSubmit();
-						}}
-					>
-						<FieldSet className="grid gap-4" disabled={isPending}>
-							<phoneForm.AppField name="phone">
-								{(field) => (
-									<field.MobileField
-										autoFocus
-										label={t("authTranslations.signUp.phoneLabel")}
-									/>
-								)}
-							</phoneForm.AppField>
+				<form.AppField name="email">
+					{({ EmailField }) => (
+						<EmailField
+							placeholder={t("authTranslations.emailPlaceholder")}
+							label={t("authTranslations.signUp.emailLabel")}
+						/>
+					)}
+				</form.AppField>
 
-							<phoneForm.Subscribe selector={(state) => state.isSubmitting}>
-								{(isSubmitting) => (
-									<Button
-										className="w-full"
-										disabled={isPending || isSubmitting}
-										type="submit"
-									>
-										{isPending || isSubmitting
-											? t("authTranslations.signUp.sendingOtp")
-											: t("authTranslations.signUp.sendOtp")}
-									</Button>
-								)}
-							</phoneForm.Subscribe>
-						</FieldSet>
-					</form>
-				</>
-			)}
+				<form.AppField name="phone">
+					{({ MobileField }) => (
+						<MobileField label={t("authTranslations.signUp.phoneLabel")} />
+					)}
+				</form.AppField>
 
-			{/* Step 2: OTP verification */}
-			{step === "otp" && (
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						otpForm.handleSubmit();
-					}}
-				>
-					<FieldSet className="grid gap-4" disabled={isPending}>
-						<Muted className="text-center">{phone}</Muted>
+				<form.AppField name="password">
+					{({ PasswordField }) => (
+						<PasswordField label={t("authTranslations.signUp.passwordLabel")} />
+					)}
+				</form.AppField>
 
-						<div dir="ltr">
-							<otpForm.AppField name="otp">
-								{(field) => (
-									<InputOTP
-										autoFocus
-										containerClassName="justify-center"
-										disabled={isPending}
-										maxLength={6}
-										onChange={(val) => field.handleChange(val)}
-										value={field.state.value}
-									>
-										<InputOTPGroup>
-											<InputOTPSlot index={0} />
-											<InputOTPSlot index={1} />
-											<InputOTPSlot index={2} />
-										</InputOTPGroup>
-										<InputOTPSeparator />
-										<InputOTPGroup>
-											<InputOTPSlot index={3} />
-											<InputOTPSlot index={4} />
-											<InputOTPSlot index={5} />
-										</InputOTPGroup>
-									</InputOTP>
-								)}
-							</otpForm.AppField>
-						</div>
-
-						<otpForm.Subscribe selector={(state) => state.isSubmitting}>
-							{(isSubmitting) => (
-								<Button
-									className="w-full"
-									disabled={isPending || isSubmitting}
-									type="submit"
-								>
-									{isPending || isSubmitting
-										? t("authTranslations.signUp.verifyingOtp")
-										: t("authTranslations.signUp.verifyOtp")}
-								</Button>
-							)}
-						</otpForm.Subscribe>
-
-						<div className="flex items-center justify-between">
-							<Button
-								disabled={isPending}
-								onClick={() => router.push("/sign-up")}
-								type="button"
-								variant="outline"
-							>
-								<ArrowLeftIcon />
-								{t("authTranslations.signIn.back")}
-							</Button>
-							<Button
-								disabled={isPending}
-								onClick={handleResendOtp}
-								type="button"
-								variant="outline"
-							>
-								<RefreshCwIcon />
-								{t("authTranslations.signUp.resendOtp")}
-							</Button>
-						</div>
-					</FieldSet>
-				</form>
-			)}
-
-			{/* Step 3: Account details */}
-			{step === "details" && (
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						detailsForm.handleSubmit();
-					}}
-				>
-					<FieldSet className="grid gap-2" disabled={isPending}>
-						<detailsForm.AppField name="name">
-							{(field) => (
-								<field.StringField
-									autoFocus
-									label={t("authTranslations.signUp.nameLabel")}
-								/>
-							)}
-						</detailsForm.AppField>
-
-						<detailsForm.AppField name="email">
-							{(field) => (
-								<field.EmailField
-									description={t("authTranslations.optional")}
-									label={t("authTranslations.signUp.emailLabel")}
-									placeholder={t("authTranslations.emailPlaceholder")}
-								/>
-							)}
-						</detailsForm.AppField>
-
-						<detailsForm.AppField name="password">
-							{(field) => (
-								<field.PasswordField
-									label={t("authTranslations.signUp.passwordLabel")}
-								/>
-							)}
-						</detailsForm.AppField>
-
-						<detailsForm.Subscribe selector={(state) => state.isSubmitting}>
-							{(isSubmitting) => (
-								<Button
-									className="w-full"
-									disabled={isPending || isSubmitting}
-									type="submit"
-								>
-									{isPending || isSubmitting
-										? t("authTranslations.signUp.submitting")
-										: t("authTranslations.signUp.submit")}
-								</Button>
-							)}
-						</detailsForm.Subscribe>
-					</FieldSet>
-				</form>
-			)}
+				<form.Subscribe selector={(state) => state.isSubmitting}>
+					{(isSubmitting) => (
+						<Button
+							className="w-full"
+							disabled={isPending || isSubmitting}
+							type="submit"
+						>
+							{isPending || isSubmitting
+								? t("authTranslations.signUp.submitting")
+								: t("authTranslations.signUp.submit")}
+						</Button>
+					)}
+				</form.Subscribe>
+			</FieldSet>
 
 			<FieldDescription className="text-center">
 				{t("authTranslations.signIn.hasAccount")}{" "}
@@ -382,6 +149,6 @@ export function SignUpForm() {
 					{t("authTranslations.signUp.toSignIn")}
 				</Link>
 			</FieldDescription>
-		</div>
+		</form>
 	);
 }

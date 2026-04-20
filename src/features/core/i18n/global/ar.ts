@@ -125,6 +125,7 @@ export default {
   getStarted: "يلا نبدأ مجاناً",
   premium: "مميز",
   error: "حدث خطأ {error}. يرجى المحاولة مرة أخرى لاحقًا.",
+  errorTitle: "خطأ!",
   success: "تمت العملية بنجاح!",
   loading: "جاري التحميل...",
   tour: {
