@@ -2,9 +2,9 @@
 
 import { useTransition } from "react";
 import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Status, StatusIndicator, StatusLabel } from "@/components/ui/status";
-import { H3, P } from "@/components/ui/typography";
 import { beginEmailVerificationAction } from "@/features/core/auth/nextjs/actions";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { useTranslation } from "@/features/core/i18n/client";
@@ -46,8 +46,6 @@ export function EmailVerificationNotice({
 
     return (
         <div>
-            <H3>{t("authTranslations.emailVerification.notice.title")}</H3>
-            <P>{email}</P>
             <Status variant="error">
                 <StatusIndicator />
                 <StatusLabel>

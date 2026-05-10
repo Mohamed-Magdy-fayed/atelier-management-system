@@ -1,18 +1,18 @@
 "use client";
 
+import { UserLockIcon } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
+
 import { useAppForm } from "@/components/forms/hooks";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import { FieldGroup, FieldSet } from "@/components/ui/field";
+import { LoadingSwap } from "@/components/ui/loading-swap";
 import {
     changePasswordAction,
     createPasswordAction,
 } from "@/features/core/auth/nextjs/actions";
-import {
-    changePasswordSchema as changePasswordFormSchema,
-} from "@/features/core/auth/schemas";
+import { changePasswordSchema as changePasswordFormSchema } from "@/features/core/auth/schemas";
 import { useTranslation } from "@/features/core/i18n/client";
 import { cn } from "@/lib/utils";
 
@@ -98,13 +98,19 @@ export function ChangePasswordForm({
                     </form.AppField>
                 </FieldGroup>
 
-                <ButtonGroup className="justify-end">
-                    <Button type="submit">
-                        {isPending
-                            ? t("authTranslations.profile.password.updating")
-                            : t("authTranslations.profile.password.submit")}
-                    </Button>
-                </ButtonGroup>
+                <form.Subscribe selector={(state) => state.isSubmitting}>
+                    {(isSubmitting) => (
+                        <Button type="submit" disabled={isPending || isSubmitting}>
+                            <LoadingSwap
+                                isLoading={isPending || isSubmitting}
+                                loadingText={t("authTranslations.profile.password.updating")}
+                            >
+                                <UserLockIcon />
+                                {t("authTranslations.profile.password.submit")}
+                            </LoadingSwap>
+                        </Button>
+                    )}
+                </form.Subscribe>
             </FieldSet>
         </form>
     );

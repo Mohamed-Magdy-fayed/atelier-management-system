@@ -14,7 +14,7 @@ import {
     InputOTPSeparator,
     InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { LoadingSwap } from "@/components/ui/loading-swap";
+import { Spinner } from "@/components/ui/spinner";
 import { resetPasswordAction } from "@/features/core/auth/nextjs/actions";
 import { passwordResetSubmissionSchema } from "@/features/core/auth/schemas";
 import { useTranslation } from "@/features/core/i18n/client";
@@ -99,10 +99,17 @@ export function ResetPasswordForm({
             <ButtonGroup>
                 <BackLink href="/forgot-password" variant={"outline"} />
                 <Button disabled={isPending} type="submit">
-                    <LoadingSwap isLoading={isPending}>
-                        <SaveIcon />
-                        {t("authTranslations.passwordReset.reset.submit")}
-                    </LoadingSwap>
+                    {isPending ? (
+                        <>
+                            <Spinner />
+                            {t("authTranslations.loading")}
+                        </>
+                    ) : (
+                        <>
+                            <SaveIcon />
+                            {t("authTranslations.passwordReset.reset.submit")}
+                        </>
+                    )}
                 </Button>
             </ButtonGroup>
         </form>

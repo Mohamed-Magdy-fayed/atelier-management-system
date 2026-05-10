@@ -1,16 +1,14 @@
 "use client";
 
 import { useStore } from "@tanstack/react-form";
-import {
-    type SubmitEventHandler,
-    useCallback,
-    useTransition,
-} from "react";
+import { SaveIcon } from "lucide-react";
+import { type SubmitEventHandler, useCallback, useTransition } from "react";
 import { toast } from "sonner";
-
 import { useAppForm } from "@/components/forms/hooks";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { FieldGroup, FieldSet } from "@/components/ui/field";
+import { LoadingSwap } from "@/components/ui/loading-swap";
 import { updateProfileNameAction } from "@/features/core/auth/nextjs/actions";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { defaultAvatar } from "@/features/core/auth/nextjs/components/user-avatar";
@@ -51,7 +49,6 @@ export function ProfileForm({ callback }: { callback?: () => void }) {
                 });
             });
         },
-
     });
     const imageUrl = useStore(form.store, (state) => state.values.imageUrl);
 
@@ -108,10 +105,19 @@ export function ProfileForm({ callback }: { callback?: () => void }) {
                         )}
                     </form.AppField>
                 </FieldGroup>
-                <form.Subscribe selector={({ isSubmitting }) => isSubmitting}>
-                    {isPending
-                        ? t("authTranslations.profile.form.saving")
-                        : t("authTranslations.profile.form.submit")}
+                <form.Subscribe selector={(state) => state.isSubmitting}>
+                    {(isSubmitting) => (
+                        <Button
+                            className="w-full"
+                            disabled={isPending || isSubmitting}
+                            type="submit"
+                        >
+                            <LoadingSwap isLoading={isPending || isSubmitting} loadingText={t("authTranslations.profile.form.saving")}>
+                                <SaveIcon />
+                                {t("authTranslations.profile.form.submit")}
+                            </LoadingSwap>
+                        </Button>
+                    )}
                 </form.Subscribe>
             </FieldSet>
         </form>

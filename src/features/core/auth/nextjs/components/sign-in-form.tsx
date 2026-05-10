@@ -208,9 +208,19 @@ export function SignInForm() {
 							<ArrowLeftIcon className="rtl:rotate-180" />
 							{t("authTranslations.signIn.back")}
 						</Button>
-						<Button className="flex-1" disabled={isPending} type="submit">
-							{t("authTranslations.signIn.submit")}
-						</Button>
+						<form.Subscribe selector={(state) => state.isSubmitting}>
+							{(isSubmitting) => (
+								<Button
+									className="flex-1"
+									disabled={isPending || isSubmitting}
+									type="submit"
+								>
+									{isPending || isSubmitting
+										? t("authTranslations.signIn.submitting")
+										: t("authTranslations.signIn.submit")}
+								</Button>
+							)}
+						</form.Subscribe>
 					</div>
 				</Activity>
 

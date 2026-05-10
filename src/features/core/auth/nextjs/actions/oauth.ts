@@ -2,6 +2,7 @@
 
 import { and, eq, sql } from "drizzle-orm";
 import { cacheTag } from "next/cache";
+import { cookies } from "next/headers";
 import { z } from "zod";
 
 import { db } from "@/drizzle";
@@ -11,7 +12,11 @@ import {
     UserCredentialsTable,
     UserOAuthAccountsTable,
 } from "@/drizzle/schema";
-import { getUserIdTag, revalidateAuthCache } from "@/features/core/auth/db-cache";
+import { getOAuthClient } from "@/features/core/auth/core";
+import {
+    getUserIdTag,
+    revalidateAuthCache,
+} from "@/features/core/auth/db-cache";
 import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
 import type {
     OAuthConnection,
@@ -20,8 +25,11 @@ import type {
 import { getT } from "@/features/core/i18n/server";
 
 const providerSchema = z.enum(oAuthProviderValues);
+const OAUTH_POPUP_MODE_COOKIE = "oAuthPopupMode";
 
-export async function listOAuthConnectionsAction(): Promise<TypedResponse<{ connections: OAuthConnection[] }>> {
+export async function listOAuthConnectionsAction(): Promise<
+    TypedResponse<{ connections: OAuthConnection[] }>
+> {
     const { id: userId } = await getCurrentUser({ redirectIfNotFound: true });
 
     const connections = await getUserOAuthConnections(userId);
@@ -49,6 +57,37 @@ async function getUserOAuthConnections(userId: string) {
         connected: connectedMap.has(provider),
         connectedAt: connectedMap.get(provider)?.createdAt ?? null,
     }));
+}
+
+export async function getOAuthConnectUrlAction(
+    rawInput: z.infer<typeof providerSchema>,
+): Promise<TypedResponse<{ url: string }>> {
+    const { t } = await getT();
+    await getCurrentUser({ redirectIfNotFound: true });
+
+    const parsed = providerSchema.safeParse(rawInput);
+
+    if (!parsed.success) {
+        return {
+            isError: true,
+            message: t("authTranslations.error.badRequest"),
+        };
+    }
+
+    const cookieStore = await cookies();
+    cookieStore.set(OAUTH_POPUP_MODE_COOKIE, "connect", {
+        secure: true,
+        httpOnly: true,
+        sameSite: "lax",
+        maxAge: 60 * 10,
+        path: "/",
+    });
+
+    const oAuthClient = getOAuthClient(parsed.data);
+    return {
+        isError: false,
+        url: oAuthClient.createAuthUrl(cookieStore),
+    };
 }
 
 export async function disconnectOAuthAccountAction(

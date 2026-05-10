@@ -57,6 +57,7 @@ export default {
             continue: "Continue",
             back: "Back",
             submit: "Sign In",
+            submitting: "Signing in...",
             error: {
                 generic: "Unable to log you in",
                 inactive: "Account is not active",

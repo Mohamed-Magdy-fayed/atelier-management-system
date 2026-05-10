@@ -20,10 +20,14 @@ import {
 import { getUserIdTag } from "@/features/core/auth/db-cache";
 import type { PartialUser } from "@/features/core/auth/types";
 
+const OAUTH_POPUP_MODE_COOKIE = "oAuthPopupMode";
+
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ provider: string }> },
 ) {
+    const cookieJar = await cookies();
+    const isPopupConnect = cookieJar.get(OAUTH_POPUP_MODE_COOKIE)?.value === "connect";
     const { provider: rawProvider } = await params;
     const code = request.nextUrl.searchParams.get("code");
     const state = request.nextUrl.searchParams.get("state");
@@ -32,6 +36,11 @@ export async function GET(
         .safeParse(rawProvider);
 
     if (typeof code !== "string" || typeof state !== "string" || !success) {
+        if (isPopupConnect) {
+            cookieJar.delete(OAUTH_POPUP_MODE_COOKIE);
+            redirect(getOAuthCompleteUrl({ status: "error" }));
+        }
+
         redirect(
             `/sign-in?oauthError=${encodeURIComponent(
                 "Failed to connect. Please try again.",
@@ -39,9 +48,10 @@ export async function GET(
         );
     }
 
-    const cookieJar = await cookies();
     const currentSession = await getUserSession(cookieJar);
     const oAuthClient = getOAuthClient(provider);
+    let oAuthErrorMessage: string | null = null;
+
     try {
         const oAuthUser = await oAuthClient.fetchUser(code, state, cookieJar);
 
@@ -65,25 +75,62 @@ export async function GET(
     } catch (error) {
         console.error(error);
 
-        const message =
+        oAuthErrorMessage =
             error instanceof Error || error instanceof DrizzleError
                 ? error.message || "Failed to connect. Please try again."
                 : "Failed to connect. Please try again.";
 
         // store error in a cookie so client pages (including pages behind auth) can display it
         try {
-            cookieJar.set("oauthError", message);
+            cookieJar.set("oauthError", oAuthErrorMessage);
         } catch { }
+    }
 
-        if (error instanceof Error) {
-            redirect(`/sign-in?oauthError=${encodeURIComponent(message)}`);
-        } else if (error instanceof DrizzleError) {
-            redirect(`/sign-in?oauthError=${encodeURIComponent(message)}`);
+    cookieJar.delete(OAUTH_POPUP_MODE_COOKIE);
+
+    if (oAuthErrorMessage) {
+        if (isPopupConnect) {
+            redirect(
+                getOAuthCompleteUrl({
+                    status: "error",
+                    provider,
+                    message: oAuthErrorMessage,
+                }),
+            );
         }
+
+        redirect(`/sign-in?oauthError=${encodeURIComponent(oAuthErrorMessage)}`);
     }
 
     revalidateTag(getUserIdTag(currentSession?.user.id || ""), "max");
+
+    if (isPopupConnect) {
+        redirect(getOAuthCompleteUrl({ status: "success", provider }));
+    }
+
     redirect("/");
+}
+
+function getOAuthCompleteUrl({
+    status,
+    provider,
+    message,
+}: {
+    status: "success" | "error";
+    provider?: OAuthProvider;
+    message?: string;
+}) {
+    const searchParams = new URLSearchParams({ status });
+
+    if (provider) {
+        searchParams.set("provider", provider);
+    }
+
+    if (message) {
+        searchParams.set("message", message);
+    }
+
+    return `/oauth/complete?${searchParams.toString()}`;
 }
 
 type ConnectOptions = { currentUserId?: string };
@@ -97,14 +144,13 @@ function connectUserToAccount(
     }: { id: string; email: string; name: string; imageUrl?: string },
     provider: OAuthProvider,
     options: ConnectOptions = {},
-) {
+): Promise<PartialUser> {
     return db.transaction(async (trx) => {
         const normalizedEmail = normalizeEmail(email);
         const existingUser = options.currentUserId
             ? await trx.query.UsersTable.findFirst({
                 columns: {
                     id: true,
-                    emailVerified: true,
                     role: true,
                     name: true,
                     email: true,
@@ -117,7 +163,6 @@ function connectUserToAccount(
             : await trx.query.UsersTable.findFirst({
                 columns: {
                     id: true,
-                    emailVerified: true,
                     role: true,
                     name: true,
                     email: true,
@@ -128,7 +173,7 @@ function connectUserToAccount(
                 where: eq(UsersTable.email, normalizedEmail),
             });
 
-        let user = existingUser;
+        let user: PartialUser | null = existingUser ?? null;
 
         if (user == null) {
             const [newUser] = await trx
@@ -169,18 +214,20 @@ function connectUserToAccount(
                 throw new Error("This OAuth account is already linked to another user");
             }
 
-            if (user.emailVerifiedAt == null) {
-                await trx
-                    .update(UsersTable)
-                    .set({ emailVerifiedAt: new Date() })
-                    .where(eq(UsersTable.id, user.id));
-            }
+            await trx
+                .update(UsersTable)
+                .set({ emailVerifiedAt: new Date() })
+                .where(eq(UsersTable.id, user.id));
         }
 
         await trx
             .insert(UserOAuthAccountsTable)
             .values({ provider, providerAccountId: id, userId: user.id })
             .onConflictDoNothing();
+
+        if (user == null) {
+            throw new Error("Unable to resolve user from OAuth profile");
+        }
 
         return user;
     });

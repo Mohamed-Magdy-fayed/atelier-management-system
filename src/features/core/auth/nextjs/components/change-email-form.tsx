@@ -1,5 +1,6 @@
 "use client";
 
+import { SendIcon } from "lucide-react";
 import {
 	type FormEvent,
 	useCallback,
@@ -10,16 +11,12 @@ import {
 import { toast } from "sonner";
 import { useAppForm } from "@/components/forms/hooks";
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import {
-	Field,
 	FieldDescription,
-	FieldError,
 	FieldGroup,
-	FieldLabel,
 	FieldSet,
 } from "@/components/ui/field";
-import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
+import { LoadingSwap } from "@/components/ui/loading-swap";
 import { beginEmailChangeAction } from "@/features/core/auth/nextjs/actions";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { changeEmailSchema } from "@/features/core/auth/schemas";
@@ -87,9 +84,9 @@ export function ChangeEmailForm() {
 	}, [errorMessage, hasEmail, status, t]);
 
 	return (
-		<form className="space-y-6" onSubmit={handleSubmit}>
+		<form onSubmit={handleSubmit}>
 			<p>{description}</p>
-			<FieldSet className="space-y-6" disabled={isPending}>
+			<FieldSet className="space-y-4" disabled={isPending}>
 				<FieldGroup>
 					{hasEmail ? (
 						<FieldDescription className="text-start text-muted-foreground text-sm">
@@ -125,47 +122,28 @@ export function ChangeEmailForm() {
 					</form.AppField>
 
 					<form.AppField name="currentPassword">
-						{(field) => {
-							const isInvalid =
-								field.state.meta.isTouched && !field.state.meta.isValid;
-							const errors = field.state.meta.errors.flatMap((error) => {
-								if (!error) return [];
-								if (typeof error === "string") return [{ message: error }];
-								return [error as { message?: string }];
-							});
-
-							return (
-								<Field data-invalid={isInvalid}>
-									<FieldLabel htmlFor={field.name}>
-										{t("authTranslations.profile.email.currentPasswordLabel")}
-									</FieldLabel>
-									<InputGroup>
-										<InputGroupInput
-											aria-invalid={isInvalid}
-											autoComplete="current-password"
-											id={field.name}
-											name={field.name}
-											onBlur={field.handleBlur}
-											onChange={(e) => field.handleChange(e.target.value)}
-											type="password"
-											value={field.state.value}
-										/>
-									</InputGroup>
-									<FieldError errors={errors} />
-								</Field>
-							);
-						}}
+						{(field) => (
+							<field.PasswordField
+								label={t("authTranslations.profile.email.currentPasswordLabel")}
+							/>
+						)}
 					</form.AppField>
 				</FieldGroup>
-				<ButtonGroup className="justify-end">
-					<Button disabled={isPending} type="submit">
-						{isPending
-							? t("authTranslations.profile.email.sending")
-							: hasEmail
-								? t("authTranslations.profile.email.submit")
-								: t("authTranslations.profile.email.addSubmit")}
-					</Button>
-				</ButtonGroup>
+				<form.Subscribe selector={(state) => state.isSubmitting}>
+					{(isSubmitting) => (
+						<Button disabled={isPending} type="submit">
+							<LoadingSwap
+								isLoading={isPending || isSubmitting}
+								loadingText={t("authTranslations.profile.email.sending")}
+							>
+								<SendIcon />
+								{hasEmail
+									? t("authTranslations.profile.email.submit")
+									: t("authTranslations.profile.email.addSubmit")}
+							</LoadingSwap>
+						</Button>
+					)}
+				</form.Subscribe>
 			</FieldSet>
 		</form>
 	);

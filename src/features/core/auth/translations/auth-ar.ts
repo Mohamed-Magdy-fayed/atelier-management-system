@@ -57,6 +57,7 @@ export default {
             continue: "متابعة",
             back: "عودة",
             submit: "تسجيل الدخول",
+            submitting: "جارٍ تسجيل الدخول...",
             error: {
                 generic: "تعذر تسجيل الدخول",
                 inactive: "الحساب غير نشط",

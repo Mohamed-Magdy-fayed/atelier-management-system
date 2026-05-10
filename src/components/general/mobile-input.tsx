@@ -157,6 +157,7 @@ export const MobileNumberInput = memo(function MobileNumberInput({
             onChange={handleChange}
             placeholder={placeholder}
             value={formattedValue}
+            initialValueFormat="national"
         />
     );
 });

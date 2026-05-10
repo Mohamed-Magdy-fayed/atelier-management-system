@@ -62,6 +62,8 @@ export function AuthManager({ trigger }: { trigger: React.ReactElement }) {
                 <ProfileForm callback={() => setOpenDialog(undefined)} />
             </SystemDialog>
             <SystemDialog
+                titleRender={() => <H4>{t("authTranslations.emailVerification.notice.title")}</H4>}
+                descriptionRender={() => <Muted>{session.user.email}</Muted>}
                 onOpenChange={(open) => setOpenDialog(open ? "email" : undefined)}
                 isOpen={openDialog === "email"}
             >
@@ -85,12 +87,16 @@ export function AuthManager({ trigger }: { trigger: React.ReactElement }) {
                 />
             </SystemDialog>
             <SystemDialog
+                titleRender={() => <H4>{t("authTranslations.oauth.connections.title")}</H4>}
+                descriptionRender={() => <Muted>{t("authTranslations.oauth.connections.description")}</Muted>}
                 onOpenChange={(open) => setOpenDialog(open ? "oauth" : undefined)}
                 isOpen={openDialog === "oauth"}
             >
                 <OAuthConnections />
             </SystemDialog>
             <SystemDialog
+                titleRender={() => <H4>{t("authTranslations.passkeys.manage")}</H4>}
+                descriptionRender={() => <Muted>{t("authTranslations.passkeys.settings.description")}</Muted>}
                 onOpenChange={(open) => setOpenDialog(open ? "passkeys" : undefined)}
                 isOpen={openDialog === "passkeys"}
             >

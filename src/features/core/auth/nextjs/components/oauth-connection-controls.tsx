@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import type { OAuthProvider } from "@/drizzle/schema";
 import {
     disconnectOAuthAccountAction,
-    oAuthSignIn,
+    getOAuthConnectUrlAction,
 } from "@/features/core/auth/nextjs/actions";
 import { useTranslation } from "@/features/core/i18n/client";
 
@@ -24,9 +24,36 @@ export function OAuthConnectionControls({
     const { t } = useTranslation();
     const [isPending, startTransition] = useTransition();
 
+    function openOAuthPopup(url: string) {
+        const width = 520;
+        const height = 700;
+        const left = window.screenX + Math.max(0, (window.outerWidth - width) / 2);
+        const top = window.screenY + Math.max(0, (window.outerHeight - height) / 2);
+
+        return window.open(
+            url,
+            "oauth-connect",
+            `popup=yes,width=${width},height=${height},left=${Math.round(left)},top=${Math.round(top)}`,
+        );
+    }
+
     function startOAuth() {
         startTransition(async () => {
-            await oAuthSignIn(provider);
+            const res = await getOAuthConnectUrlAction(provider);
+
+            if (res.isError) {
+                toast.error(res.message);
+                return;
+            }
+
+            const popup = openOAuthPopup(res.url);
+
+            if (popup) {
+                popup.focus();
+                return;
+            }
+
+            window.location.assign(res.url);
         });
     }
 

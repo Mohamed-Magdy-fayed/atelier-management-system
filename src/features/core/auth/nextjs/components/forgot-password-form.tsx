@@ -16,7 +16,7 @@ export function ForgotPasswordForm() {
     const [isPending, startTransition] = useTransition();
 
     const form = useAppForm({
-        defaultValues: { phone: "" },
+        defaultValues: { email: "" },
         validators: { onSubmit: passwordResetRequestSchema },
         onSubmit: async ({ value }) => {
             startTransition(async () => {
@@ -35,12 +35,12 @@ export function ForgotPasswordForm() {
             form.handleSubmit();
         }}>
             <FieldGroup>
-                <form.AppField name="phone">
+                <form.AppField name="email">
                     {(field) => (
-                        <field.MobileField
+                        <field.EmailField
                             autoFocus
-                            label={t("authTranslations.signIn.phoneLabel")}
-                            placeholder="012 3456789"
+                            label={t("authTranslations.signIn.emailLabel")}
+                            placeholder="example@example.com"
                         />
                     )}
                 </form.AppField>

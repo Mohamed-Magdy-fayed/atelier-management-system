@@ -9,6 +9,7 @@ import {
     FieldError,
     FieldLabel,
 } from "@/components/ui/field";
+import { useTranslation } from "@/features/core/i18n/client";
 import { useFieldContext } from "./hooks";
 
 export type FormFieldProps = {
@@ -29,12 +30,38 @@ export function FormBase({
     controlFirst,
 }: FormBaseProps) {
     const field = useFieldContext();
+    const { t } = useTranslation();
     const isInvalid =
         field.state.meta.isTouched && !field.state.meta.isValid;
 
-    const errors = field.state.meta.errors.map((e) =>
-        typeof e === "string" ? { message: e } : (e as { message?: string }),
-    );
+    const translateErrorMessage = (message?: string) => {
+        if (!message) {
+            return message;
+        }
+
+        const isTranslationKey = /^[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)+$/u.test(
+            message,
+        );
+
+        if (!isTranslationKey) {
+            return message;
+        }
+
+        try {
+            return t(message as never);
+        } catch {
+            return message;
+        }
+    };
+
+    const errors = field.state.meta.errors.map((e) => {
+        if (typeof e === "string") {
+            return { message: translateErrorMessage(e) };
+        }
+
+        const message = (e as { message?: string })?.message;
+        return { ...(e as object), message: translateErrorMessage(message) };
+    });
 
     const labelElement = (
         <>

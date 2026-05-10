@@ -15,6 +15,7 @@ const authRoutes = [
 
 const publicRoutes = [
     "/verify-email",
+    "/oauth/",
 ];
 
 export async function proxy(request: NextRequest) {

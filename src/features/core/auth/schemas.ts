@@ -54,7 +54,7 @@ export const changeEmailSchema = z
 		confirmEmail: z.email(translationKey("authTranslations.validation.invalidEmail")),
 		// Some accounts (OAuth-only) may not have a password set.
 		// Keep the value as a string (possibly empty) so it matches form inputs.
-		currentPassword: z.string(),
+		currentPassword: passwordSchema,
 	})
 	.superRefine((values, ctx) => {
 		if (values.newEmail !== values.confirmEmail) {
@@ -86,9 +86,9 @@ export const passwordResetSubmissionSchema = z.object({
 
 export const changePasswordSchema = z
 	.object({
-		currentPassword: z.string(),
+		currentPassword: passwordSchema,
 		newPassword: passwordSchema,
-		confirmPassword: z.string(),
+		confirmPassword: passwordSchema,
 	})
 	.superRefine((values, ctx) => {
 		if (values.newPassword !== values.confirmPassword) {

@@ -44,8 +44,6 @@ export function SystemDialog({
     actions,
 }: SystemDialogProps) {
     return (
-
-
         <Dialog open={isOpen} onOpenChange={onOpenChange} modal>
             <DialogTrigger render={triggerRender} />
             <DialogContent className="overflow-hidden">

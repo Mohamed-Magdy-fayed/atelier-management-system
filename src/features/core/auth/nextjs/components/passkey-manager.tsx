@@ -1,9 +1,11 @@
 "use client";
 
 import { startRegistration } from "@simplewebauthn/browser";
+import { FingerprintPatternIcon } from "lucide-react";
 import { startTransition, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingSwap } from "@/components/ui/loading-swap";
 import {
     beginPasskeyRegistrationAction,
     completePasskeyRegistrationAction,
@@ -99,11 +101,6 @@ export function PasskeyManager() {
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-muted-foreground text-sm">
-                    {t("authTranslations.passkeys.settings.description")}
-                </p>
-            </div>
             <ul className="space-y-3">
                 {passkeys.length === 0 && (
                     <li className="rounded border border-dashed px-3 py-4 text-muted-foreground text-sm">
@@ -144,9 +141,13 @@ export function PasskeyManager() {
             </ul>
 
             <Button disabled={isRegistering} onClick={handleRegister}>
-                {isRegistering
-                    ? t("authTranslations.passkeys.registering")
-                    : t("authTranslations.passkeys.add")}
+                <LoadingSwap
+                    isLoading={isRegistering}
+                    loadingText={t("authTranslations.passkeys.registering")}
+                >
+                    <FingerprintPatternIcon />
+                    {t("authTranslations.passkeys.add")}
+                </LoadingSwap>
             </Button>
         </div>
     );
