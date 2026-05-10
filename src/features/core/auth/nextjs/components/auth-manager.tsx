@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Activity, startTransition, useState } from "react";
 
-import { ResponsiveDialog } from "@/components/general/responsive-dialog";
+import { SystemDialog } from "@/components/general/system-dialog";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
     DropdownMenu,
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Status, StatusIndicator } from "@/components/ui/status";
+import { H4, Muted } from "@/components/ui/typography";
 import { signOutAction } from "@/features/core/auth/nextjs/actions";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { ChangeEmailForm } from "@/features/core/auth/nextjs/components/change-email-form";
@@ -50,15 +51,19 @@ export function AuthManager({ trigger }: { trigger: React.ReactElement }) {
 
     return (
         <>
-            <ResponsiveDialog
+            <SystemDialog
                 onOpenChange={(open) => setOpenDialog(open ? "profile" : undefined)}
-                open={openDialog === "profile"}
+                isOpen={openDialog === "profile"}
+                titleRender={() => <H4>{t("authTranslations.profile.title")}</H4>}
+                descriptionRender={() => (
+                    <Muted>{t("authTranslations.profile.description")}</Muted>
+                )}
             >
                 <ProfileForm callback={() => setOpenDialog(undefined)} />
-            </ResponsiveDialog>
-            <ResponsiveDialog
+            </SystemDialog>
+            <SystemDialog
                 onOpenChange={(open) => setOpenDialog(open ? "email" : undefined)}
-                open={openDialog === "email"}
+                isOpen={openDialog === "email"}
             >
                 <div className="flex flex-col gap-4">
                     <EmailVerificationNotice
@@ -69,28 +74,28 @@ export function AuthManager({ trigger }: { trigger: React.ReactElement }) {
                         <ChangeEmailForm />
                     </Activity>
                 </div>
-            </ResponsiveDialog>
-            <ResponsiveDialog
+            </SystemDialog>
+            <SystemDialog
                 onOpenChange={(open) => setOpenDialog(open ? "password" : undefined)}
-                open={openDialog === "password"}
+                isOpen={openDialog === "password"}
             >
                 <ChangePasswordForm
                     callback={() => setOpenDialog(undefined)}
                     isCreate={!session?.hasPassword}
                 />
-            </ResponsiveDialog>
-            <ResponsiveDialog
+            </SystemDialog>
+            <SystemDialog
                 onOpenChange={(open) => setOpenDialog(open ? "oauth" : undefined)}
-                open={openDialog === "oauth"}
+                isOpen={openDialog === "oauth"}
             >
                 <OAuthConnections />
-            </ResponsiveDialog>
-            <ResponsiveDialog
+            </SystemDialog>
+            <SystemDialog
                 onOpenChange={(open) => setOpenDialog(open ? "passkeys" : undefined)}
-                open={openDialog === "passkeys"}
+                isOpen={openDialog === "passkeys"}
             >
                 <PasskeyManager />
-            </ResponsiveDialog>
+            </SystemDialog>
             <DropdownMenu>
                 <DropdownMenuTrigger render={trigger} />
                 <DropdownMenuContent

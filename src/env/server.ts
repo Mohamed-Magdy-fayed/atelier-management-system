@@ -29,6 +29,8 @@ export const env = createEnv({
     SMTP_FROM_EMAIL: z.email().optional(),
     SMTP_FROM_NAME: z.string().min(1).optional(),
 
+    CLOUDINARY_API_SECRET: z.string().min(1),
+
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),

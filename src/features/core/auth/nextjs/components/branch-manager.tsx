@@ -11,7 +11,6 @@ import {
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { ResponsiveDialog } from "@/components/general/responsive-dialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -43,6 +42,7 @@ import { BranchForm } from "@/features/core/auth/nextjs/components/branch-form";
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { SystemDialog } from "@/components/general/system-dialog";
 
 export function BranchManager() {
     const isMobile = useIsMobile();
@@ -110,18 +110,18 @@ export function BranchManager() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            <ResponsiveDialog
+            <SystemDialog
                 onOpenChange={(val) => setOpenDialog(val ? "org:create" : undefined)}
-                open={openDialog === "org:create"}
+                isOpen={openDialog === "org:create"}
             >
                 <Lead className="mb-4">
                     {t("authTranslations.branch.create.title")}
                 </Lead>
                 <BranchForm onSuccess={() => setOpenDialog(undefined)} />
-            </ResponsiveDialog>
-            <ResponsiveDialog
+            </SystemDialog>
+            <SystemDialog
                 onOpenChange={(open) => setEditingOrg(open ? editingOrg : undefined)}
-                open={editingOrg !== undefined}
+                isOpen={editingOrg !== undefined}
             >
                 <Lead className="mb-4">{t("authTranslations.branch.edit.title")}</Lead>
                 {editingOrg ? (
@@ -130,7 +130,7 @@ export function BranchManager() {
                         onSuccess={() => setEditingOrg(undefined)}
                     />
                 ) : null}
-            </ResponsiveDialog>
+            </SystemDialog>
             <DropdownMenu>
                 <DropdownMenuTrigger
                     render={

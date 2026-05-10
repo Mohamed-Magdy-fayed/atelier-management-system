@@ -18,6 +18,7 @@ export default {
             phoneMin: "Phone number must be at least 7 characters",
             phoneMax: "Phone number must be at most 16 characters",
             invalidEmail: "Please enter a valid email address",
+            invalidUrl: "Please enter a valid URL",
         },
         or: "Or",
         setPassword: "Set Password",
@@ -261,6 +262,14 @@ export default {
         profile: {
             title: "Profile Settings",
             description: "Manage your account profile information",
+            imageUrl: {
+                label: "Profile image",
+                placeholder: "Select profile image",
+            },
+            age: {
+                label: "Age",
+                placeholder: "Enter your age if you'd like to share it",
+            },
             error: {
                 invalidInput: "Invalid input",
             },

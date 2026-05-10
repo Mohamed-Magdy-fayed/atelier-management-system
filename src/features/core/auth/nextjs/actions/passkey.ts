@@ -14,6 +14,7 @@ import {
     verifyRegistrationResponse,
 } from "@simplewebauthn/server";
 import { and, desc, eq } from "drizzle-orm";
+import { cacheTag } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -27,6 +28,7 @@ import {
 import { env } from "@/env/server";
 import { createUserSession } from "@/features/core/auth/core";
 import { hashTokenValue } from "@/features/core/auth/core/token";
+import { getUserIdTag, revalidateAuthCache } from "@/features/core/auth/db-cache";
 import { validateInput } from "@/features/core/auth/nextjs/actions/helpers";
 import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
 import type {
@@ -41,7 +43,6 @@ import { getT } from "@/features/core/i18n/server";
 const PASSKEY_CHALLENGE_TTL_MS = 1000 * 60 * 10;
 const EXPECTED_ORIGIN = new URL(env.BASE_URL).origin;
 
-const userIdSchema = z.uuid();
 const deletePasskeySchema = z.object({ passkeyId: z.uuid() });
 const authResponseSchema = z.custom<AuthenticationResponseJSON>();
 const registrationResponseSchema = z.custom<RegistrationResponseJSON>();
@@ -228,19 +229,11 @@ export async function beginPasskeyAuthenticationAction(
 
 export async function beginPasskeyRegistrationAction(): Promise<RegistrationOptionsResult> {
     const { t } = await getT();
-    const { id: rawUserId } = await getCurrentUser({ redirectIfNotFound: true });
-
-    const parsedUserId = userIdSchema.safeParse(rawUserId);
-    if (!parsedUserId.success) {
-        return {
-            isError: true,
-            message: t("authTranslations.passkeys.auth.error.userNotFound"),
-        };
-    }
+    const { id: userId } = await getCurrentUser({ redirectIfNotFound: true });
 
     const user = await db.query.UsersTable.findFirst({
         columns: { id: true, email: true, name: true },
-        where: eq(UsersTable.id, parsedUserId.data),
+        where: eq(UsersTable.id, userId),
     });
     if (!user) {
         return {
@@ -295,6 +288,8 @@ export async function beginPasskeyRegistrationAction(): Promise<RegistrationOpti
         challenge: options.challenge,
         operation: "passkey-registration",
     });
+
+    revalidateAuthCache({ id: userId, branchId: "" });
 
     return { isError: false, options };
 }
@@ -446,19 +441,10 @@ export async function completePasskeyRegistrationAction(
     rawAttestation: z.infer<typeof registrationResponseSchema>,
 ): Promise<TypedResponse<{ userId: string }>> {
     const { t } = await getT();
-    const { id: rawUserId } = await getCurrentUser({ redirectIfNotFound: true });
+    const { id: userId } = await getCurrentUser({ redirectIfNotFound: true });
 
-    const parsedAttestation =
-        registrationResponseSchema.safeParse(rawAttestation);
-    const parsedUserId = userIdSchema.safeParse(rawUserId);
-    if (!parsedAttestation.success || !parsedUserId.success) {
-        return {
-            isError: true,
-            message: t("authTranslations.passkeys.register.invalidChallenge"),
-        };
-    }
+    const attestation = await validateInput(registrationResponseSchema, rawAttestation)
 
-    const userId = parsedUserId.data;
     const challenge = await consumeChallengeToken({
         userId,
         operation: "passkey-registration",
@@ -481,7 +467,7 @@ export async function completePasskeyRegistrationAction(
     }
 
     const verification = await verifyRegistrationResponse({
-        response: parsedAttestation.data,
+        response: attestation,
         expectedChallenge: challenge.challenge,
         expectedOrigin: EXPECTED_ORIGIN,
         expectedRPID: rpId,
@@ -503,9 +489,9 @@ export async function completePasskeyRegistrationAction(
     const credentialPublicKey = credential.publicKey;
     const transports = Array.isArray(credential.transports)
         ? credential.transports
-        : parsedAttestation.data.response.transports &&
-            Array.isArray(parsedAttestation.data.response.transports)
-            ? parsedAttestation.data.response.transports
+        : attestation.response.transports &&
+            Array.isArray(attestation.response.transports)
+            ? attestation.response.transports
             : null;
 
     await db
@@ -535,15 +521,15 @@ export async function completePasskeyRegistrationAction(
 export async function listPasskeysAction(): Promise<
     TypedResponse<{ data: PasskeyListItem[] }>
 > {
-    const { t } = await getT();
-    const { id: rawUserId } = await getCurrentUser({ redirectIfNotFound: true });
-    const parsed = userIdSchema.safeParse(rawUserId);
-    if (!parsed.success) {
-        return {
-            isError: true,
-            message: t("authTranslations.error.badRequest"),
-        };
-    }
+    const { id: userId } = await getCurrentUser({ redirectIfNotFound: true });
+
+    const data = await getUserPasskeys(userId);
+    return { isError: false, data };
+}
+
+async function getUserPasskeys(userId: string) {
+    "use cache";
+    cacheTag(getUserIdTag(userId));
 
     const credentials = await db.query.BiometricCredentialsTable.findMany({
         columns: {
@@ -555,11 +541,11 @@ export async function listPasskeysAction(): Promise<
             isBackupState: true,
             transports: true,
         },
-        where: eq(BiometricCredentialsTable.userId, parsed.data),
+        where: eq(BiometricCredentialsTable.userId, userId),
         orderBy: (table, { desc }) => desc(table.createdAt),
     });
 
-    const data: PasskeyListItem[] = credentials.map((cred) => ({
+    return credentials.map((cred) => ({
         id: cred.id,
         label: cred.label,
         createdAt: cred.createdAt.toISOString(),
@@ -570,8 +556,6 @@ export async function listPasskeysAction(): Promise<
             ? (cred.transports as string[])
             : [],
     }));
-
-    return { isError: false, data };
 }
 
 export async function deletePasskeyAction(
@@ -606,6 +590,8 @@ export async function deletePasskeyAction(
     await db
         .delete(BiometricCredentialsTable)
         .where(eq(BiometricCredentialsTable.id, credential.id));
+
+    revalidateAuthCache({ id: userId, branchId: "" });
 
     return {
         isError: false,

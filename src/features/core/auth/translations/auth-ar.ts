@@ -18,6 +18,7 @@ export default {
             phoneMin: "يجب أن يتكون رقم الهاتف من 7 ارقام على الأقل",
             phoneMax: "يجب ألا يتجاوز رقم الهاتف 16 رقم",
             invalidEmail: "يرجى إدخال بريد إلكتروني صالح",
+            invalidUrl: "يرجى إدخال عنوان URL صالح",
         },
         or: "أو",
         setPassword: "تعيين كلمة المرور",
@@ -257,6 +258,14 @@ export default {
         profile: {
             title: "إعدادات الملف الشخصي",
             description: "إدارة معلومات ملف حسابك الشخصي",
+            imageUrl: {
+                label: "صورة الملف الشخصي",
+                placeholder: "اختر صورة للملف الشخصي",
+            },
+            age: {
+                label: "العمر",
+                placeholder: "أدخل عمرك إذا كنت ترغب في مشاركته",
+            },
             error: {
                 invalidInput: "بيانات غير صالحة",
             },

@@ -8,6 +8,13 @@
       "when": 1776549646870,
       "tag": "0000_romantic_ikaris",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1776721532652,
+      "tag": "0001_stiff_vengeance",
+      "breakpoints": true
     }
   ]
 }

@@ -1,8 +1,9 @@
 "use server";
 
 import { and, eq, sql } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { cacheTag } from "next/cache";
 import { z } from "zod";
+
 import { db } from "@/drizzle";
 import {
     type OAuthProvider,
@@ -10,6 +11,7 @@ import {
     UserCredentialsTable,
     UserOAuthAccountsTable,
 } from "@/drizzle/schema";
+import { getUserIdTag, revalidateAuthCache } from "@/features/core/auth/db-cache";
 import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
 import type {
     OAuthConnection,
@@ -19,10 +21,16 @@ import { getT } from "@/features/core/i18n/server";
 
 const providerSchema = z.enum(oAuthProviderValues);
 
-export async function listOAuthConnectionsAction(): Promise<
-    TypedResponse<{ data: OAuthConnection[] }>
-> {
+export async function listOAuthConnectionsAction(): Promise<TypedResponse<{ connections: OAuthConnection[] }>> {
     const { id: userId } = await getCurrentUser({ redirectIfNotFound: true });
+
+    const connections = await getUserOAuthConnections(userId);
+    return { isError: false, connections };
+}
+
+async function getUserOAuthConnections(userId: string) {
+    "use cache";
+    cacheTag(getUserIdTag(userId));
 
     const accounts = await db.query.UserOAuthAccountsTable.findMany({
         columns: { provider: true, providerAccountId: true, createdAt: true },
@@ -35,14 +43,12 @@ export async function listOAuthConnectionsAction(): Promise<
     const providerSet = new Set<OAuthProvider>(oAuthProviderValues);
     for (const account of accounts) providerSet.add(account.provider);
 
-    const result: OAuthConnection[] = Array.from(providerSet).map((provider) => ({
+    return Array.from(providerSet).map((provider) => ({
         provider,
         displayName: provider,
         connected: connectedMap.has(provider),
         connectedAt: connectedMap.get(provider)?.createdAt ?? null,
     }));
-
-    return { isError: false, data: result };
 }
 
 export async function disconnectOAuthAccountAction(
@@ -107,7 +113,6 @@ export async function disconnectOAuthAccountAction(
             ),
         );
 
-    revalidatePath("/");
-
+    revalidateAuthCache({ id: userId, branchId: "" });
     return { isError: false, disconnected: true };
 }

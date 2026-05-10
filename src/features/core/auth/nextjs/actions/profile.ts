@@ -1,7 +1,6 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import type { z } from "zod";
 
@@ -13,6 +12,7 @@ import {
     generateSalt,
     hashPassword,
 } from "@/features/core/auth/core/passwordHasher";
+import { revalidateAuthCache } from "@/features/core/auth/db-cache";
 import { validateInput } from "@/features/core/auth/nextjs/actions/helpers";
 import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
 import {
@@ -29,20 +29,11 @@ export async function updateProfileNameAction(
     const { t } = await getT();
     const { id: userId } = await getCurrentUser({ redirectIfNotFound: true });
 
-    const parsed = updateProfileSchema.safeParse(rawInput);
-    if (!parsed.success) {
-        return {
-            isError: true,
-            message: t("authTranslations.profile.error.invalidInput"),
-        };
-    }
+    const data = await validateInput(updateProfileSchema, rawInput);
 
-    await db
-        .update(UsersTable)
-        .set({ name: parsed.data.name.trim() })
-        .where(eq(UsersTable.id, userId));
+    await db.update(UsersTable).set(data).where(eq(UsersTable.id, userId));
 
-    revalidatePath("/");
+    revalidateAuthCache({ id: userId, branchId: "" });
 
     return {
         isError: false,

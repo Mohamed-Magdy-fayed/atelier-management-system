@@ -1,9 +1,9 @@
 import { and, DrizzleError, eq } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
-
 import { db } from "@/drizzle";
 import {
     type OAuthProvider,
@@ -11,7 +11,13 @@ import {
     UserOAuthAccountsTable,
     UsersTable,
 } from "@/drizzle/schema";
-import { createUserSession, getOAuthClient, getUserSession, normalizeEmail } from "@/features/core/auth/core";
+import {
+    createUserSession,
+    getOAuthClient,
+    getUserSession,
+    normalizeEmail,
+} from "@/features/core/auth/core";
+import { getUserIdTag } from "@/features/core/auth/db-cache";
 import type { PartialUser } from "@/features/core/auth/types";
 
 export async function GET(
@@ -76,13 +82,19 @@ export async function GET(
         }
     }
 
+    revalidateTag(getUserIdTag(currentSession?.user.id || ""), "max");
     redirect("/");
 }
 
 type ConnectOptions = { currentUserId?: string };
 
 function connectUserToAccount(
-    { id, email, name, imageUrl }: { id: string; email: string; name: string; imageUrl?: string },
+    {
+        id,
+        email,
+        name,
+        imageUrl,
+    }: { id: string; email: string; name: string; imageUrl?: string },
     provider: OAuthProvider,
     options: ConnectOptions = {},
 ) {

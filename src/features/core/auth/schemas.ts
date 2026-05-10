@@ -95,7 +95,7 @@ export const changePasswordSchema = z
 			ctx.addIssue({
 				code: "custom",
 				path: ["confirmPassword"],
-				message: "authTranslations.passwordMismatch",
+				message: translationKey("authTranslations.passwordMismatch"),
 			});
 		}
 	});
@@ -110,13 +110,16 @@ export const createPasswordSchema = z
 			ctx.addIssue({
 				code: "custom",
 				path: ["confirmPassword"],
-				message: "authTranslations.passwordMismatch",
+				message: translationKey("authTranslations.passwordMismatch"),
 			});
 		}
 	});
 
 export const updateProfileSchema = z.object({
-	name: z.string().trim().min(1, "authTranslations.required"),
+	name: z.string().trim().min(1, translationKey("authTranslations.required")),
+	phone: z.string().trim().nullable(),
+	imageUrl: z.url(translationKey("authTranslations.validation.invalidUrl")).nullable(),
+	age: z.number().int().positive().nullable(),
 });
 
 export const createBranchSchema = z.object({

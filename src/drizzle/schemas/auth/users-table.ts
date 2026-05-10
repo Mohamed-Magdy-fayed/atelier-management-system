@@ -7,6 +7,7 @@ import {
 	uniqueIndex,
 	varchar,
 } from "drizzle-orm/pg-core";
+
 import {
 	createdAt,
 	createdBy,
@@ -38,9 +39,8 @@ export const UsersTable = pgTable(
 		imageUrl: varchar({ length: 512 }),
 		role: userRoleEnum().notNull().default("customer"),
 		emailVerifiedAt: timestamp({ withTimezone: true }),
-		phoneVerifiedAt: timestamp({ withTimezone: true }),
 		lastSignInAt: timestamp({ withTimezone: true }),
-		salary: integer(),
+		age: integer(),
 		createdAt,
 		createdBy,
 		updatedAt,

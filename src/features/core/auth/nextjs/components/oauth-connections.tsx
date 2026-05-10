@@ -22,17 +22,15 @@ export function OAuthConnections() {
     const [error, setError] = useState<string>();
     const [connections, setConnections] = useState<OAuthConnection[]>([]);
 
-    async function listConnections() {
-        const res = await listOAuthConnectionsAction();
-        if (res.isError) {
-            setError(res.message);
-            return;
-        }
-        setConnections(res.data);
-    }
-
     useEffect(() => {
-        startTransition(listConnections);
+        startTransition(async () => {
+            const res = await listOAuthConnectionsAction();
+            if (res.isError) {
+                setError(res.message);
+                return;
+            }
+            setConnections(res.connections);
+        });
     }, []);
 
     const content = useMemo(() => {
@@ -83,7 +81,14 @@ export function OAuthConnections() {
                     <OAuthConnectionControls
                         connected={connection.connected}
                         provider={connection.provider}
-                        onDisconnected={listConnections}
+                        onDisconnected={async () => {
+                            const res = await listOAuthConnectionsAction();
+                            if (res.isError) {
+                                setError(res.message);
+                                return;
+                            }
+                            setConnections(res.connections);
+                        }}
                     />
                 </div>
             );

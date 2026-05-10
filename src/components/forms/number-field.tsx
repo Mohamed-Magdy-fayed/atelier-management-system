@@ -9,7 +9,7 @@ export function FormNumberField({
     autoFocus,
     ...props
 }: FormFieldProps & { placeholder?: string }) {
-    const field = useFieldContext<number>();
+    const field = useFieldContext<number | null>();
     const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 
     return (
@@ -21,10 +21,11 @@ export function FormNumberField({
                 id={field.name}
                 name={field.name}
                 onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.valueAsNumber)}
+                onChange={(e) => field.handleChange(() => isNaN(e.target.valueAsNumber) ? null : e.target.valueAsNumber)}
                 placeholder={placeholder}
                 type="number"
-                value={field.state.value}
+                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                value={field.state.value ?? ""}
             />
         </FormBase>
     );

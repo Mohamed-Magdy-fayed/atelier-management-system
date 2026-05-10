@@ -1,9 +1,7 @@
-import {
-    createFormHook,
-    createFormHookContexts,
-} from "@tanstack/react-form";
+import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
 import { toast } from "sonner";
 
+import { FormImageField } from "@/components/forms/image-field";
 import { useTranslation } from "@/features/core/i18n/client";
 import { FormBooleanField } from "./boolean-field";
 import { FormDateField } from "./date-field";
@@ -28,6 +26,7 @@ const { useAppForm: useAppFormBase } = createFormHook({
         SelectField: FormSelectField,
         DateField: FormDateField,
         BooleanField: FormBooleanField,
+        ImageField: FormImageField,
         // SearchLookupField: FormSearchLookupField,
     },
     formComponents: {},
