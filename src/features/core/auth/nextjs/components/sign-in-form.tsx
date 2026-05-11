@@ -4,7 +4,7 @@ import {
 	type AuthenticationResponseJSON,
 	startAuthentication,
 } from "@simplewebauthn/browser";
-import { ArrowLeftIcon, FingerprintIcon } from "lucide-react";
+import { ArrowLeftIcon, FingerprintIcon, LogInIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Activity, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import {
 	FieldSeparator,
 	FieldSet,
 } from "@/components/ui/field";
+import { LoadingSwap } from "@/components/ui/loading-swap";
 import { H1, Muted } from "@/components/ui/typography";
 import { type OAuthProvider, oAuthProviderValues } from "@/drizzle/schema";
 import {
@@ -179,7 +180,10 @@ export function SignInForm() {
 						onClick={handleContinueEmail}
 						type="button"
 					>
-						{t("authTranslations.signIn.continue")}
+						<LoadingSwap isLoading={isPending}>
+							<LogInIcon />
+							{t("authTranslations.signIn.continue")}
+						</LoadingSwap>
 					</Button>
 				</Activity>
 
@@ -215,9 +219,13 @@ export function SignInForm() {
 									disabled={isPending || isSubmitting}
 									type="submit"
 								>
-									{isPending || isSubmitting
-										? t("authTranslations.signIn.submitting")
-										: t("authTranslations.signIn.submit")}
+									<LoadingSwap
+										isLoading={isPending || isSubmitting}
+										loadingText={t("authTranslations.signIn.submitting")}
+									>
+										<LogInIcon />
+										{t("authTranslations.signIn.submit")}
+									</LoadingSwap>
 								</Button>
 							)}
 						</form.Subscribe>

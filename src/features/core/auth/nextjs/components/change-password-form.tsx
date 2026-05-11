@@ -12,46 +12,35 @@ import {
     changePasswordAction,
     createPasswordAction,
 } from "@/features/core/auth/nextjs/actions";
-import { changePasswordSchema as changePasswordFormSchema } from "@/features/core/auth/schemas";
+import {
+    changePasswordSchema,
+    createPasswordSchema,
+} from "@/features/core/auth/schemas";
 import { useTranslation } from "@/features/core/i18n/client";
 import { cn } from "@/lib/utils";
 
-export function ChangePasswordForm({
-    isCreate,
-    callback,
-}: {
-    isCreate?: boolean;
+type PasswordFormProps = {
     callback?: () => void;
-}) {
+};
+
+export function CreatePasswordForm({ callback }: PasswordFormProps) {
     const { t } = useTranslation();
     const [isPending, startTransition] = useTransition();
 
     const form = useAppForm({
         defaultValues: {
-            currentPassword: "",
             newPassword: "",
             confirmPassword: "",
         },
         validators: {
-            onSubmit: changePasswordFormSchema,
+            onSubmit: createPasswordSchema,
         },
         onSubmit: async ({ value }) => {
             startTransition(async () => {
-                if (isCreate) {
-                    const result = await createPasswordAction({
-                        newPassword: value.newPassword,
-                        confirmPassword: value.confirmPassword,
-                    });
-                    if (result.isError) {
-                        toast.error(result.message ?? t("error", { error: "" }));
-                        return;
-                    }
-                } else {
-                    const result = await changePasswordAction(value);
-                    if (result.isError) {
-                        toast.error(result.message ?? t("error", { error: "" }));
-                        return;
-                    }
+                const result = await createPasswordAction(value);
+                if (result.isError) {
+                    toast.error(result.message ?? t("error", { error: "" }));
+                    return;
                 }
 
                 toast.success(t("authTranslations.profile.password.submit"));
@@ -63,7 +52,7 @@ export function ChangePasswordForm({
 
     return (
         <form
-            className={cn("space-y-5")}
+            className={cn("space-y-4")}
             onSubmit={(event) => {
                 event.preventDefault();
                 form.handleSubmit();
@@ -71,15 +60,86 @@ export function ChangePasswordForm({
         >
             <FieldSet disabled={isPending}>
                 <FieldGroup>
-                    {!isCreate ? (
-                        <form.AppField name="currentPassword">
-                            {(field) => (
-                                <field.PasswordField
-                                    label={t("authTranslations.profile.password.currentLabel")}
-                                />
-                            )}
-                        </form.AppField>
-                    ) : null}
+                    <form.AppField name="newPassword">
+                        {(field) => (
+                            <field.PasswordField
+                                label={t("authTranslations.profile.password.newLabel")}
+                            />
+                        )}
+                    </form.AppField>
+
+                    <form.AppField name="confirmPassword">
+                        {(field) => (
+                            <field.PasswordField
+                                label={t("authTranslations.profile.password.confirmLabel")}
+                            />
+                        )}
+                    </form.AppField>
+                </FieldGroup>
+
+                <form.Subscribe selector={(state) => state.isSubmitting}>
+                    {(isSubmitting) => (
+                        <Button type="submit" disabled={isPending || isSubmitting}>
+                            <LoadingSwap
+                                isLoading={isPending || isSubmitting}
+                                loadingText={t("authTranslations.profile.password.updating")}
+                            >
+                                <UserLockIcon />
+                                {t("authTranslations.profile.password.submit")}
+                            </LoadingSwap>
+                        </Button>
+                    )}
+                </form.Subscribe>
+            </FieldSet>
+        </form>
+    );
+}
+
+export function UpdatePasswordForm({ callback }: PasswordFormProps) {
+    const { t } = useTranslation();
+    const [isPending, startTransition] = useTransition();
+
+    const form = useAppForm({
+        defaultValues: {
+            currentPassword: "",
+            newPassword: "",
+            confirmPassword: "",
+        },
+        validators: {
+            onSubmit: changePasswordSchema,
+        },
+        onSubmit: async ({ value }) => {
+            startTransition(async () => {
+                const result = await changePasswordAction(value);
+                if (result.isError) {
+                    toast.error(result.message ?? t("error", { error: "" }));
+                    return;
+                }
+
+                toast.success(t("authTranslations.profile.password.submit"));
+                form.reset();
+                callback?.();
+            });
+        },
+    });
+
+    return (
+        <form
+            className={cn("space-y-4")}
+            onSubmit={(event) => {
+                event.preventDefault();
+                form.handleSubmit();
+            }}
+        >
+            <FieldSet disabled={isPending}>
+                <FieldGroup>
+                    <form.AppField name="currentPassword">
+                        {(field) => (
+                            <field.PasswordField
+                                label={t("authTranslations.profile.password.currentLabel")}
+                            />
+                        )}
+                    </form.AppField>
 
                     <form.AppField name="newPassword">
                         {(field) => (
@@ -114,4 +174,18 @@ export function ChangePasswordForm({
             </FieldSet>
         </form>
     );
+}
+
+export function ChangePasswordForm({
+    isCreate,
+    callback,
+}: {
+    isCreate?: boolean;
+    callback?: () => void;
+}) {
+    if (isCreate) {
+        return <CreatePasswordForm callback={callback} />;
+    }
+
+    return <UpdatePasswordForm callback={callback} />;
 }

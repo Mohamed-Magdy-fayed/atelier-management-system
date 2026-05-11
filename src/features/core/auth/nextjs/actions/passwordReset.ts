@@ -41,7 +41,7 @@ function hashPasswordResetOtp(normalizedEmail: string, otp: string) {
 
 export async function requestPasswordResetAction(
     rawInput: z.infer<typeof passwordResetRequestSchema>,
-): Promise<TypedResponse<{}>> {
+): Promise<TypedResponse<object>> {
     const { t } = await getT();
     const { email } = await validateInput(passwordResetRequestSchema, rawInput);
 
@@ -113,7 +113,7 @@ export async function requestPasswordResetAction(
 
 export async function resetPasswordAction(
     rawInput: unknown,
-): Promise<TypedResponse<{}>> {
+): Promise<TypedResponse<{ message: string }>> {
     const { t } = await getT();
     const { email, otp, password } = await validateInput(passwordResetSubmissionSchema, rawInput);
 
@@ -214,5 +214,8 @@ export async function resetPasswordAction(
         };
     }
 
-    return { isError: false };
+    return {
+        isError: false,
+        message: t("authTranslations.profile.password.submit"),
+    };
 }

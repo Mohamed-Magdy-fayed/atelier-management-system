@@ -1,10 +1,10 @@
 "use client";
 
+import { UserPlus2Icon } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
-
 import { useAppForm } from "@/components/forms";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
 	FieldSeparator,
 	FieldSet,
 } from "@/components/ui/field";
+import { LoadingSwap } from "@/components/ui/loading-swap";
 import { type OAuthProvider, oAuthProviderValues } from "@/drizzle/schema";
 import { oAuthSignIn, signUpAction } from "@/features/core/auth/nextjs/actions";
 import FormAlert from "@/features/core/auth/nextjs/components/form-alert";
@@ -132,9 +133,13 @@ export function SignUpForm() {
 							disabled={isPending || isSubmitting}
 							type="submit"
 						>
-							{isPending || isSubmitting
-								? t("authTranslations.signUp.submitting")
-								: t("authTranslations.signUp.submit")}
+							<LoadingSwap
+								isLoading={isPending || isSubmitting}
+								loadingText={t("authTranslations.signUp.submitting")}
+							>
+								<UserPlus2Icon />
+								{t("authTranslations.signUp.submit")}
+							</LoadingSwap>
 						</Button>
 					)}
 				</form.Subscribe>

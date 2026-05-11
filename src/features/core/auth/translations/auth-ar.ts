@@ -6,7 +6,7 @@ export default {
         unauthorized: dt("غير مصرح لك بـ {action:enum} {resource:enum}", {
             enum: {
                 action: { create: "إنشاء", view: "عرض هذه", update: "تعديل هذه", delete: "حذف هذه" },
-                resource: { employees: "الموظفين", screens: "الشاشات" },
+                resource: { employees: "الموظفين", screens: "الشاشات", branches: "الفروع" },
             }
         }),
         required: "هذا الحقل مطلوب",
@@ -434,6 +434,7 @@ export default {
                 select: "اختر الفرع",
                 edit: "تعديل الفرع",
                 empty: "قم بإنشاء فرع",
+                noAssignedBranches: "لا توجد فروع مخصصة لحسابك حتى الآن",
                 activeBadge: "نشط",
                 current: "الحالي",
                 setActive: "تعيين كافتراضي",

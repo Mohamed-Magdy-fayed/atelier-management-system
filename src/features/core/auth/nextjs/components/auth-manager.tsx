@@ -78,6 +78,13 @@ export function AuthManager({ trigger }: { trigger: React.ReactElement }) {
                 </div>
             </SystemDialog>
             <SystemDialog
+                titleRender={() => (
+                    <H4>
+                        {t("authTranslations.profile.password.createOrChange", {
+                            isChange: session?.hasPassword ? "true" : "false",
+                        })}
+                    </H4>
+                )}
                 onOpenChange={(open) => setOpenDialog(open ? "password" : undefined)}
                 isOpen={openDialog === "password"}
             >

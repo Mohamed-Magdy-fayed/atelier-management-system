@@ -16,7 +16,11 @@ type ProvidersProps = PropsWithChildren<{
 
 export async function Providers({ children, locale, theme }: ProvidersProps) {
     const authState = await getAuth();
-    const branchsState = authState.session?.user.id ? await getBranches(authState.session.user.id) : null;
+    const branchsState = authState.session?.user.id
+        ? await getBranches(authState.session.user.id, {
+            includeAllBranches: authState.session.user.role === "admin",
+        })
+        : null;
 
     return (
         <ThemeProvider theme={theme}>

@@ -6,7 +6,9 @@ import type { getBranches } from "@/features/core/auth/nextjs/actions";
 
 type BranchContextValue = Awaited<ReturnType<typeof getBranches>>;
 
-const BranchContext = createContext<BranchContextValue | null>(null);
+const BranchContext = createContext<BranchContextValue | null | undefined>(
+	undefined,
+);
 type BranchProviderProps = { value: BranchContextValue | null; children: ReactNode };
 
 export function BranchProvider({ value, children }: BranchProviderProps) {
@@ -15,7 +17,7 @@ export function BranchProvider({ value, children }: BranchProviderProps) {
 
 export function useBranch() {
 	const context = useContext(BranchContext);
-	if (context == null) {
+	if (context === undefined) {
 		throw new Error("useBranch must be used within an BranchProvider");
 	}
 	return context;

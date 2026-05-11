@@ -1,6 +1,7 @@
 "use client";
 
 import { SaveIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { useAppForm } from "@/components/forms/hooks";
@@ -14,21 +15,22 @@ import {
     InputOTPSeparator,
     InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { Spinner } from "@/components/ui/spinner";
+import { LoadingSwap } from "@/components/ui/loading-swap";
 import { resetPasswordAction } from "@/features/core/auth/nextjs/actions";
 import { passwordResetSubmissionSchema } from "@/features/core/auth/schemas";
 import { useTranslation } from "@/features/core/i18n/client";
 
 export function ResetPasswordForm({
-    initialPhone = "",
+    initialEmail = "",
 }: {
-    initialPhone?: string;
+    initialEmail?: string;
 }) {
     const { t } = useTranslation();
+    const router = useRouter();
     const [isPending, startTransition] = useTransition();
 
     const form = useAppForm({
-        defaultValues: { phone: initialPhone, otp: "", password: "" },
+        defaultValues: { email: initialEmail, otp: "", password: "" },
         validators: { onSubmit: passwordResetSubmissionSchema },
         onSubmit: async ({ value }) => {
             startTransition(async () => {
@@ -37,25 +39,30 @@ export function ResetPasswordForm({
                     toast.error(res.message);
                     return;
                 }
+
+                toast.success(
+                    res.message ?? t("authTranslations.profile.password.submit"),
+                );
+                router.push("/sign-in");
             });
         },
     });
 
     return (
         <form
-            className="space-y-6"
+            className="space-y-4"
             onSubmit={(e) => {
                 e.preventDefault();
                 form.handleSubmit();
             }}
         >
             <FieldSet disabled={isPending}>
-                <form.AppField name="phone">
+                <form.AppField name="email">
                     {(field) => (
-                        <field.MobileField
+                        <field.EmailField
                             autoFocus
-                            label={t("authTranslations.signIn.phoneLabel")}
-                            placeholder="012 3456789"
+                            label={t("authTranslations.signIn.emailLabel")}
+                            placeholder="example@example.com"
                         />
                     )}
                 </form.AppField>
@@ -96,21 +103,24 @@ export function ResetPasswordForm({
                     )}
                 </form.AppField>
             </FieldSet>
-            <ButtonGroup>
+            <ButtonGroup className="w-full gap-2">
                 <BackLink href="/forgot-password" variant={"outline"} />
-                <Button disabled={isPending} type="submit">
-                    {isPending ? (
-                        <>
-                            <Spinner />
-                            {t("authTranslations.loading")}
-                        </>
-                    ) : (
-                        <>
-                            <SaveIcon />
-                            {t("authTranslations.passwordReset.reset.submit")}
-                        </>
+                <form.Subscribe selector={(state) => state.isSubmitting}>
+                    {(isSubmitting) => (
+                        <Button
+                            disabled={isPending || isSubmitting}
+                            type="submit"
+                        >
+                            <LoadingSwap
+                                isLoading={isPending || isSubmitting}
+                                loadingText={t("loading")}
+                            >
+                                <SaveIcon />
+                                {t("authTranslations.passwordReset.reset.submit")}
+                            </LoadingSwap>
+                        </Button>
                     )}
-                </Button>
+                </form.Subscribe>
             </ButtonGroup>
         </form>
     );

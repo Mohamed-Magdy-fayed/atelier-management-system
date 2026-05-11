@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
 
@@ -13,6 +14,7 @@ import { useTranslation } from "@/features/core/i18n/client";
 
 export function ForgotPasswordForm() {
     const { t } = useTranslation();
+    const router = useRouter();
     const [isPending, startTransition] = useTransition();
 
     const form = useAppForm({
@@ -25,6 +27,8 @@ export function ForgotPasswordForm() {
                     toast.error(res.message || "");
                     return;
                 }
+
+                router.push(`/reset-password?email=${encodeURIComponent(value.email)}`);
             });
         },
     });

@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-
+import { SystemDialog } from "@/components/general/system-dialog";
+import { WrapWithTooltip } from "@/components/general/wrap-with-tooltip";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -33,21 +34,31 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Lead } from "@/components/ui/typography";
+import { H4, Lead } from "@/components/ui/typography";
 import {
     deleteBranchAction,
     setActiveBranchForUserAction,
 } from "@/features/core/auth/nextjs/actions";
+import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { BranchForm } from "@/features/core/auth/nextjs/components/branch-form";
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { SystemDialog } from "@/components/general/system-dialog";
+import { cn } from "@/lib/utils";
 
 export function BranchManager() {
     const isMobile = useIsMobile();
     const { t, locale } = useTranslation();
-    const { hasActiveOrg, branches, activeBranch } = useBranch();
+    const { isAuthenticated, session } = useAuth();
+    const branchState = useBranch();
+    const isCustomer = isAuthenticated ? session.user.role === "customer" : false;
+    const isAdmin = isAuthenticated ? session.user.role === "admin" : false;
+    const canManageBranches = isAdmin;
+    const hasBranchState = branchState != null;
+    const hasActiveOrg = hasBranchState ? branchState.hasActiveOrg : false;
+    const branches = hasBranchState ? branchState.branches : [];
+    const activeBranch = hasBranchState ? branchState.activeBranch : undefined;
+    const isSwitcherDisabled = !isAdmin && branches.length === 0;
 
     const [openDialog, setOpenDialog] = useState<"org:create" | undefined>(
         undefined,
@@ -65,12 +76,44 @@ export function BranchManager() {
             const res = await setActiveBranchForUserAction(id);
             if (res.isError) {
                 toast.error(res.message);
+                return;
             }
 
             toast.success(
                 t("authTranslations.branch.actions.setActiveBranch.success"),
             );
         });
+    }
+
+    const triggerButton = (
+        <Button
+            variant="outline"
+            disabled={isSwitcherDisabled}
+            className={cn(isSwitcherDisabled && "opacity-40")}
+        >
+            <BuildingIcon className="text-primary" />
+            <span className="truncate font-medium">
+                {!hasActiveOrg || !activeBranch
+                    ? t("authTranslations.branch.switcher.select")
+                    : locale === "ar"
+                        ? activeBranch.nameAr
+                        : activeBranch.nameEn}
+            </span>
+        </Button>
+    );
+
+    if (!isAuthenticated || !hasBranchState || isCustomer) {
+        return null;
+    }
+
+    if (isSwitcherDisabled) {
+        return (
+            <WrapWithTooltip
+                text={t("authTranslations.branch.switcher.noAssignedBranches")}
+            >
+                <span className="inline-flex">{triggerButton}</span>
+            </WrapWithTooltip>
+        );
     }
 
     return (
@@ -111,12 +154,10 @@ export function BranchManager() {
                 </AlertDialogContent>
             </AlertDialog>
             <SystemDialog
+                titleRender={() => <H4>{t("authTranslations.branch.create.title")}</H4>}
                 onOpenChange={(val) => setOpenDialog(val ? "org:create" : undefined)}
                 isOpen={openDialog === "org:create"}
             >
-                <Lead className="mb-4">
-                    {t("authTranslations.branch.create.title")}
-                </Lead>
                 <BranchForm onSuccess={() => setOpenDialog(undefined)} />
             </SystemDialog>
             <SystemDialog
@@ -132,22 +173,7 @@ export function BranchManager() {
                 ) : null}
             </SystemDialog>
             <DropdownMenu>
-                <DropdownMenuTrigger
-                    render={
-                        <Button
-                            variant="outline"
-                        >
-                            <BuildingIcon className="text-primary" />
-                            <span className="truncate font-medium">
-                                {!hasActiveOrg
-                                    ? t("authTranslations.branch.switcher.select")
-                                    : locale === "ar"
-                                        ? activeBranch.nameAr
-                                        : activeBranch.nameEn}
-                            </span>
-                        </Button>
-                    }
-                />
+                <DropdownMenuTrigger render={triggerButton} />
                 <DropdownMenuContent
                     align="start"
                     side={isMobile ? "bottom" : "right"}
@@ -158,6 +184,11 @@ export function BranchManager() {
                         <DropdownMenuLabel>
                             {t("authTranslations.branch.create.title")}
                         </DropdownMenuLabel>
+                        {branches.length === 0 ? (
+                            <DropdownMenuItem disabled>
+                                {t("authTranslations.branch.switcher.empty")}
+                            </DropdownMenuItem>
+                        ) : null}
                         {branches.map((branch) => (
                             <DropdownMenuSub key={branch.id}>
                                 <DropdownMenuSubTrigger>
@@ -176,39 +207,47 @@ export function BranchManager() {
                                         <ListStartIcon />
                                         {t("authTranslations.branch.switcher.setActive")}
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            setEditingOrg(branch);
-                                        }}
-                                    >
-                                        <EditIcon />
-                                        {t("authTranslations.branch.switcher.edit")}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            setDeletingOrg(branch);
-                                        }}
-                                        variant="destructive"
-                                    >
-                                        <Trash2 />
-                                        {t("common.delete")}
-                                    </DropdownMenuItem>
+                                    {canManageBranches ? (
+                                        <>
+                                            <DropdownMenuItem
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setEditingOrg(branch);
+                                                }}
+                                            >
+                                                <EditIcon />
+                                                {t("authTranslations.branch.switcher.edit")}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setDeletingOrg(branch);
+                                                }}
+                                                variant="destructive"
+                                            >
+                                                <Trash2 />
+                                                {t("common.delete")}
+                                            </DropdownMenuItem>
+                                        </>
+                                    ) : null}
                                 </DropdownMenuSubContent>
                             </DropdownMenuSub>
                         ))}
                     </DropdownMenuGroup>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                        onClick={(e) => {
-                            e.preventDefault();
-                            setOpenDialog("org:create");
-                        }}
-                    >
-                        <Plus className="size-4" />
-                        {t("authTranslations.branch.switcher.add")}
-                    </DropdownMenuItem>
+                    {canManageBranches ? (
+                        <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setOpenDialog("org:create");
+                                }}
+                            >
+                                <Plus className="size-4" />
+                                {t("authTranslations.branch.switcher.add")}
+                            </DropdownMenuItem>
+                        </>
+                    ) : null}
                 </DropdownMenuContent>
             </DropdownMenu>
         </>

@@ -6,7 +6,7 @@ import {
     UsersTable,
 } from "@/drizzle/schema";
 import { SEED_ACTOR_EMAIL } from "@/drizzle/seed";
-import { hashPassword } from "@/features/core/auth/core";
+import { hashPassword } from "@/features/core/auth/core/passwordHasher";
 
 const adminId = "00000000-0000-0000-0000-000000000001";
 
@@ -52,9 +52,10 @@ export async function seedBase() {
                 .returning();
 
             const branchAssignments = await tx.insert(BranchMembershipsTable).values(
-                basicBranches.map((branch) => ({
+                basicBranches.map((branch, index) => ({
                     userId: adminUser.id,
                     branchId: branch.id,
+                    isCurrent: index === 0,
                 })),
             );
 
@@ -64,9 +65,18 @@ export async function seedBase() {
                 .values(employees)
                 .returning({ id: UsersTable.id });
 
+            const employeeBranches = basicBranches.slice(1);
+
             const employeeMemberships = seededEmployees.flatMap((employee, index) => {
-                const primaryBranch = basicBranches[index % basicBranches.length]?.id;
-                const secondaryBranch = basicBranches[(index + 1) % basicBranches.length]?.id;
+                // Keep a subset of employees unassigned to cover disabled-branch UX.
+                if (index % 5 === 0) return [];
+
+                const availableBranches =
+                    employeeBranches.length > 0 ? employeeBranches : basicBranches;
+                const primaryBranch =
+                    availableBranches[index % availableBranches.length]?.id;
+                const secondaryBranch =
+                    availableBranches[(index + 1) % availableBranches.length]?.id;
 
                 if (!primaryBranch) return [];
 
@@ -130,6 +140,7 @@ function buildSeedEmployees(createdBy: string): Array<typeof UsersTable.$inferIn
 }
 
 const branchesData: (typeof BranchesTable.$inferInsert)[] = [
+    { nameAr: "الفرع الرئيسي", nameEn: "Main Branch" },
     { nameAr: "القاهرة", nameEn: "Cairo" },
     { nameAr: "الإسكندرية", nameEn: "Alexandria" },
     { nameAr: "الجيزة", nameEn: "Giza" },

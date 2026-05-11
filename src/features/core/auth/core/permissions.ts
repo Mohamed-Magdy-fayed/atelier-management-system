@@ -15,6 +15,11 @@ type RolesWithPermissions = {
   }>;
 };
 
+type BranchPermissionData = {
+  userId: string;
+  branchId: string;
+};
+
 type Permissions = {
   users: {
     dataType: PartialUser;
@@ -22,6 +27,10 @@ type Permissions = {
   };
   screens: {
     dataType: { screenKey: ScreenKey };
+    action: DefaultAction;
+  };
+  branches: {
+    dataType: BranchPermissionData;
     action: DefaultAction;
   };
 };
@@ -40,6 +49,7 @@ export const rolesPermissions = {
   admin: {
     users: unrestricted,
     screens: unrestricted,
+    branches: unrestricted,
   },
   employee: {
     screens: {
@@ -50,6 +60,9 @@ export const rolesPermissions = {
       update: (user: PartialUser, data: PartialUser) => user.id === data.id,
       delete: (user: PartialUser, data: PartialUser) => user.id === data.id,
     },
+    branches: {
+      view: (user: PartialUser, branch: BranchPermissionData) => user.id === branch.userId,
+    },
   },
   customer: {
     users: {
@@ -59,6 +72,9 @@ export const rolesPermissions = {
     screens: {
       view: (_, data: { screenKey: ScreenKey }) => data.screenKey === "my-account"
     },
+    branches: {
+      view: true,
+    }
   },
 } as const satisfies RolesWithPermissions;
 

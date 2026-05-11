@@ -6,7 +6,7 @@ export default {
         unauthorized: dt("You don't have permission to {action:enum} {resource:enum}", {
             enum: {
                 action: { create: "create", view: "view these", update: "edit these", delete: "delete these" },
-                resource: { users: "users", screens: "screens" },
+                resource: { users: "users", screens: "screens", branches: "branches" },
             }
         }),
         required: "This field is required",
@@ -440,6 +440,7 @@ export default {
                 select: "Select branch",
                 edit: "Edit branch",
                 empty: "Create an branch",
+                noAssignedBranches: "No branches are assigned to your account yet",
                 activeBadge: "Active",
                 current: "Current",
                 setActive: "Set active",

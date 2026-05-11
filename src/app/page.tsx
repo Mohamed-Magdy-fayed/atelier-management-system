@@ -1,10 +1,6 @@
 import Image from "next/image";
 
-import { ClientGreeting } from "@/app/_providers/client";
-import { Button } from "@/components/ui/button";
-import { AuthManager } from "@/features/core/auth/nextjs/components/auth-manager";
-import { BranchManager } from "@/features/core/auth/nextjs/components/branch-manager";
-import { UserAvatar } from "@/features/core/auth/nextjs/components/user-avatar";
+import { ClientGreeting, HomeUserActions } from "@/app/_providers/client";
 import { HydrateClient } from "@/integrations/trpc/server";
 
 export default async function Home() {
@@ -21,18 +17,7 @@ export default async function Home() {
         <ClientGreeting />
       </HydrateClient>
       <div className="flex items-center gap-2">
-        <AuthManager
-          trigger={
-            <Button
-              variant={"ghost"}
-              size={"icon-sm"}
-              className={"hover:opacity-50"}
-            >
-              <UserAvatar />
-            </Button>
-          }
-        />
-        <BranchManager />
+        <HomeUserActions />
       </div>
     </main>
   );
