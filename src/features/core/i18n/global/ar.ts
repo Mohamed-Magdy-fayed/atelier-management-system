@@ -11,7 +11,7 @@ export default {
   hobby: dt("اخترت {hobby:enum} كهوايتك.", {
     enum: { hobby: { runner: "عداء", developer: "مطور" } },
   }),
-  appName: "مثال جاتيلينج",
+  appName: "فانتاستك",
   common: {
     empty: "لا توجد بيانات متاحة.",
     menu: "القائمة",
@@ -150,6 +150,29 @@ export default {
         "افتح بطاقة المستخدم لتحديث بياناتك، تغيير كلمة المرور، أو تسجيل الخروج.",
     },
   },
+  landing: {
+    badge: "منصة أعمال",
+    title:
+      "أدر الفروع والفرق والعملاء والعمليات المستقبلية من مركز تحكم واحد.",
+    lead:
+      "تساعدك فانتاستك على إدارة العمليات اليومية من خلال مساحة عمل واضحة، ثرية بالمعلومات، وجاهزة للنمو واتخاذ القرار.",
+    primaryGuest: "تسجيل الدخول إلى النظام",
+    primaryAuthenticated: "فتح مساحة العمل",
+    secondaryGuest: "استعراض الإمكانات",
+    secondaryAuthenticated: "الانتقال إلى لوحة التحكم",
+    statOperationsTitle: "عمليات مرتبطة بالفروع",
+    statOperationsBody:
+      "نسّق الفروع والعملاء والموظفين من بيئة إدارية واحدة.",
+    statVisibilityTitle: "رؤية جاهزة لاتخاذ القرار",
+    statVisibilityBody:
+      "اعرض الأرقام والاتجاهات والإجراءات التي يحتاجها المدراء يوميًا.",
+    statScaleTitle: "جاهزة لإضافة كيانات جديدة",
+    statScaleBody:
+      "وسّع النظام ليشمل المنتجات والخدمات والطلبات وسير العمل دون إعادة بناء الأساس.",
+    authPanelTitle: "إدارة أوضح لعمليات الأعمال.",
+    authPanelLead:
+      "دخول آمن، ووعي بالفروع، وسير عمل ثنائي اللغة داخل مساحة عمل إدارية واحدة.",
+  },
   systemPages: {
     appName: "فانتاستك",
     openMenu: "فتح القائمة",
@@ -161,13 +184,40 @@ export default {
     breadcrumbEmployees: "الموظفون",
     breadcrumbCustomers: "العملاء",
     dashboardTitle: "لوحة التحكم",
-    dashboardLead: "نظرة عامة واختصارات لأقسام النظام.",
+    dashboardLead: "نظرة تشغيلية مباشرة على الفروع والفرق ونشاط العملاء.",
+    dashboardBranchesTitle: "الفروع النشطة",
+    dashboardBranchesDescription:
+      "الفروع المتاحة حاليًا للتشغيل وتوزيع الفرق.",
+    dashboardEmployeesTitle: "الموظفون",
+    dashboardEmployeesDescription:
+      "سجلات الموظفين الجاهزة للتوزيع والصلاحيات والمتابعة.",
+    dashboardCustomersTitle: "العملاء",
+    dashboardCustomersDescription:
+      "سجلات العملاء الجاهزة للخدمة والتقارير والنمو.",
+    dashboardVerifiedTitle: "العملاء الموثقون",
+    dashboardVerifiedDescription:
+      "حسابات العملاء التي تم توثيق بريدها الإلكتروني.",
+    dashboardRecentSignInsTitle: "عمليات الدخول الحديثة",
+    dashboardRecentSignInsDescription:
+      "المستخدمون الذين دخلوا النظام خلال آخر 30 يومًا.",
+    dashboardCoverageTitle: "نسبة التوثيق",
+    dashboardCoverageDescription:
+      "نسبة العملاء الجاهزين للتواصل الموثوق.",
+    dashboardActionsTitle: "إجراءات الإدارة",
+    dashboardActionsDescription:
+      "انتقل بسرعة إلى أكثر مناطق العمل تأثيرًا.",
+    dashboardActionsCustomers: "إدارة العملاء",
+    dashboardActionsEmployees: "إدارة الموظفين",
+    dashboardActionsCoverage: "مراجعة جاهزية العملاء",
+    dashboardInsightsTitle: "محاور المتابعة",
+    dashboardInsightsLead:
+      "استخدم المؤشرات أعلاه لاكتشاف ضغط التشغيل ونمو العملاء وفجوات الجاهزية قبل أن تؤثر على العمل.",
     employeesTitle: "الموظفون",
     employeesLead:
-      "جدول على العميل لبيانات الموظفين الحقيقية: تصفية، تثبيت، تصدير، إجراءات جماعية.",
+      "أدر بيانات الموظفين وجاهزية الوصول ومتابعة الفريق من مساحة عمل واحدة.",
     customersTitle: "العملاء",
     customersLead:
-      "ترقيم على الخادم لبيانات العملاء الحقيقية مع التصفية والترتيب.",
+      "أدر بيانات العملاء ونشاطهم ومتابعات الخدمة على مستوى العمل بالكامل.",
     createdFrom: "تاريخ الإنشاء من",
     createdTo: "تاريخ الإنشاء إلى",
     addUser: "إضافة مستخدم",
@@ -177,19 +227,17 @@ export default {
     roleAdmin: "مدير",
     roleEmployee: "موظف",
     roleCustomer: "عميل",
-    userCreating: "جاري إنشاء المستخدم...",
-    userCreated: "تم إنشاء المستخدم.",
-    userUpdated: "تم تحديث المستخدم.",
-    userSaveFailed: "تعذر حفظ المستخدم.",
+    userCreating: "جارٍ إنشاء السجل...",
+    userCreated: "تم إنشاء السجل.",
+    userUpdated: "تم تحديث السجل.",
+    userSaveFailed: "تعذر حفظ السجل.",
     auditInfoTitle: "معلومات التتبّع",
     auditInfoDescription: "بيانات التتبّع الخاصة بهذا السجل.",
-    deleteUsersTitle: "حذف المستخدمين؟",
-    deleteUsersDescription: dt(
-      "سيتم حذف {count:number} من السجلات نهائيًا. لا يمكن التراجع.",
-      {},
-    ),
-    userDeletedCount: dt("تم حذف {count:number} مستخدم.", {}),
-    userDeleteFailed: "تعذر حذف المستخدم.",
+    deleteUsersTitle: "حذف السجلات المحددة؟",
+    deleteUsersDescription:
+      "سيتم حذف {count:number} من السجلات المحددة نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
+    userDeletedCount: dt("تم حذف {count:number} سجل.", {}),
+    userDeleteFailed: "تعذر حذف السجلات المحددة.",
     bulkVerify: "تعليم المحدد كمؤكَّد",
     bulkUnverify: "إلغاء توكيد المحدد",
     bulkVerifying: "جاري توكيد المحدد...",
@@ -255,18 +303,18 @@ export default {
     importParsed: dt("تم تحليل {count:number} صف(وف).", {}),
     importReviewTitle: "مراجعة الاستيراد",
     importReviewDescription:
-      "تحقق من كل صف قبل الاعتماد. الإلغاء هنا يعني عدم إرسال أي شيء إلى قاعدة البيانات.",
+      "راجع كل صف قبل تطبيق التغييرات. الإلغاء هنا يُبقي قاعدة البيانات دون تغيير.",
     importChooseFile: "اختر ملفًا",
     importReplaceFile: "استبدال الملف",
     importChooseFileHint: "اختر ملف CSV لمعاينة الصفوف التي ستتم إضافتها أو استعادتها.",
     importPreviewing: "جارٍ التحقق من الصفوف...",
     importPreviewEmpty: "لا توجد صفوف متاحة للمعاينة في هذا الملف.",
     importPreviewFailed: "تعذر التحقق من هذا الاستيراد.",
-    importCommit: "اعتماد الصفوف الصالحة",
-    importCommitting: "جارٍ اعتماد الصفوف الموافق عليها...",
-    importCommitSuccess: dt("تم اعتماد {count:number} صف(وف).", {}),
+    importCommit: "تطبيق الصفوف الصالحة",
+    importCommitting: "جارٍ تطبيق الصفوف المعتمدة...",
+    importCommitSuccess: dt("تم تطبيق {count:number} صف(وف).", {}),
     importCommitFailed: "فشل اعتماد الاستيراد.",
-    importNoValidRows: "لا توجد صفوف صالحة جاهزة للاعتماد.",
+    importNoValidRows: "لا توجد صفوف صالحة جاهزة للتطبيق.",
     importSummaryTotal: "إجمالي الصفوف",
     importSummaryValid: "صالحة",
     importSummaryInvalid: "غير صالحة",
@@ -287,7 +335,7 @@ export default {
     importActionCreate: "إدخال",
     importActionRestore: "استعادة",
     importActionSkip: "تخطي",
-    importResultReady: "جاهزة للاعتماد.",
+    importResultReady: "جاهزة للتطبيق.",
     importResultDone: "اكتملت بنجاح.",
     importNoRowsForFilter: "لا توجد صفوف تطابق هذا الفلتر.",
     importReasonEmailRequired: "البريد الإلكتروني مطلوب.",
@@ -303,7 +351,7 @@ export default {
     importReasonAlreadyExists: "يوجد مستخدم نشط مطابق بالفعل.",
     importReasonRoleMismatch: "المستخدم المحذوف المطابق يتبع دورًا آخر.",
     importReasonChangedBeforeCommit:
-      "تغير هذا الصف قبل الاعتماد. راجعه مرة أخرى.",
+      "تغير هذا الصف قبل تطبيق الاستيراد. راجعه مرة أخرى.",
     department: "القسم",
     columnEmail: "البريد الإلكتروني",
     phone: "الهاتف",
@@ -329,6 +377,12 @@ export default {
     verifiedAt: "تاريخ التوكيد",
     exportSuccess: dt("تم تصدير {count:number} سجل.", {}),
     exportFailed: "تعذر التصدير.",
+  },
+  oauthComplete: {
+    successTitle: "تم ربط الحساب",
+    errorTitle: "فشل الربط",
+    successDescription: "سيتم إغلاق هذه النافذة تلقائيًا.",
+    errorDescription: "تعذر ربط الحساب. يمكنك إغلاق هذه النافذة.",
   },
   copyright: dt("© {year:date} {appName}. جميع الحقوق محفوظة.", {
     date: { year: { year: "numeric" } },

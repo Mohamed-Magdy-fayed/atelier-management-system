@@ -23,7 +23,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Funtastic",
-  description: "Futuristic fundamentals business management software",
+  description:
+    "Branch-aware business suite for managing teams, customers, and growth-ready operations.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 

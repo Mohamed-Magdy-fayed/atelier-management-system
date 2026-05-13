@@ -49,6 +49,7 @@ export function UserFormDialog({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const isEdit = user != null;
+  const resolvedRole = (user?.role as UserFormValues["role"]) ?? defaultRole;
 
   const createMut = useMutation(trpc.users.create.mutationOptions());
   const updateMut = useMutation(trpc.users.update.mutationOptions());
@@ -59,9 +60,9 @@ export function UserFormDialog({
       email: user?.email ?? "",
       phone: user?.phone ?? "",
       age: user?.age ?? null,
-      role: (user?.role as UserFormValues["role"]) ?? defaultRole,
+      role: resolvedRole,
     }),
-    [user, defaultRole],
+    [user, resolvedRole],
   );
 
   const form = useAppForm({
@@ -71,6 +72,7 @@ export function UserFormDialog({
       const payload = {
         ...value,
         phone: value.phone ? value.phone : null,
+        role: resolvedRole,
       };
       const action = isEdit && user
         ? updateMut.mutateAsync({ id: user.id, ...payload })
@@ -105,15 +107,17 @@ export function UserFormDialog({
   }, [open, user?.id]);
 
   const pending = createMut.isPending || updateMut.isPending;
-
-  const roleOptions = useMemo(
-    () => [
-      { value: "admin", label: String(t("systemPages.roleAdmin")) },
-      { value: "employee", label: String(t("systemPages.roleEmployee")) },
-      { value: "customer", label: String(t("systemPages.roleCustomer")) },
-    ],
-    [t],
+  const entityLabel = t(
+    resolvedRole === "employee"
+      ? "systemPages.roleEmployee"
+      : resolvedRole === "admin"
+        ? "systemPages.roleAdmin"
+        : "systemPages.roleCustomer",
   );
+  const dialogTitle = `${t(isEdit ? "common.edit" : "common.add")} ${entityLabel}`;
+  const dialogDescription = isEdit
+    ? `${t("common.edit")} ${entityLabel.toLowerCase()}.`
+    : `${t("common.create")} ${entityLabel.toLowerCase()}.`;
 
   const SubmitIcon = pending ? Loader2Icon : isEdit ? SaveIcon : PlusIcon;
 
@@ -121,20 +125,8 @@ export function UserFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {String(
-              t(isEdit ? "systemPages.editUser" : "systemPages.addUser"),
-            )}
-          </DialogTitle>
-          <DialogDescription>
-            {String(
-              t(
-                isEdit
-                  ? "systemPages.editUserDescription"
-                  : "systemPages.addUserDescription",
-              ),
-            )}
-          </DialogDescription>
+          <DialogTitle>{dialogTitle}</DialogTitle>
+          <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
         <form
           className="space-y-4"
@@ -149,7 +141,7 @@ export function UserFormDialog({
                 {(f) => (
                   <f.StringField
                     label={String(t("forms.name"))}
-                    placeholder={String(t("forms.nameSearchPlaceholder"))}
+                    placeholder={String(t("forms.namePlaceholder"))}
                     autoFocus
                   />
                 )}
@@ -164,19 +156,9 @@ export function UserFormDialog({
                   <f.MobileField label={String(t("dataTable.phone"))} />
                 )}
               </form.AppField>
-              <div className="grid grid-cols-2 gap-3">
-                <form.AppField name="age">
-                  {(f) => <f.NumberField label={String(t("forms.age"))} />}
-                </form.AppField>
-                <form.AppField name="role">
-                  {(f) => (
-                    <f.SelectField
-                      label={String(t("dataTable.role"))}
-                      options={roleOptions}
-                    />
-                  )}
-                </form.AppField>
-              </div>
+              <form.AppField name="age">
+                {(f) => <f.NumberField label={String(t("forms.age"))} />}
+              </form.AppField>
             </FieldGroup>
           </FieldSet>
           <div className="flex justify-end gap-2">

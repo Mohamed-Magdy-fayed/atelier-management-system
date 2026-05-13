@@ -3,6 +3,8 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
+import { useTranslation } from "@/features/core/i18n/client";
+
 type OAuthConnectCompleteMessage = {
     type: "oauth:connect-complete";
     status: "success" | "error";
@@ -12,6 +14,7 @@ type OAuthConnectCompleteMessage = {
 
 export default function OAuthCompletePage() {
     const searchParams = useSearchParams();
+    const { t } = useTranslation();
     const status = searchParams.get("status") === "success" ? "success" : "error";
     const provider = searchParams.get("provider") ?? undefined;
     const message = searchParams.get("message") ?? undefined;
@@ -38,11 +41,13 @@ export default function OAuthCompletePage() {
     }, [status, provider, message]);
 
     const title =
-        status === "success" ? "Account connected" : "Connection failed";
+        status === "success"
+            ? t("oauthComplete.successTitle")
+            : t("oauthComplete.errorTitle");
     const description =
         status === "success"
-            ? "This window will close automatically."
-            : message || "Unable to connect your account. You can close this window.";
+            ? t("oauthComplete.successDescription")
+            : message || t("oauthComplete.errorDescription");
 
     return (
         <main className="flex min-h-screen items-center justify-center bg-background p-6">

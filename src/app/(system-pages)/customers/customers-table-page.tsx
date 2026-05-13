@@ -46,6 +46,7 @@ export function CustomersTablePage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { t, locale } = useTranslation();
+  const addCustomerLabel = `${t("common.add")} ${t("systemPages.roleCustomer")}`;
 
   const {
     pagination,
@@ -179,13 +180,13 @@ export function CustomersTablePage() {
                     size="icon"
                     className="size-8"
                     onClick={() => setCreateOpen(true)}
-                    aria-label={t("systemPages.addUser")}
+                    aria-label={addCustomerLabel}
                   >
                     <PlusIcon className="size-3.5" />
                   </Button>
                 }
               />
-              <TooltipContent>{t("systemPages.addUser")}</TooltipContent>
+              <TooltipContent>{addCustomerLabel}</TooltipContent>
             </Tooltip>
             <DataTableViewOptions table={table} />
             <DataTableExportButton

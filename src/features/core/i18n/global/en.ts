@@ -11,7 +11,7 @@ export default {
   hobby: dt("You chose {hobby:enum} as your hobby.", {
     enum: { hobby: { runner: "runner", developer: "developer" } },
   }),
-  appName: "Gateling Example",
+  appName: "Funtastic",
   common: {
     empty: "No data available.",
     menu: "Menu",
@@ -152,6 +152,29 @@ export default {
         "Open your user card to update profile details, change password, or sign out.",
     },
   },
+  landing: {
+    badge: "Business Suite",
+    title:
+      "Manage branches, teams, customers, and future operations from one control center.",
+    lead:
+      "Funtastic helps administrators run daily operations with a clean workspace designed for growth, visibility, and confident decision-making.",
+    primaryGuest: "Sign in to workspace",
+    primaryAuthenticated: "Open workspace",
+    secondaryGuest: "Explore capabilities",
+    secondaryAuthenticated: "Go to dashboard",
+    statOperationsTitle: "Branch-aware operations",
+    statOperationsBody:
+      "Coordinate branches, customers, and staff from one administrative workspace.",
+    statVisibilityTitle: "Decision-ready visibility",
+    statVisibilityBody:
+      "Surface the numbers, trends, and actions leaders need every day.",
+    statScaleTitle: "Ready for new entities",
+    statScaleBody:
+      "Grow into products, services, orders, and richer workflows without rebuilding the foundation.",
+    authPanelTitle: "Business operations, clearly managed.",
+    authPanelLead:
+      "Secure access, branch awareness, and bilingual workflows in one admin-ready workspace.",
+  },
   systemPages: {
     appName: "Funtastic",
     openMenu: "Open menu",
@@ -163,13 +186,41 @@ export default {
     breadcrumbEmployees: "Employees",
     breadcrumbCustomers: "Customers",
     dashboardTitle: "Dashboard",
-    dashboardLead: "Overview and shortcuts to workspace areas.",
+    dashboardLead:
+      "A live operational overview for branches, teams, and customer activity.",
+    dashboardBranchesTitle: "Active branches",
+    dashboardBranchesDescription:
+      "Locations currently available for staffing and operational coverage.",
+    dashboardEmployeesTitle: "Employees",
+    dashboardEmployeesDescription:
+      "Staff records available for assignment, permissions, and follow-up.",
+    dashboardCustomersTitle: "Customers",
+    dashboardCustomersDescription:
+      "Customer records available for service, reporting, and growth.",
+    dashboardVerifiedTitle: "Verified customers",
+    dashboardVerifiedDescription:
+      "Customer accounts with verified email addresses.",
+    dashboardRecentSignInsTitle: "Recent sign-ins",
+    dashboardRecentSignInsDescription:
+      "Users who accessed the system during the last 30 days.",
+    dashboardCoverageTitle: "Verification coverage",
+    dashboardCoverageDescription:
+      "Share of customer records ready for trusted communication.",
+    dashboardActionsTitle: "Management actions",
+    dashboardActionsDescription:
+      "Move quickly into the highest-value operational areas.",
+    dashboardActionsCustomers: "Manage customers",
+    dashboardActionsEmployees: "Manage employees",
+    dashboardActionsCoverage: "Review customer readiness",
+    dashboardInsightsTitle: "Operational focus",
+    dashboardInsightsLead:
+      "Use the metrics above to spot staffing pressure, customer growth, and readiness gaps before they slow the business.",
     employeesTitle: "Employees",
     employeesLead:
-      "Client-side table over real employee users: filters, pinning, export, bulk actions.",
+      "Manage employee records, access readiness, and team activity from one workspace.",
     customersTitle: "Customers",
     customersLead:
-      "Server-side pagination over real customer users with filters and sorting.",
+      "Manage customer records, search activity, and service follow-up across the business.",
     createdFrom: "Created from",
     createdTo: "Created to",
     addUser: "Add user",
@@ -179,19 +230,17 @@ export default {
     roleAdmin: "Admin",
     roleEmployee: "Employee",
     roleCustomer: "Customer",
-    userCreating: "Creating user…",
-    userCreated: "User created.",
-    userUpdated: "User updated.",
-    userSaveFailed: "Could not save user.",
+    userCreating: "Creating record…",
+    userCreated: "Record created.",
+    userUpdated: "Record updated.",
+    userSaveFailed: "Could not save record.",
     auditInfoTitle: "Audit info",
     auditInfoDescription: "Tracking metadata for this record.",
-    deleteUsersTitle: "Delete users?",
-    deleteUsersDescription: dt(
-      "{count:number} record(s) will be permanently removed. This cannot be undone.",
-      {},
-    ),
-    userDeletedCount: dt("Deleted {count:number} user(s).", {}),
-    userDeleteFailed: "Could not delete user.",
+    deleteUsersTitle: "Delete selected records?",
+    deleteUsersDescription:
+      "Permanently remove {count:number} selected records. This action cannot be undone.",
+    userDeletedCount: dt("Deleted {count:number} records.", {}),
+    userDeleteFailed: "Could not delete selected records.",
     bulkVerify: "Mark selected as verified",
     bulkUnverify: "Mark selected as unverified",
     bulkVerifying: "Verifying selected…",
@@ -222,8 +271,8 @@ export default {
     sort: "Sort",
     sortBy: "Sort By",
     noSorting: "No sorting applied!",
-    modifySorting: "Modify sorting to branchanize your rows.",
-    addSorting: "Add sorting to branchanize your rows.",
+    modifySorting: "Modify sorting to organize your rows.",
+    addSorting: "Add sorting to organize your rows.",
     addSort: "Add sort",
     resetSorting: "Reset sorting",
     searchFields: "Search fields...",
@@ -257,18 +306,18 @@ export default {
     importParsed: dt("Parsed {count:number} row(s).", {}),
     importReviewTitle: "Review import",
     importReviewDescription:
-      "Validate each row before you commit. Cancelling here keeps the database unchanged.",
+      "Review each row before applying changes. Canceling here keeps the database unchanged.",
     importChooseFile: "Choose file",
     importReplaceFile: "Replace file",
     importChooseFileHint: "Select a CSV file to preview inserts and restores.",
     importPreviewing: "Validating rows...",
     importPreviewEmpty: "No preview rows are available for this file.",
     importPreviewFailed: "Could not validate that import.",
-    importCommit: "Commit valid rows",
-    importCommitting: "Committing approved rows...",
-    importCommitSuccess: dt("Committed {count:number} row(s).", {}),
+    importCommit: "Apply valid rows",
+    importCommitting: "Applying approved rows...",
+    importCommitSuccess: dt("Applied {count:number} row(s).", {}),
     importCommitFailed: "Import commit failed.",
-    importNoValidRows: "There are no valid rows ready to commit.",
+    importNoValidRows: "There are no valid rows ready to apply.",
     importSummaryTotal: "Total rows",
     importSummaryValid: "Valid",
     importSummaryInvalid: "Invalid",
@@ -289,7 +338,7 @@ export default {
     importActionCreate: "Insert",
     importActionRestore: "Restore",
     importActionSkip: "Skip",
-    importResultReady: "Ready to commit.",
+    importResultReady: "Ready to apply.",
     importResultDone: "Completed successfully.",
     importNoRowsForFilter: "No rows match this filter.",
     importReasonEmailRequired: "Email is required.",
@@ -305,7 +354,7 @@ export default {
     importReasonAlreadyExists: "A matching active user already exists.",
     importReasonRoleMismatch: "The matching deleted user belongs to another role.",
     importReasonChangedBeforeCommit:
-      "This row changed before commit. Review it again.",
+      "This row changed before the import was applied. Review it again.",
     department: "Department",
     columnEmail: "Email",
     phone: "Phone",
@@ -331,6 +380,13 @@ export default {
     verifiedAt: "Verified at",
     exportSuccess: dt("Exported {count:number} row(s).", {}),
     exportFailed: "Export failed.",
+  },
+  oauthComplete: {
+    successTitle: "Account connected",
+    errorTitle: "Connection failed",
+    successDescription: "This window will close automatically.",
+    errorDescription:
+      "Unable to connect your account. You can close this window.",
   },
   copyright: dt("© {year:date} {appName}. all rights reserved.", {
     date: { year: { year: "numeric" } },

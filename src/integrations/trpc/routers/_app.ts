@@ -34,20 +34,6 @@ function getPathname(value: string): string {
 }
 
 export const appRouter = createTRPCRouter({
-    hello: baseProcedure
-        .input(
-            z.object({
-                text: z.string(),
-            }),
-        )
-        .query((opts) => {
-            return {
-                greeting: opts.ctx.t("greetings", {
-                    name: opts.input.text,
-                    lastLoginDate: new Date(),
-                }),
-            };
-        }),
     i18n: {
         toggleLocale: baseProcedure
             .input(z.object({ newLocale: z.string() }))

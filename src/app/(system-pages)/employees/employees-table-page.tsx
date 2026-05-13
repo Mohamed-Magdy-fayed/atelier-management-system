@@ -48,6 +48,7 @@ const userGlobalFilter: FilterFn<UserGridRow> = (row, _columnId, value) => {
 export function EmployeesTablePage() {
   const trpc = useTRPC();
   const { t, locale } = useTranslation();
+  const addEmployeeLabel = `${t("common.add")} ${t("systemPages.roleEmployee")}`;
   const { data, isFetching } = useQuery(trpc.users.listEmployees.queryOptions());
 
   const [rowAction, setRowAction] = useState<RowAction>(null);
@@ -96,13 +97,13 @@ export function EmployeesTablePage() {
                     size="icon"
                     className="size-8"
                     onClick={() => setCreateOpen(true)}
-                    aria-label={t("systemPages.addUser")}
+                    aria-label={addEmployeeLabel}
                   >
                     <PlusIcon className="size-3.5" />
                   </Button>
                 }
               />
-              <TooltipContent>{t("systemPages.addUser")}</TooltipContent>
+              <TooltipContent>{addEmployeeLabel}</TooltipContent>
             </Tooltip>
             <DataTableViewOptions table={table} />
             <DataTableExportButton

@@ -95,8 +95,6 @@ export class OAuthClient<T> {
 		})
 			.then((res) => res.json())
 			.then((rawData) => {
-				console.log(rawData);
-
 				const { data, success, error } =
 					this.userInfo.schema.safeParse(rawData);
 				if (!success) throw new InvalidUserError(error);

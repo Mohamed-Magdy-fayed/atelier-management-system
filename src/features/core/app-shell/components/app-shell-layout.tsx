@@ -78,7 +78,7 @@ export function AppShellLayout({
             <ol className="flex items-center gap-1">
               <li>
                 <Link href="/" className="hover:text-foreground">
-                  Home
+                  {t("appName")}
                 </Link>
               </li>
               {breadcrumbLabel ? (
