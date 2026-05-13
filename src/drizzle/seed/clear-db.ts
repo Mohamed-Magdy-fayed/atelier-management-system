@@ -2,7 +2,46 @@ import { sql } from "drizzle-orm";
 
 import { db } from "@/drizzle";
 
+const SAFE_DB_HOSTS = new Set([
+  "localhost",
+  "127.0.0.1",
+  "::1",
+  "db",
+  "postgres",
+  "postgresql",
+  "host.docker.internal",
+]);
+
+function getDatabaseHostname(): string {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is required before clearing the database.");
+  }
+
+  try {
+    return new URL(databaseUrl).hostname.toLowerCase();
+  } catch {
+    throw new Error("DATABASE_URL is not a valid URL.");
+  }
+}
+
+function assertSafeToClearDb() {
+  const hostname = getDatabaseHostname();
+  const allowRemote = process.env.SEED_ALLOW_REMOTE === "1";
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Refusing to clear the database in production.");
+  }
+
+  if (!allowRemote && !SAFE_DB_HOSTS.has(hostname)) {
+    throw new Error(
+      `Refusing to clear a non-local database host (${hostname}). Set SEED_ALLOW_REMOTE=1 to override.`,
+    );
+  }
+}
+
 export async function clearDb() {
+    assertSafeToClearDb();
     console.log("🗑️ Emptying all data tables");
 
     const tablesSchema = db._.schema;
