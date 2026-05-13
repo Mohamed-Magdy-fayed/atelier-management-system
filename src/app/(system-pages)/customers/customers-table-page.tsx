@@ -20,14 +20,14 @@ import {
   DataTable,
   DataTableActionBar,
   type DataTableControlledState,
-  DataTableExportImport,
+  DataTableExportButton,
   DataTablePagination,
   DataTableToolbar,
   DataTableViewOptions,
-  serializeColumnFiltersForServer,
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
+import { UsersImportButton } from "@/features/core/import-review";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { UserGridRow } from "@/integrations/trpc/routers/users";
@@ -158,8 +158,8 @@ export function CustomersTablePage() {
       className={isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"}
     >
       <div className="space-y-1">
-        <H2>{String(t("systemPages.customersTitle"))}</H2>
-        <Lead>{String(t("systemPages.customersLead"))}</Lead>
+        <H2>{t("systemPages.customersTitle")}</H2>
+        <Lead>{t("systemPages.customersLead")}</Lead>
       </div>
       <DataTable
         table={table}
@@ -168,7 +168,7 @@ export function CustomersTablePage() {
             table={table}
             globalFilter={gf}
             onGlobalFilterChange={(v) => setGf(v)}
-            searchPlaceholder={String(t("dataTable.searchUsersHint"))}
+            searchPlaceholder={t("dataTable.searchUsersHint")}
             filterSlot={<UsersGridFilters table={table} />}
           >
             <Tooltip>
@@ -179,16 +179,16 @@ export function CustomersTablePage() {
                     size="icon"
                     className="size-8"
                     onClick={() => setCreateOpen(true)}
-                    aria-label={String(t("systemPages.addUser"))}
+                    aria-label={t("systemPages.addUser")}
                   >
                     <PlusIcon className="size-3.5" />
                   </Button>
                 }
               />
-              <TooltipContent>{String(t("systemPages.addUser"))}</TooltipContent>
+              <TooltipContent>{t("systemPages.addUser")}</TooltipContent>
             </Tooltip>
             <DataTableViewOptions table={table} />
-            <DataTableExportImport
+            <DataTableExportButton
               table={table}
               exportFileName="customers.csv"
               fetchAllRows={fetchAllRows}
@@ -202,8 +202,8 @@ export function CustomersTablePage() {
                 lastSignInAt: row.lastSignInAt,
                 createdAt: row.createdAt,
               })}
-              onImportParsed={() => undefined}
             />
+            <UsersImportButton role="customer" />
           </DataTableToolbar>
         }
         footer={<DataTablePagination table={table} />}

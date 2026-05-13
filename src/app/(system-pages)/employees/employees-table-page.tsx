@@ -15,12 +15,13 @@ import { H2, Lead } from "@/components/ui/typography";
 import {
   DataTable,
   DataTableActionBar,
-  DataTableExportImport,
+  DataTableExportButton,
   DataTablePagination,
   DataTableToolbar,
   DataTableViewOptions,
   useDataTable,
 } from "@/features/core/data-table";
+import { UsersImportButton } from "@/features/core/import-review";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { UserGridRow } from "@/integrations/trpc/routers/users";
@@ -74,8 +75,8 @@ export function EmployeesTablePage() {
       className={isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"}
     >
       <div className="space-y-1">
-        <H2>{String(t("systemPages.employeesTitle"))}</H2>
-        <Lead>{String(t("systemPages.employeesLead"))}</Lead>
+        <H2>{t("systemPages.employeesTitle")}</H2>
+        <Lead>{t("systemPages.employeesLead")}</Lead>
       </div>
       <DataTable
         table={table}
@@ -84,7 +85,7 @@ export function EmployeesTablePage() {
             table={table}
             globalFilter={globalFilter}
             onGlobalFilterChange={(v) => setGlobalFilter(v)}
-            searchPlaceholder={String(t("dataTable.searchUsersHint"))}
+            searchPlaceholder={t("dataTable.searchUsersHint")}
             filterSlot={<UsersGridFilters table={table} />}
           >
             <Tooltip>
@@ -95,16 +96,16 @@ export function EmployeesTablePage() {
                     size="icon"
                     className="size-8"
                     onClick={() => setCreateOpen(true)}
-                    aria-label={String(t("systemPages.addUser"))}
+                    aria-label={t("systemPages.addUser")}
                   >
                     <PlusIcon className="size-3.5" />
                   </Button>
                 }
               />
-              <TooltipContent>{String(t("systemPages.addUser"))}</TooltipContent>
+              <TooltipContent>{t("systemPages.addUser")}</TooltipContent>
             </Tooltip>
             <DataTableViewOptions table={table} />
-            <DataTableExportImport
+            <DataTableExportButton
               table={table}
               exportFileName="employees.csv"
               getExportRow={(row) => ({
@@ -117,8 +118,8 @@ export function EmployeesTablePage() {
                 lastSignInAt: row.lastSignInAt,
                 createdAt: row.createdAt,
               })}
-              onImportParsed={() => undefined}
             />
+            <UsersImportButton role="employee" />
           </DataTableToolbar>
         }
         footer={<DataTablePagination table={table} />}
