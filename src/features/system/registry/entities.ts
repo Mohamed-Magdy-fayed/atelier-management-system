@@ -39,6 +39,7 @@ export type SystemEntityRegistryItem = {
   supportsExport: boolean;
   supportsRowSelection: boolean;
   supportsBulkActions: boolean;
+  filters: readonly string[];
   rowActions: readonly string[];
   bulkActions: readonly string[];
   showInDashboard: boolean;
@@ -61,6 +62,7 @@ export const SYSTEM_ENTITY_REGISTRY = [
     supportsExport: true,
     supportsRowSelection: true,
     supportsBulkActions: true,
+    filters: ["age", "verified", "createdAt", "lastSignInAt"],
     rowActions: ["info", "edit", "delete"],
     bulkActions: ["verify", "unverify", "delete"],
     showInDashboard: true,
@@ -81,6 +83,7 @@ export const SYSTEM_ENTITY_REGISTRY = [
     supportsExport: false,
     supportsRowSelection: true,
     supportsBulkActions: false,
+    filters: [],
     rowActions: ["info", "edit", "delete"],
     bulkActions: [],
     showInDashboard: true,
@@ -101,6 +104,7 @@ export const SYSTEM_ENTITY_REGISTRY = [
     supportsExport: false,
     supportsRowSelection: false,
     supportsBulkActions: false,
+    filters: [],
     rowActions: ["info", "setActive", "edit", "delete"],
     bulkActions: [],
     showInDashboard: true,
@@ -120,9 +124,10 @@ export const SYSTEM_ENTITY_REGISTRY = [
     supportsImport: true,
     supportsExport: true,
     supportsRowSelection: true,
-    supportsBulkActions: false,
-    rowActions: ["info", "edit", "activate", "deactivate", "delete"],
-    bulkActions: [],
+    supportsBulkActions: true,
+    filters: ["isActive", "price", "createdAt"],
+    rowActions: ["info", "edit", "activate", "deactivate", "archive"],
+    bulkActions: ["activate", "deactivate", "archive"],
     showInDashboard: true,
     seedProfiles: ["baseline", "demo", "performance"],
   },

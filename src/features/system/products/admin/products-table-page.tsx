@@ -36,6 +36,8 @@ import {
   ProductDeleteDialog,
   ProductFormDialog,
   ProductInfoModal,
+  ProductsBulkActions,
+  ProductsGridFilters,
   ProductsImportButton,
   type ProductRowActionVariant,
 } from "./components";
@@ -73,9 +75,10 @@ export function ProductsTablePage() {
       page: pagination.pageIndex + 1,
       perPage: pagination.pageSize,
       sorting,
+      columnFilters,
       globalFilter: globalFilter || undefined,
     }),
-    [globalFilter, pagination.pageIndex, pagination.pageSize, sorting],
+    [columnFilters, globalFilter, pagination.pageIndex, pagination.pageSize, sorting],
   );
 
   const { data, isFetching } = useQuery(
@@ -139,12 +142,13 @@ export function ProductsTablePage() {
     const result = await queryClient.fetchQuery(
       trpc.products.exportRows.queryOptions({
         sorting,
+        columnFilters,
         globalFilter: globalFilter || undefined,
       }),
     );
 
     return result.rows;
-  }, [globalFilter, queryClient, sorting, trpc]);
+  }, [columnFilters, globalFilter, queryClient, sorting, trpc]);
 
   return (
     <div
@@ -163,6 +167,7 @@ export function ProductsTablePage() {
             globalFilter={resolvedGlobalFilter}
             onGlobalFilterChange={(value) => setResolvedGlobalFilter(value)}
             searchPlaceholder={t("dataTable.searchProductsHint")}
+            filterSlot={<ProductsGridFilters table={table} />}
           >
             <Tooltip>
               <TooltipTrigger
@@ -199,7 +204,11 @@ export function ProductsTablePage() {
           </DataTableToolbar>
         }
         footer={<DataTablePagination table={table} />}
-        actionBar={<DataTableActionBar table={table} />}
+        actionBar={
+          <DataTableActionBar table={table}>
+            <ProductsBulkActions table={table} />
+          </DataTableActionBar>
+        }
       />
 
       <ProductFormDialog open={createOpen} onOpenChange={setCreateOpen} />

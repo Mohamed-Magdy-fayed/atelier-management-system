@@ -273,6 +273,22 @@ export default {
     productActivated: "تم تفعيل المنتج.",
     productDeactivated: "تم تعطيل المنتج.",
     productStatusChangeFailed: "تعذر تحديث حالة المنتج.",
+    bulkActivateProducts: "تفعيل المنتجات المحددة",
+    bulkDeactivateProducts: "تعطيل المنتجات المحددة",
+    bulkArchiveProducts: "أرشفة المنتجات المحددة",
+    bulkActivatingProducts: "جارٍ تفعيل المنتجات المحددة...",
+    bulkDeactivatingProducts: "جارٍ تعطيل المنتجات المحددة...",
+    bulkArchiveProductsTitle: "أرشفة المنتجات المحددة؟",
+    bulkArchiveProductsDescription:
+      "ستتم أرشفة {count:number} من المنتجات المحددة. ستختفي من قوائم الإدارة النشطة لكنها ستبقى في سجل التدقيق.",
+    bulkProductsActivatedSuccess: dt("تم تفعيل {count:number} من المنتجات المحددة.", {}),
+    bulkProductsDeactivatedSuccess: dt(
+      "تم تعطيل {count:number} من المنتجات المحددة.",
+      {},
+    ),
+    bulkProductsArchivedSuccess: dt("تمت أرشفة {count:number} من المنتجات المحددة.", {}),
+    bulkProductStatusFailed: "تعذر تحديث المنتجات المحددة.",
+    bulkProductArchiveFailed: "تعذر أرشفة المنتجات المحددة.",
     deleteProductsTitle: "أرشفة المنتج؟",
     deleteProductsDescription:
       "ستتم أرشفة {name}. سيختفي المنتج من قوائم الإدارة النشطة لكنه سيبقى في سجل التدقيق.",

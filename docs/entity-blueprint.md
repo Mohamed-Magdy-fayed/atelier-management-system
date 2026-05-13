@@ -43,11 +43,14 @@ Required intake questions:
 3. Does the entity need import?
 4. Does the entity need export?
 5. Does the table need row selection?
-6. Does the entity need bulk actions? If yes, which ones?
-7. Which row actions are required? Examples: `activate`, `deactivate`, `set active`, `archive`, `restore`, `duplicate`.
-8. Should the info dialog be audit-only? Default answer: yes.
-9. Does the entity need a public or landing-page presence?
-10. Should the entity be demo-visible and seeded?
+6. Is this a definitions/reference page or a transactional page?
+7. Should the table use client mode or server mode? Default: definition pages use client mode, transactional pages use server mode.
+8. Does the entity need bulk actions? If yes, which ones?
+9. Which filters should appear on the table? Include any filter that makes sense for the entity's business context.
+10. Which row actions are required? Examples: `activate`, `deactivate`, `set active`, `archive`, `restore`, `duplicate`.
+11. Should the info dialog be audit-only? Default answer: yes.
+12. Does the entity need a public or landing-page presence?
+13. Should the entity be demo-visible and seeded?
 
 If the request does not answer these questions, the agent should ask first and wait.
 
@@ -82,6 +85,7 @@ src/
         admin/
           components/
             product-form-dialog.tsx
+            products-grid-filters.tsx
             product-info-dialog.tsx
             product-row-actions.tsx
             products-bulk-actions.tsx
@@ -154,6 +158,8 @@ type SystemEntityRegistryItem = {
   supportsImport: boolean;
   supportsExport: boolean;
   supportsRowSelection: boolean;
+  supportsBulkActions: boolean;
+  filters: readonly string[];
   rowActions: readonly string[];
   bulkActions: readonly string[];
   showInDashboard: boolean;
@@ -207,7 +213,7 @@ Conditional primitives:
 - bulk action component when bulk actions are enabled
 - import button when import is enabled
 - export button when export is enabled
-- filters when the entity needs more than global search
+- filters that reflect meaningful business dimensions for the entity
 - metrics header when the page needs decision support
 
 Rules:
@@ -215,6 +221,126 @@ Rules:
 - do not place reusable entity UI under `src/app/(system-pages)/_components`
 - do not force all entities through one giant generic CRUD component
 - do reuse shared table, dialog, import, and layout primitives
+
+## Data Table Mode Pattern
+
+Choose the table mode based on the kind of page.
+
+Default rule:
+
+- definition/reference pages use the client version of the data table
+- transactional pages use the server version of the data table
+
+Definition/reference pages usually include:
+
+- branches
+- products
+- services
+- categories
+- settings-like master data
+
+Why client mode fits definition pages:
+
+- row counts are usually moderate
+- local sorting and filtering feel faster
+- the page often behaves like a management list for reusable system definitions
+
+Transactional pages usually include:
+
+- orders
+- bookings
+- invoices
+- payments
+- activity logs
+- audit trails
+
+Why server mode fits transactional pages:
+
+- transaction tables usually grow much larger
+- filtering, sorting, and pagination should scale with the database
+- export and reporting queries often need the exact current server-side filter state
+
+Override rule:
+
+- if a definition page is known to be very large, server mode is acceptable
+- if a transactional page is intentionally tiny, client mode can be used only with explicit justification
+
+## Filter Pattern
+
+Every entity should ship the filters that make sense for its context.
+
+Rules:
+
+- global search is not a replacement for obvious business filters
+- if the entity has a meaningful status, add a status filter
+- if the entity has a meaningful number such as price, amount, stock, or age, add a range filter
+- if the entity has meaningful dates such as created, booked, delivered, or last activity, add date filters
+- if the entity belongs to a branch, owner, category, or other business dimension, add that filter when it helps operators narrow the list quickly
+- avoid filler filters that do not help real decision-making
+
+Examples:
+
+- customers: verification, age, created date, last sign-in date
+- products: status, price range, created date
+- orders: status, payment status, branch, order date, total range
+
+A good rule of thumb:
+
+- if an operator would naturally ask "show me only the active ones", "show me high-price items", or "show me this month's records", that filter belongs on the screen
+
+## Action Bar Pattern
+
+The action bar is for selection-scoped actions only.
+
+Use it when:
+
+- the table has row selection
+- the selected rows support meaningful bulk actions
+
+Do not use it for:
+
+- page-wide actions such as `add`, `import`, `export all`, or view options
+- single-record actions that belong in the row menu
+- decorative empty state chrome
+
+Selection rules:
+
+- if row selection is enabled, the action bar should contain real selected-row actions
+- if there are no meaningful selected-row actions, remove row selection instead of rendering an empty action bar
+- always keep the clear-selection affordance
+- action bar actions should usually mirror the entity's `bulkActions` registry entry
+
+Decision guide:
+
+- toolbar: page-level actions
+- row menu: one-record actions
+- action bar: selected-row actions
+
+Example:
+
+```tsx
+<DataTable
+  table={table}
+  toolbar={
+    <DataTableToolbar table={table}>
+      <AddProductButton />
+      <DataTableExportButton table={table} />
+      <ProductsImportButton />
+    </DataTableToolbar>
+  }
+  actionBar={
+    <DataTableActionBar table={table}>
+      <ProductsBulkActions table={table} />
+    </DataTableActionBar>
+  }
+/>
+```
+
+In that example:
+
+- `AddProductButton`, import, and page-level export stay in the toolbar
+- `ProductsBulkActions` owns `activate`, `deactivate`, and `archive` for the selected rows
+- the action bar appears only when selection exists
 
 ## Audit Info Dialog Rule
 
@@ -340,7 +466,7 @@ Rules:
 - only ship actions the entity actually needs
 - register expected actions in the entity registry
 - keep state-changing actions close to the row menu unless they need a full dialog
-- if row selection exists, ship the action bar so users can see selection state and clear it quickly
+- if row selection exists, ship the action bar with real selected-row actions so users can act on the selection immediately
 
 Examples:
 
@@ -368,18 +494,20 @@ Entity forms should follow:
 When asked to add an entity, an AI agent should:
 
 1. Ask the intake questions in this document if the feature set is not already clear.
-2. Confirm import/export, row actions, bulk actions, branch scope, and audit dialog behavior before generating code.
+2. Confirm import/export, filters, row actions, bulk actions, branch scope, audit dialog behavior, and the correct table mode before generating code.
 3. Confirm whether row selection also requires an action bar. Default answer: yes.
-4. Create the schema file in the correct domain.
-5. Export it through `src/drizzle/schema.ts`.
-6. Add the entity to the central registry.
-7. Create `schemas.ts`, `queries.ts`, `mutations.ts`, `router.ts`, and `types.ts`.
-8. Add `import.ts` only when import is required.
-9. Create feature-owned admin UI primitives.
-10. Add a thin route file in `src/app/(system-pages)`.
-11. Add full bilingual copy.
-12. Add seed support if the entity is demo-visible.
-13. Avoid duplicating patterns that already exist in another entity feature.
+4. Use client-mode tables for definition pages by default.
+5. Use server-mode tables for transactional pages by default.
+6. Create the schema file in the correct domain.
+7. Export it through `src/drizzle/schema.ts`.
+8. Add the entity to the central registry.
+9. Create `schemas.ts`, `queries.ts`, `mutations.ts`, `router.ts`, and `types.ts`.
+10. Add `import.ts` only when import is required.
+11. Create feature-owned admin UI primitives.
+12. Add a thin route file in `src/app/(system-pages)`.
+13. Add full bilingual copy.
+14. Add seed support if the entity is demo-visible.
+15. Avoid duplicating patterns that already exist in another entity feature.
 
 ## Definition Of Done
 
@@ -393,6 +521,8 @@ An entity is not complete until all of the following are true:
 - permissions work
 - nav and breadcrumb labels resolve
 - audit info dialog follows the agreed mode
+- meaningful entity filters are present
+- the chosen table mode matches the entity type or has explicit justification
 - row actions match the agreed action set
 - row selection also includes the action bar when selection is enabled
 - import/export is implemented if requested

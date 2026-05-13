@@ -3,6 +3,9 @@ import { z } from "zod";
 export const productListFilterInput = z.object({
   sorting: z.array(z.object({ id: z.string(), desc: z.boolean() })).default([]),
   globalFilter: z.string().optional(),
+  columnFilters: z
+    .array(z.object({ id: z.string(), value: z.unknown() }))
+    .default([]),
 });
 
 export const listProductsInput = z.object({
@@ -10,6 +13,7 @@ export const listProductsInput = z.object({
   perPage: z.number().int().min(1).max(100).default(20),
   sorting: productListFilterInput.shape.sorting,
   globalFilter: productListFilterInput.shape.globalFilter,
+  columnFilters: productListFilterInput.shape.columnFilters,
 });
 
 export const exportProductsInput = productListFilterInput;
@@ -54,6 +58,15 @@ export const productSetActiveSchema = z.object({
   isActive: z.boolean(),
 });
 
+export const productBulkSetActiveSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1),
+  isActive: z.boolean(),
+});
+
+export const productBulkArchiveSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1),
+});
+
 export type ProductListFilterInput = z.infer<typeof productListFilterInput>;
 export type ListProductsInput = z.infer<typeof listProductsInput>;
 export type ExportProductsInput = z.infer<typeof exportProductsInput>;
@@ -63,3 +76,5 @@ export type ProductMutationInput = z.infer<typeof productMutationSchema>;
 export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;
 export type ProductDeleteInput = z.infer<typeof productDeleteSchema>;
 export type ProductSetActiveInput = z.infer<typeof productSetActiveSchema>;
+export type ProductBulkSetActiveInput = z.infer<typeof productBulkSetActiveSchema>;
+export type ProductBulkArchiveInput = z.infer<typeof productBulkArchiveSchema>;

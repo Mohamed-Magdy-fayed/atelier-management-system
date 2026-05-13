@@ -61,7 +61,7 @@ export function ProfileForm({ callback }: { callback?: () => void }) {
     );
 
     return (
-        <form className="space-y-5" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
             <FieldSet disabled={isPending}>
                 <FieldGroup>
                     <Avatar className="mx-auto size-12 border-2 rounded-full">

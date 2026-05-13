@@ -1,9 +1,11 @@
-import { and, eq, isNull, ne } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 
 import { ProductsTable } from "@/drizzle/schema";
 
 import type {
+  ProductBulkArchiveInput,
+  ProductBulkSetActiveInput,
   ProductDeleteInput,
   ProductMutationInput,
   ProductSetActiveInput,
@@ -160,4 +162,52 @@ export async function setProductActive(
     .where(eq(ProductsTable.id, input.id));
 
   return { updated: true };
+}
+
+export async function bulkSetProductsActive(
+  ctx: TRPCContext,
+  input: ProductBulkSetActiveInput,
+) {
+  const session = getRequiredSession(ctx);
+  assertAdminRole(session.user.role);
+
+  await ctx.db
+    .update(ProductsTable)
+    .set({
+      isActive: input.isActive,
+      updatedBy: session.user.id,
+    })
+    .where(
+      and(
+        inArray(ProductsTable.id, input.ids),
+        isNull(ProductsTable.deletedAt),
+      ),
+    );
+
+  return { updated: true };
+}
+
+export async function bulkArchiveProducts(
+  ctx: TRPCContext,
+  input: ProductBulkArchiveInput,
+) {
+  const session = getRequiredSession(ctx);
+  assertAdminRole(session.user.role);
+
+  await ctx.db
+    .update(ProductsTable)
+    .set({
+      isActive: false,
+      deletedAt: new Date(),
+      deletedBy: session.user.id,
+      updatedBy: session.user.id,
+    })
+    .where(
+      and(
+        inArray(ProductsTable.id, input.ids),
+        isNull(ProductsTable.deletedAt),
+      ),
+    );
+
+  return { deleted: true };
 }

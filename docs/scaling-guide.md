@@ -131,6 +131,37 @@ For admin entities, use `tRPC` as the standard for:
 
 Server actions can remain for session, auth, and highly UI-bound workflows, but entity CRUD should have one primary pattern.
 
+### 5.5. Choose the right table mode
+
+Data-table mode should follow the entity type by default:
+
+- definition/reference pages use the client-side data table
+- transactional pages use the server-side data table
+
+Use client mode for pages such as:
+
+- products
+- services
+- branches
+- categories
+- other reusable system definitions
+
+Use server mode for pages such as:
+
+- orders
+- bookings
+- invoices
+- payments
+- logs
+- audit-heavy timelines
+
+Reason:
+
+- definition pages are usually smaller and benefit from instant local filtering and sorting
+- transactional tables are usually the ones that grow large, so filtering, sorting, and pagination should stay on the server
+
+Only break this rule when there is a clear, documented reason.
+
 ### 6. Bilingual UI by default
 
 Any new screen, field, toast, dialog, or action must ship with both:
@@ -220,6 +251,9 @@ Before coding, confirm:
 - do we need import?
 - do we need export?
 - do we need row selection?
+- is this a definitions page or a transactional page?
+- should the table use client mode or server mode?
+- which filters make sense for this entity?
 - do we need bulk actions? which ones?
 - which row actions are needed?
 - should the info dialog be audit-only? default: yes
@@ -278,6 +312,7 @@ The registry record should include:
 - table capabilities
 - import/export support
 - row selection support
+- meaningful filters
 - row actions
 - bulk actions
 - audit info mode
@@ -313,6 +348,10 @@ If row selection is enabled, add:
 - an action bar
 - selection-aware export behavior
 - bulk actions if they were part of the confirmed feature set
+
+The action bar should only contain selected-row actions. Keep page-wide actions such as `add`, `import`, and view options in the toolbar.
+
+Do not stop at global search when obvious contextual filters exist. If the entity has meaningful status, date, range, branch, ownership, or lifecycle dimensions, expose them.
 
 ### Step 7. Create the route entry page
 
@@ -360,6 +399,8 @@ When an AI agent adds a new entity, it must:
 8. Keep app route files thin.
 9. Prefer extending shared admin primitives over inventing a new pattern.
 10. Default info dialogs to audit-only unless the request explicitly asks for a richer detail view.
+11. Add the filters that make sense for the entity instead of relying on global search alone.
+12. Default definitions pages to client-mode tables and transactional pages to server-mode tables unless there is a clear reason not to.
 
 ## Audit Field Policy
 
@@ -388,6 +429,8 @@ Required UX expectations:
 - useful empty state
 - predictable table actions
 - intentional row selection only when the entity needs it
+- contextual filters that help operators narrow the entity list quickly
+- the correct table mode for the entity size and behavior
 - role-safe forms
 - non-technical copy
 - clean loading and mutation feedback

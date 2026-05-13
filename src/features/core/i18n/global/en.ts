@@ -276,6 +276,22 @@ export default {
     productActivated: "Product activated.",
     productDeactivated: "Product deactivated.",
     productStatusChangeFailed: "Could not update product status.",
+    bulkActivateProducts: "Activate selected products",
+    bulkDeactivateProducts: "Deactivate selected products",
+    bulkArchiveProducts: "Archive selected products",
+    bulkActivatingProducts: "Activating selected products…",
+    bulkDeactivatingProducts: "Deactivating selected products…",
+    bulkArchiveProductsTitle: "Archive selected products?",
+    bulkArchiveProductsDescription:
+      "Archive {count:number} selected products. They will disappear from active management lists but remain in audit history.",
+    bulkProductsActivatedSuccess: dt("Activated {count:number} selected products.", {}),
+    bulkProductsDeactivatedSuccess: dt(
+      "Deactivated {count:number} selected products.",
+      {},
+    ),
+    bulkProductsArchivedSuccess: dt("Archived {count:number} selected products.", {}),
+    bulkProductStatusFailed: "Could not update the selected products.",
+    bulkProductArchiveFailed: "Could not archive the selected products.",
     deleteProductsTitle: "Archive product?",
     deleteProductsDescription:
       "Archive {name}. The product will disappear from active management lists but remain in audit history.",
