@@ -153,6 +153,9 @@ export default async function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
+            <LinkButton href="/branches" variant="outline" size="sm">
+              {t("systemPages.dashboardActionsBranches")}
+            </LinkButton>
             <LinkButton href="/customers" variant="outline" size="sm">
               {t("systemPages.dashboardActionsCustomers")}
             </LinkButton>
