@@ -1,23 +1,17 @@
 "use client";
 
 import type { ColumnDef, Table } from "@tanstack/react-table";
-import { useEffect, useRef } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 function SelectAllHeader<T>({ table }: { table: Table<T> }) {
-  const ref = useRef<HTMLInputElement>(null);
   const some = table.getIsSomePageRowsSelected();
   const all = table.getIsAllPageRowsSelected();
-  useEffect(() => {
-    if (ref.current) ref.current.indeterminate = some && !all;
-  }, [some, all]);
 
   return (
-    <input
-      ref={ref}
-      type="checkbox"
-      className="size-3.5 rounded border border-input accent-primary"
+    <Checkbox
       checked={all}
-      onChange={table.getToggleAllPageRowsSelectedHandler()}
+      indeterminate={some && !all}
+      onCheckedChange={(checked) => table.toggleAllPageRowsSelected(checked)}
       aria-label="Select all on page"
     />
   );
@@ -32,11 +26,9 @@ export function createSelectColumn<T>(): ColumnDef<T> {
     enableSorting: false,
     header: ({ table }) => <SelectAllHeader table={table} />,
     cell: ({ row }) => (
-      <input
-        type="checkbox"
-        className="size-3.5 rounded border border-input accent-primary"
+      <Checkbox
         checked={row.getIsSelected()}
-        onChange={row.getToggleSelectedHandler()}
+        onCheckedChange={(checked) => row.toggleSelected(checked)}
         aria-label="Select row"
       />
     ),
