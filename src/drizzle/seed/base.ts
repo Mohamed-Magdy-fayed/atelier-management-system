@@ -10,6 +10,69 @@ import { hashPassword } from "@/features/core/auth/core/passwordHasher";
 
 const adminId = "00000000-0000-0000-0000-000000000001";
 
+/** Large enough to stress-test server-side pagination on the customers grid. */
+const SEED_CUSTOMER_COUNT = 8_000;
+const SEED_CUSTOMER_INSERT_BATCH = 500;
+
+const DAY_MS = 24 * 60 * 60 * 1_000;
+
+const FIRST_NAMES = [
+    "Ahmed", "Mohamed", "Mahmoud", "Mostafa", "Khaled", "Hassan", "Hussein",
+    "Youssef", "Omar", "Amr", "Ali", "Ibrahim", "Tarek", "Sherif", "Hossam",
+    "Sara", "Mariam", "Nour", "Salma", "Hana", "Yasmine", "Aya", "Dina",
+    "Reem", "Heba", "Laila", "Fatma", "Eman", "Rasha", "Mona",
+];
+
+const LAST_NAMES = [
+    "Hassan", "Saleh", "Mostafa", "Ibrahim", "Adel", "Fathy", "Gamal", "Said",
+    "Mansour", "Nabil", "Farouk", "Younis", "Sabry", "Hamdy", "Helmy",
+    "Ezzat", "Shawky", "Magdy", "Refaat", "Anwar", "Hashem", "Khalifa",
+];
+
+function pickName(i: number): string {
+    const first = FIRST_NAMES[i % FIRST_NAMES.length];
+    const last = LAST_NAMES[(i * 7) % LAST_NAMES.length];
+    return `${first} ${last}`;
+}
+
+function pickAge(i: number): number | null {
+    if (i % 11 === 0) return null;
+    return 5 + ((i * 13) % 86);
+}
+
+function pickPhone(i: number, idx: number): string | null {
+    if (i % 13 === 0) return null;
+    const formatter = i % 5;
+    const seq = `${1000000 + idx}`;
+    if (formatter === 0) return `201${seq}`;
+    if (formatter === 1) return `0020${seq}`;
+    if (formatter === 2) return `1${seq}`;
+    if (formatter === 3) return `9665${seq.slice(0, 8)}`;
+    return `010${seq}`;
+}
+
+function pickCreatedAt(i: number, now: number): Date {
+    const daysBack = (i * 17) % (3 * 365);
+    return new Date(now - daysBack * DAY_MS);
+}
+
+function pickLastSignInAt(i: number, now: number, createdAt: Date): Date | null {
+    if (i % 4 === 0) return null;
+    const span = Math.max(1, Math.floor((now - createdAt.getTime()) / DAY_MS));
+    const daysAgo = ((i * 23) % Math.min(span, 540));
+    return new Date(now - daysAgo * DAY_MS);
+}
+
+function pickEmailVerifiedAt(
+    i: number,
+    createdAt: Date,
+    rate: number,
+): Date | null {
+    if ((i * 7) % 100 >= rate) return null;
+    const within = ((i * 5) % 30) + 1;
+    return new Date(createdAt.getTime() + within * DAY_MS);
+}
+
 export async function seedBase() {
     const {
         adminUser,
@@ -17,6 +80,7 @@ export async function seedBase() {
         basicBranches,
         branchAssignments,
         seededEmployees,
+        seededCustomerCount,
     } =
         await db.transaction(async (tx) => {
             const adminUser = await tx
@@ -68,7 +132,6 @@ export async function seedBase() {
             const employeeBranches = basicBranches.slice(1);
 
             const employeeMemberships = seededEmployees.flatMap((employee, index) => {
-                // Keep a subset of employees unassigned to cover disabled-branch UX.
                 if (index % 5 === 0) return [];
 
                 const availableBranches =
@@ -103,12 +166,25 @@ export async function seedBase() {
                 await tx.insert(BranchMembershipsTable).values(employeeMemberships);
             }
 
+            let seededCustomerCount = 0;
+            for (let offset = 0; offset < SEED_CUSTOMER_COUNT; offset += SEED_CUSTOMER_INSERT_BATCH) {
+                const batchSize = Math.min(SEED_CUSTOMER_INSERT_BATCH, SEED_CUSTOMER_COUNT - offset);
+                const batch = buildSeedCustomers(
+                    adminUser.email ?? SEED_ACTOR_EMAIL,
+                    offset,
+                    batchSize,
+                );
+                await tx.insert(UsersTable).values(batch);
+                seededCustomerCount += batch.length;
+            }
+
             return {
                 adminUser,
                 adminCredential,
                 basicBranches,
                 branchAssignments,
                 seededEmployees,
+                seededCustomerCount,
             };
         });
 
@@ -118,23 +194,50 @@ export async function seedBase() {
         basicBranches,
         branchAssignments,
         seededEmployees,
+        seededCustomerCount,
     };
 }
 
 function buildSeedEmployees(createdBy: string): Array<typeof UsersTable.$inferInsert> {
+    const now = Date.now();
     return Array.from({ length: 60 }, (_, index) => {
         const i = index + 1;
-
+        const createdAt = pickCreatedAt(i + 1_000_000, now);
         return {
             createdBy,
             email: `employee${i}@mail.com`,
-            name: `Employee ${i}`,
-            phone: `2012000${String(i).padStart(4, "0")}`,
-            role: "employee",
-            salary: 5000 + (i % 12) * 750,
-            lastSignInAt: new Date(Date.now() - i * 36e5),
-            emailVerifiedAt: new Date(),
-            phoneVerifiedAt: new Date(),
+            name: pickName(i + 5),
+            phone: `+2010${String(10000000 + i).padStart(8, "0")}`,
+            role: "employee" as const,
+            age: pickAge(i + 1),
+            createdAt,
+            lastSignInAt: pickLastSignInAt(i + 3, now, createdAt),
+            emailVerifiedAt: pickEmailVerifiedAt(i, createdAt, 85),
+        };
+    });
+}
+
+/** Deterministic customers with varied phone formats / ages / verification / activity. */
+function buildSeedCustomers(
+    createdBy: string,
+    offset: number,
+    length: number,
+): Array<typeof UsersTable.$inferInsert> {
+    const now = Date.now();
+    return Array.from({ length }, (_, j) => {
+        const i = offset + j;
+        const n = i + 1;
+        const createdAt = pickCreatedAt(i, now);
+        return {
+            createdBy,
+            email: `customer.seed.${n}@example.com`,
+            name: pickName(i),
+            phone: pickPhone(i, n),
+            role: "customer" as const,
+            age: pickAge(i),
+            createdAt,
+            emailVerifiedAt: pickEmailVerifiedAt(i, createdAt, 60),
+            lastSignInAt: pickLastSignInAt(i, now, createdAt),
         };
     });
 }

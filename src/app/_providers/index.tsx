@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { getAuth, getBranches } from "@/features/core/auth/nextjs/actions";
 import { AuthProvider } from "@/features/core/auth/nextjs/components/auth-provider";
 import { BranchProvider } from "@/features/core/auth/nextjs/components/branch-provider";
@@ -8,6 +9,7 @@ import { ThemeProvider } from "@/features/core/color-theme/client";
 import type { Theme } from "@/features/core/color-theme/server";
 import { TranslationProvider } from "@/features/core/i18n/client";
 import { TRPCReactProvider } from "@/integrations/trpc/client";
+import { DirectionProvider } from "@base-ui/react";
 
 type ProvidersProps = PropsWithChildren<{
     locale: string;
@@ -28,8 +30,12 @@ export async function Providers({ children, locale, theme }: ProvidersProps) {
                 <AuthProvider value={authState}>
                     <BranchProvider value={branchsState}>
                         <TRPCReactProvider>
-                            {children}
-                            <Toaster />
+                            <DirectionProvider direction={locale === "ar" ? "rtl" : "ltr"}>
+                                <TooltipProvider>
+                                    {children}
+                                    <Toaster />
+                                </TooltipProvider>
+                            </DirectionProvider>
                         </TRPCReactProvider>
                     </BranchProvider>
                 </AuthProvider>

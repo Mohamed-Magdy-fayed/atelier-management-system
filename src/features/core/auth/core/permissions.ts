@@ -42,7 +42,13 @@ export const unrestricted = {
   delete: true,
 };
 
-export const screenKeys = ["dashboard", "my-account", "employee", "test"] as const;
+export const screenKeys = [
+    "dashboard",
+    "my-account",
+    "employee",
+    "customers",
+    "test",
+] as const;
 export type ScreenKey = (typeof screenKeys)[number];
 
 export const rolesPermissions = {

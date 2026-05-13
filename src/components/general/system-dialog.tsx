@@ -45,7 +45,7 @@ export function SystemDialog({
 }: SystemDialogProps) {
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange} modal>
-            <DialogTrigger render={triggerRender} />
+            {triggerRender ? <DialogTrigger render={triggerRender} /> : null}
             <DialogContent className="overflow-hidden">
                 <DialogHeader className="bg-input -m-4 p-4 rounded-lg">
                     <DialogTitle render={titleRender} className="px-4 py-2" />

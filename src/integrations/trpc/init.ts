@@ -35,7 +35,7 @@ const t = initTRPC
     });
 
 const authMiddleware = t.middleware(({ ctx, next }) => {
-    if (!ctx.session || ctx.session.exp) {
+    if (!ctx.session || ctx.session.exp * 1000 <= Date.now()) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
     }
 

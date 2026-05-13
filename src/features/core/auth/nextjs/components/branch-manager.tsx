@@ -3,6 +3,7 @@
 import {
     AlertTriangleIcon,
     BuildingIcon,
+    ChevronsUpDownIcon,
     EditIcon,
     ListStartIcon,
     Plus,
@@ -34,6 +35,11 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from "@/components/ui/sidebar";
 import { H4, Lead } from "@/components/ui/typography";
 import {
     deleteBranchAction,
@@ -46,7 +52,20 @@ import { useTranslation } from "@/features/core/i18n/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
-export function BranchManager() {
+type BranchManagerVariant = "default" | "sidebar";
+
+export function BranchManager({
+    variant = "default",
+}: {
+    /**
+     * Visual variant for the dropdown trigger:
+     * - `default` — a regular `Button` (used in headers).
+     * - `sidebar` — a `SidebarMenuButton size="lg"` that fits the official
+     *   shadcn sidebar header slot, collapses to an icon when the sidebar
+     *   collapses, and inherits sidebar theme tokens.
+     */
+    variant?: BranchManagerVariant;
+} = {}) {
     const isMobile = useIsMobile();
     const { t, locale } = useTranslation();
     const { isAuthenticated, session } = useAuth();
@@ -85,28 +104,72 @@ export function BranchManager() {
         });
     }
 
-    const triggerButton = (
-        <Button
-            variant="outline"
-            disabled={isSwitcherDisabled}
-            className={cn(isSwitcherDisabled && "opacity-40")}
-        >
-            <BuildingIcon className="text-primary" />
-            <span className="truncate font-medium">
-                {!hasActiveOrg || !activeBranch
-                    ? t("authTranslations.branch.switcher.select")
-                    : locale === "ar"
-                        ? activeBranch.nameAr
-                        : activeBranch.nameEn}
-            </span>
-        </Button>
-    );
+    const branchLabel =
+        !hasActiveOrg || !activeBranch
+            ? String(t("authTranslations.branch.switcher.select"))
+            : locale === "ar"
+                ? activeBranch.nameAr
+                : activeBranch.nameEn;
+
+    // Render the trigger differently depending on where the BranchManager
+    // is mounted. Sidebar variant matches the official shadcn header slot.
+    const triggerButton =
+        variant === "sidebar" ? (
+            <SidebarMenuButton
+                size="lg"
+                disabled={isSwitcherDisabled}
+                tooltip={branchLabel}
+                className={cn(
+                    "data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground",
+                    isSwitcherDisabled && "opacity-40",
+                )}
+            >
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    <BuildingIcon className="size-4" aria-hidden />
+                </div>
+                <div className="grid flex-1 text-start text-sm leading-tight">
+                    <span className="truncate font-semibold">{branchLabel}</span>
+                    {hasActiveOrg && activeBranch ? (
+                        <span className="truncate text-xs text-sidebar-foreground/70">
+                            {t("authTranslations.branch.switcher.activeBadge")}
+                        </span>
+                    ) : null}
+                </div>
+                <ChevronsUpDownIcon className="ms-auto size-4" aria-hidden />
+            </SidebarMenuButton>
+        ) : (
+            <Button
+                variant="outline"
+                disabled={isSwitcherDisabled}
+                className={cn(isSwitcherDisabled && "opacity-40")}
+            >
+                <BuildingIcon className="text-primary" />
+                <span className="truncate font-medium">{branchLabel}</span>
+            </Button>
+        );
 
     if (!isAuthenticated || !hasBranchState || isCustomer) {
         return null;
     }
 
     if (isSwitcherDisabled) {
+        // In the sidebar slot the disabled trigger is wrapped in the same menu
+        // item so the layout doesn't collapse to a bare element.
+        if (variant === "sidebar") {
+            return (
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <WrapWithTooltip
+                            text={t(
+                                "authTranslations.branch.switcher.noAssignedBranches",
+                            )}
+                        >
+                            <span className="inline-flex w-full">{triggerButton}</span>
+                        </WrapWithTooltip>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            );
+        }
         return (
             <WrapWithTooltip
                 text={t("authTranslations.branch.switcher.noAssignedBranches")}
@@ -116,7 +179,7 @@ export function BranchManager() {
         );
     }
 
-    return (
+    const content = (
         <>
             <AlertDialog
                 onOpenChange={(open) => setDeletingOrg(open ? deletingOrg : undefined)}
@@ -252,4 +315,14 @@ export function BranchManager() {
             </DropdownMenu>
         </>
     );
+
+    if (variant === "sidebar") {
+        return (
+            <SidebarMenu>
+                <SidebarMenuItem>{content}</SidebarMenuItem>
+            </SidebarMenu>
+        );
+    }
+
+    return content;
 }

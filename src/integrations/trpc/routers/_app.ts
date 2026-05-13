@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { LOCALE_COOKIE_NAME } from "@/features/core/i18n/lib";
 import { baseProcedure, createTRPCRouter } from "../init";
+import { usersRouter } from "./users";
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const ALLOWED_IMAGE_MIME_TYPES = new Set([
@@ -127,6 +128,7 @@ export const appRouter = createTRPCRouter({
                 url: `/images/${safeName}`,
             };
         }),
+    users: usersRouter,
 });
 
 export type AppRouter = typeof appRouter;
