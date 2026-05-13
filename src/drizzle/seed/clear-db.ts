@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 
 import { db } from "@/drizzle";
+import { env } from "@/env/server";
 
 const SAFE_DB_HOSTS = new Set([
   "localhost",
@@ -13,7 +14,7 @@ const SAFE_DB_HOSTS = new Set([
 ]);
 
 function getDatabaseHostname(): string {
-  const databaseUrl = process.env.DATABASE_URL;
+  const databaseUrl = env.DATABASE_URL;
   if (!databaseUrl) {
     throw new Error("DATABASE_URL is required before clearing the database.");
   }
