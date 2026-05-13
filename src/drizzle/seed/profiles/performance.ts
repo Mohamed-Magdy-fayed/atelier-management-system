@@ -6,5 +6,6 @@ export async function seedPerformanceProfile() {
     employeeCount: 60,
     customerCount: 8_000,
     customerInsertBatch: 500,
+    productCount: 60,
   });
 }

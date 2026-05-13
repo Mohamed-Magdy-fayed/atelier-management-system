@@ -15,6 +15,13 @@
       "when": 1776721532652,
       "tag": "0001_stiff_vengeance",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778704356129,
+      "tag": "0002_open_eternals",
+      "breakpoints": true
     }
   ]
 }

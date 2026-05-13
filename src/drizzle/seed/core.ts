@@ -2,6 +2,7 @@ import { db } from "@/drizzle";
 import {
   BranchesTable,
   BranchMembershipsTable,
+  ProductsTable,
   UserCredentialsTable,
   UsersTable,
 } from "@/drizzle/schema";
@@ -85,10 +86,26 @@ const branchesData: (typeof BranchesTable.$inferInsert)[] = [
   { nameAr: "أسيوط", nameEn: "Assiut" },
 ] as const;
 
+const productTemplates = [
+  { nameEn: "Signature Coffee Beans", nameAr: "حبوب قهوة سيجنتشر", price: 650 },
+  { nameEn: "Arabic Coffee Blend", nameAr: "خلطة قهوة عربية", price: 540 },
+  { nameEn: "Premium Black Tea", nameAr: "شاي أسود فاخر", price: 280 },
+  { nameEn: "Sparkling Berry Drink", nameAr: "مشروب توت فوار", price: 190 },
+  { nameEn: "Chocolate Croissant", nameAr: "كرواسون بالشوكولاتة", price: 120 },
+  { nameEn: "Butter Cookies Box", nameAr: "علبة بسكويت بالزبدة", price: 210 },
+  { nameEn: "Pistachio Cake Slice", nameAr: "قطعة كيك بالفستق", price: 160 },
+  { nameEn: "Fresh Orange Juice", nameAr: "عصير برتقال طازج", price: 95 },
+  { nameEn: "Vanilla Cheesecake", nameAr: "تشيزكيك بالفانيليا", price: 175 },
+  { nameEn: "Granola Breakfast Jar", nameAr: "برطمان جرانولا للفطور", price: 135 },
+  { nameEn: "Cold Brew Bottle", nameAr: "زجاجة كولد برو", price: 145 },
+  { nameEn: "House Sandwich Combo", nameAr: "وجبة ساندويتش هاوس", price: 230 },
+] as const;
+
 export type SeedScenarioConfig = {
   customerCount: number;
   customerInsertBatch: number;
   employeeCount: number;
+  productCount: number;
   profile: SeedProfileName;
 };
 
@@ -100,6 +117,7 @@ export type SeedScenarioResult = {
   profile: SeedProfileName;
   seededCustomerCount: number;
   seededEmployees: Array<{ id: string }>;
+  seededProductCount: number;
 };
 
 function pickName(i: number): string {
@@ -192,6 +210,30 @@ function buildSeedCustomers(
   });
 }
 
+function buildSeedProducts(
+  createdBy: string,
+  count: number,
+): Array<typeof ProductsTable.$inferInsert> {
+  return Array.from({ length: count }, (_, index) => {
+    const i = index + 1;
+    const template = productTemplates[index % productTemplates.length];
+    const cycle = Math.floor(index / productTemplates.length);
+    const createdAt = pickCreatedAt(i + 2_000_000, Date.now());
+
+    return {
+      code: `PRD-${String(i).padStart(3, "0")}`,
+      nameEn:
+        cycle === 0 ? template.nameEn : `${template.nameEn} ${cycle + 1}`,
+      nameAr:
+        cycle === 0 ? template.nameAr : `${template.nameAr} ${cycle + 1}`,
+      price: template.price + cycle * 25,
+      isActive: i % 9 !== 0,
+      createdBy,
+      createdAt,
+    };
+  });
+}
+
 export async function seedScenario(
   config: SeedScenarioConfig,
 ): Promise<SeedScenarioResult> {
@@ -200,6 +242,7 @@ export async function seedScenario(
     adminCredential,
     basicBranches,
     branchAssignments,
+    seededProductCount,
     seededEmployees,
     seededCustomerCount,
   } = await db.transaction(async (tx) => {
@@ -241,6 +284,11 @@ export async function seedScenario(
         isCurrent: index === 0,
       })),
     );
+
+    const seededProducts = await tx
+      .insert(ProductsTable)
+      .values(buildSeedProducts(SEED_SYSTEM_ACTOR, config.productCount))
+      .returning({ id: ProductsTable.id });
 
     const employees = buildSeedEmployees(SEED_SYSTEM_ACTOR, config.employeeCount);
     const seededEmployees = await tx
@@ -304,6 +352,7 @@ export async function seedScenario(
       adminCredential,
       basicBranches,
       branchAssignments,
+      seededProductCount: seededProducts.length,
       seededEmployees,
       seededCustomerCount,
     };
@@ -315,6 +364,7 @@ export async function seedScenario(
     adminCredential,
     basicBranches,
     branchAssignments,
+    seededProductCount,
     seededEmployees,
     seededCustomerCount,
   };

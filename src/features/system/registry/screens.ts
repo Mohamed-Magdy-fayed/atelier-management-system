@@ -1,16 +1,18 @@
 import type { LucideIcon } from "lucide-react";
-import { Building2, LayoutDashboard, UserCircle, Users } from "lucide-react";
+import { Box, Building2, LayoutDashboard, UserCircle, Users } from "lucide-react";
 
 type NavTranslationKey =
   | "navDashboard"
   | "navEmployees"
   | "navCustomers"
-  | "navBranches";
+  | "navBranches"
+  | "navProducts";
 type BreadcrumbTranslationKey =
   | "breadcrumbDashboard"
   | "breadcrumbEmployees"
   | "breadcrumbCustomers"
-  | "breadcrumbBranches";
+  | "breadcrumbBranches"
+  | "breadcrumbProducts";
 
 type SystemScreenRecord = {
   key: string;
@@ -63,6 +65,16 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     protected: true,
     navTranslationKey: "navBranches",
     breadcrumbTranslationKey: "breadcrumbBranches",
+  },
+  {
+    key: "products",
+    href: "/products",
+    pathPrefixes: ["/products"],
+    Icon: Box,
+    showInNav: true,
+    protected: true,
+    navTranslationKey: "navProducts",
+    breadcrumbTranslationKey: "breadcrumbProducts",
   },
   {
     key: "my-account",
