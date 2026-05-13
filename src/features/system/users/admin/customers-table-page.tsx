@@ -32,13 +32,13 @@ import { useTranslation } from "@/features/core/i18n/client";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { UserGridRow } from "@/integrations/trpc/routers/users";
 
-import { UserDeleteDialog } from "../_components/user-delete-dialog";
-import { UserFormDialog } from "../_components/user-form-dialog";
-import { UserInfoModal } from "../_components/user-info-modal";
-import type { UserRowActionVariant } from "../_components/user-row-actions";
-import { buildUserGridColumns } from "../_components/users-table-columns";
-import { UsersBulkActions } from "../_components/users-bulk-actions";
-import { UsersGridFilters } from "../_components/users-grid-filters";
+import { UserDeleteDialog } from "./components/user-delete-dialog";
+import { UserFormDialog } from "./components/user-form-dialog";
+import { UserInfoModal } from "./components/user-info-modal";
+import type { UserRowActionVariant } from "./components/user-row-actions";
+import { UsersBulkActions } from "./components/users-bulk-actions";
+import { UsersGridFilters } from "./components/users-grid-filters";
+import { buildUserGridColumns } from "./components/users-table-columns";
 
 type RowAction = { row: UserGridRow; variant: UserRowActionVariant } | null;
 
@@ -139,7 +139,6 @@ export function CustomersTablePage() {
     controlled,
   });
 
-  /** Pull every matching customer (no pagination) for CSV export. */
   const fetchAllRows = useCallback(async () => {
     const r = await queryClient.fetchQuery(
       trpc.users.exportRows.queryOptions({

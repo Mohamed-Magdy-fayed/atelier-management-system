@@ -33,9 +33,7 @@ type UserFormValues = z.infer<typeof userFormSchema>;
 export type UserFormDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** When provided, the dialog acts in edit mode. */
   user?: UserGridRow | null;
-  /** Default role for new records (e.g. "customer" on /customers, "employee" on /employees). */
   defaultRole?: UserFormValues["role"];
 };
 

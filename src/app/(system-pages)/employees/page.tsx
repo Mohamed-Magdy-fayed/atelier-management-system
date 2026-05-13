@@ -1,4 +1,4 @@
-import { EmployeesTablePage } from "./employees-table-page";
+import { EmployeesTablePage } from "@/features/system/users/admin";
 import { HydrateClient, prefetch, trpc } from "@/integrations/trpc/server";
 
 export default async function EmployeesPage() {

@@ -1,5 +1,6 @@
 import type { UserRole } from "@/drizzle/schema";
 import type { PartialUser } from "@/features/core/auth/types";
+import { screenKeys, type ScreenKey } from "@/features/system/registry";
 
 export type DefaultAction = "view" | "update" | "create" | "delete";
 
@@ -42,14 +43,7 @@ export const unrestricted = {
   delete: true,
 };
 
-export const screenKeys = [
-    "dashboard",
-    "my-account",
-    "employee",
-    "customers",
-    "test",
-] as const;
-export type ScreenKey = (typeof screenKeys)[number];
+export { screenKeys, type ScreenKey };
 
 export const rolesPermissions = {
   admin: {

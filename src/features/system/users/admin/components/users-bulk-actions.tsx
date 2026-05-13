@@ -28,7 +28,6 @@ export function UsersBulkActions({ table }: { table: Table<UserGridRow> }) {
   const queryClient = useQueryClient();
 
   const verifyMut = useMutation(trpc.users.bulkSetVerified.mutationOptions());
-
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   async function bulkVerify(verified: boolean) {

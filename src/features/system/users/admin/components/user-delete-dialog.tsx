@@ -21,9 +21,7 @@ import { useTRPC } from "@/integrations/trpc/client";
 type UserDeleteDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** IDs to delete. */
   ids: string[];
-  /** Called after a successful delete. */
   onDeleted?: () => void;
 };
 
@@ -39,7 +37,6 @@ export function UserDeleteDialog({
   const [pending, setPending] = useState(false);
 
   const delMut = useMutation(trpc.users.softDelete.mutationOptions());
-
   const count = ids.length;
 
   async function handleConfirm() {

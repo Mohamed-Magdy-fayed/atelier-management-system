@@ -1,4 +1,4 @@
-import { CustomersTablePage } from "./customers-table-page";
+import { CustomersTablePage } from "@/features/system/users/admin";
 import { HydrateClient, prefetch, trpc } from "@/integrations/trpc/server";
 
 const defaultCustomersInput = {

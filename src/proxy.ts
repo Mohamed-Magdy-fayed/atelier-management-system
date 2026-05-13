@@ -2,9 +2,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import {
     getUserSession,
     hasPermission,
-    type ScreenKey,
     updateUserSessionExpiration,
 } from "@/features/core/auth/core";
+import { getProtectedScreenDefinitionByPathname } from "@/features/system/registry";
 
 const authRoutes = [
     "/sign-in",
@@ -47,8 +47,13 @@ async function middlewareAuth(request: NextRequest) {
         } else if (isPublicRoute) {
             return NextResponse.next();
         } else {
-            const screenKey = request.nextUrl.pathname as unknown as ScreenKey;
-            if (!hasPermission(session.user, "screens", "view", { screenKey })) {
+            const screen = getProtectedScreenDefinitionByPathname(pathname);
+            if (
+                !screen ||
+                !hasPermission(session.user, "screens", "view", {
+                    screenKey: screen.key,
+                })
+            ) {
                 return NextResponse.rewrite(new URL("/unauthorized", request.url));
             } else {
                 return NextResponse.next();
