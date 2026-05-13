@@ -1,12 +1,13 @@
 "use client";
 
 import {
-  CopyIcon,
   InfoIcon,
+  ListStartIcon,
   MoreHorizontalIcon,
   PencilIcon,
   Trash2Icon,
 } from "lucide-react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { setActiveBranchForUserAction } from "@/features/core/auth/nextjs/actions";
 import { useTranslation } from "@/features/core/i18n/client";
 import type { BranchGridRow } from "@/integrations/trpc/routers/branches";
 
@@ -36,6 +38,19 @@ export function BranchRowActions({
   setRowAction,
 }: BranchRowActionsProps) {
   const { t } = useTranslation();
+  const [isPending, startTransition] = useTransition();
+
+  function setActiveBranch() {
+    startTransition(async () => {
+      const result = await setActiveBranchForUserAction(row.id);
+      if (result.isError) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(String(t("authTranslations.branch.actions.setActiveBranch.success")));
+    });
+  }
 
   return (
     <DropdownMenu>
@@ -56,18 +71,13 @@ export function BranchRowActions({
           <InfoIcon className="size-3.5" />
           {String(t("common.info"))}
         </DropdownMenuItem>
+        <DropdownMenuItem disabled={isPending} onClick={() => void setActiveBranch()}>
+          <ListStartIcon className="size-3.5" />
+          {String(t("authTranslations.branch.switcher.setActive"))}
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setRowAction({ row, variant: "edit" })}>
           <PencilIcon className="size-3.5" />
           {String(t("common.edit"))}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            void navigator.clipboard.writeText(row.id);
-            toast.success(String(t("dataTable.copyRowId")));
-          }}
-        >
-          <CopyIcon className="size-3.5" />
-          {String(t("dataTable.copyRowId"))}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => setRowAction({ row, variant: "delete" })}>

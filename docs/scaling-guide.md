@@ -14,7 +14,7 @@ It is written for both:
 The agreed direction for the system is:
 
 - single brand: `Funtastic`
-- product identity: business suite
+- product identity: business suite with a polished company-facing experience for products, services, and bookings
 - full Arabic and English parity
 - realistic local demo data
 - `tRPC` as the standard transport for admin entity work
@@ -86,6 +86,7 @@ Future admin screens should be built from shared primitives such as:
 
 - page headers
 - data grid wrappers
+- selection action bars
 - filter bars
 - export/import buttons
 - form dialogs
@@ -108,6 +109,10 @@ The registry should drive:
 - breadcrumb label key
 - seed profile ownership
 - feature flags such as import/export support
+- row-action definitions
+- bulk-action definitions
+- whether row selection is enabled
+- whether info dialogs are audit-only
 
 This prevents "remember to edit five files" development.
 
@@ -205,6 +210,24 @@ Then export through:
 
 This is the standard process for both humans and AI agents.
 
+### Step 0. Confirm the feature set
+
+Do not build a new entity from the name alone.
+
+Before coding, confirm:
+
+- is the entity global or branch-aware?
+- do we need import?
+- do we need export?
+- do we need row selection?
+- do we need bulk actions? which ones?
+- which row actions are needed?
+- should the info dialog be audit-only? default: yes
+- should it appear on the customer-facing landing experience?
+- should it be seeded for demo profiles?
+
+If these answers are missing, the AI agent must ask first.
+
 ### Step 1. Define the database table
 
 Create the table in the appropriate schema domain, for example:
@@ -254,6 +277,10 @@ The registry record should include:
 - icon
 - table capabilities
 - import/export support
+- row selection support
+- row actions
+- bulk actions
+- audit info mode
 - dashboard visibility
 - seed ownership
 
@@ -279,6 +306,13 @@ Each entity should get its own admin primitives, usually:
 - `<Entity>InfoPanel` or `<Entity>InfoDialog`
 
 These should live in the feature folder, not under `src/app/(system-pages)/_components`.
+
+If row selection is enabled, add:
+
+- a select column
+- an action bar
+- selection-aware export behavior
+- bulk actions if they were part of the confirmed feature set
 
 ### Step 7. Create the route entry page
 
@@ -316,14 +350,16 @@ Any new major entity should update:
 
 When an AI agent adds a new entity, it must:
 
-1. Follow the folder conventions in this guide.
-2. Use the central registry instead of hardcoding nav or permissions in multiple places.
-3. Use `tRPC` for admin entity operations unless the task explicitly says otherwise.
-4. Add bilingual labels and messages.
-5. Add seed support if the entity is demo-visible.
-6. Avoid route-local duplication under `src/app/(system-pages)`.
-7. Keep app route files thin.
-8. Prefer extending shared admin primitives over inventing a new pattern.
+1. Ask the entity intake questions first if the feature set is not explicit.
+2. Follow the folder conventions in this guide.
+3. Use the central registry instead of hardcoding nav or permissions in multiple places.
+4. Use `tRPC` for admin entity operations unless the task explicitly says otherwise.
+5. Add bilingual labels and messages.
+6. Add seed support if the entity is demo-visible.
+7. Avoid route-local duplication under `src/app/(system-pages)`.
+8. Keep app route files thin.
+9. Prefer extending shared admin primitives over inventing a new pattern.
+10. Default info dialogs to audit-only unless the request explicitly asks for a richer detail view.
 
 ## Audit Field Policy
 
@@ -351,10 +387,12 @@ Required UX expectations:
 - clear page title and business-facing subtitle
 - useful empty state
 - predictable table actions
+- intentional row selection only when the entity needs it
 - role-safe forms
 - non-technical copy
 - clean loading and mutation feedback
 - no developer narration on live screens
+- audit-only info dialogs by default
 
 Avoid copy like:
 
@@ -367,6 +405,16 @@ Prefer product language such as:
 - "Manage customer records across all branches."
 - "Review and apply import changes."
 - "Delete 3 customers?"
+
+## Landing Experience Rule
+
+The landing page should represent the company using `Funtastic`, not only the admin team using it.
+
+That means:
+
+- the public-facing copy should speak to selling products, services, or bookings
+- the admin workspace should still be clearly available to staff
+- new entities that affect the company-facing experience should be considered in landing-page planning, not only admin tables
 
 ## Recommended Near-Term Refactors
 

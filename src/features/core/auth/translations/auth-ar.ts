@@ -405,6 +405,10 @@ export default {
                     success: "تم تعيين الفرع الحالية",
                     error: "تعذر تعيين الفرع الحالية",
                 },
+                clearActiveBranch: {
+                    success: "يتم الآن عرض كل الفروع",
+                    error: "تعذر إلغاء تحديد الفرع الحالية",
+                },
                 createBranch: {
                     success: "تم إنشاء الفرع",
                     error: "تعذر إنشاء الفرع",
@@ -432,6 +436,7 @@ export default {
             switcher: {
                 add: "إضافة فرع",
                 select: "اختر الفرع",
+                allBranches: "كل الفروع",
                 edit: "تعديل الفرع",
                 empty: "قم بإنشاء فرع",
                 noAssignedBranches: "لا توجد فروع مخصصة لحسابك حتى الآن",

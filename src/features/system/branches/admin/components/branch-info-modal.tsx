@@ -58,31 +58,15 @@ export function BranchInfoModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{String(t("systemPages.branchInfoTitle"))}</DialogTitle>
+          <DialogTitle>{String(t("systemPages.auditInfoTitle"))}</DialogTitle>
           <DialogDescription>
-            {String(t("systemPages.branchInfoDescription"))}
+            {String(t("systemPages.auditInfoDescription"))}
           </DialogDescription>
         </DialogHeader>
         <div className="divide-y divide-border">
           <InfoRow
             label={String(t("dataTable.id"))}
             value={<code className="text-[0.7rem]">{branch.id}</code>}
-          />
-          <InfoRow
-            label={String(t("systemPages.branchesNameEn"))}
-            value={branch.nameEn}
-          />
-          <InfoRow
-            label={String(t("systemPages.branchesNameAr"))}
-            value={branch.nameAr}
-          />
-          <InfoRow
-            label={String(t("systemPages.branchesOwner"))}
-            value={branch.ownerName ?? dash}
-          />
-          <InfoRow
-            label={String(t("systemPages.branchesMemberCount"))}
-            value={branch.memberCount}
           />
           <InfoRow
             label={String(t("common.createdAt"))}

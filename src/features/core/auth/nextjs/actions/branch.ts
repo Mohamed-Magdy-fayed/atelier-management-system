@@ -360,6 +360,37 @@ export async function setActiveBranchForUserAction(
     }
 }
 
+export async function clearActiveBranchForUserAction(): Promise<
+    TypedResponse<{ updated: true }>
+> {
+    const { t } = await getT();
+    const actor = await getCurrentUser({ redirectIfNotFound: true });
+    const userId = actor.id;
+
+    if (actor.role === "customer") {
+        return {
+            isError: true,
+            message: t("authTranslations.unauthorized", {
+                action: "update",
+                resource: "branches",
+            }),
+        };
+    }
+
+    try {
+        await db
+            .update(BranchMembershipsTable)
+            .set({ isCurrent: false })
+            .where(eq(BranchMembershipsTable.userId, userId));
+
+        revalidateAuthCache({ id: userId });
+
+        return { isError: false, updated: true };
+    } catch (error) {
+        return authError(error);
+    }
+}
+
 export async function getBranches(
     userId: string,
     options?: { includeAllBranches?: boolean },

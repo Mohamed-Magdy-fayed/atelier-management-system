@@ -411,6 +411,10 @@ export default {
                     success: "Active branch set",
                     error: "Unable to set active branch",
                 },
+                clearActiveBranch: {
+                    success: "Viewing all branches",
+                    error: "Unable to clear the active branch",
+                },
                 createBranch: {
                     success: "Branch created",
                     error: "Unable to create branch",
@@ -438,6 +442,7 @@ export default {
             switcher: {
                 add: "Add branch",
                 select: "Select branch",
+                allBranches: "All branches",
                 edit: "Edit branch",
                 empty: "Create an branch",
                 noAssignedBranches: "No branches are assigned to your account yet",

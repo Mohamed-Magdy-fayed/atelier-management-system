@@ -2,22 +2,54 @@
 
 ## Goal
 
-This blueprint defines the target implementation pattern for any admin-managed entity added to `Funtastic`.
+This blueprint defines the standard implementation pattern for any admin-managed entity added to `Funtastic`.
 
 It exists so that:
 
 - humans can add entities consistently
-- AI agents can generate the right structure without guesswork
-- the product scales without dumping logic into routes or giant transport files
+- AI agents can add entities without guessing missing feature expectations
+- the product scales without pushing business logic into routes or giant transport files
 
-## Example Entities
+## Product Context
 
-The first entity families this blueprint should support well are:
+`Funtastic` is not only an internal admin panel. The product direction is:
+
+- a polished company-facing experience for selling products, services, or bookings
+- a strong admin workspace behind that experience
+- bilingual English and Arabic parity
+- registry-driven feature discovery and screen behavior
+
+Any new entity should fit both the admin architecture and this overall product direction.
+
+## Example Entity Families
+
+The blueprint should support these well:
 
 - customers and employees
 - branches
 - products or services
 - orders or bookings
+
+## Mandatory Intake Before Coding
+
+Before a human or AI agent creates a new entity, they must confirm the feature set.
+
+Do not start implementation from only "add entity XYZ".
+
+Required intake questions:
+
+1. What business role does the entity play?
+2. Is the entity global, branch-aware, or future branch-aware?
+3. Does the entity need import?
+4. Does the entity need export?
+5. Does the table need row selection?
+6. Does the entity need bulk actions? If yes, which ones?
+7. Which row actions are required? Examples: `activate`, `deactivate`, `set active`, `archive`, `restore`, `duplicate`.
+8. Should the info dialog be audit-only? Default answer: yes.
+9. Does the entity need a public or landing-page presence?
+10. Should the entity be demo-visible and seeded?
+
+If the request does not answer these questions, the agent should ask first and wait.
 
 ## Core Pattern
 
@@ -52,14 +84,13 @@ src/
             product-form-dialog.tsx
             product-info-dialog.tsx
             product-row-actions.tsx
-            products-filters.tsx
+            products-bulk-actions.tsx
+            products-import-button.tsx
             products-table-columns.tsx
-            products-table-page.tsx
-          lib/
-            export.ts
-            filters.ts
+          products-table-page.tsx
           index.ts
         server/
+          import.ts
           mutations.ts
           queries.ts
           router.ts
@@ -104,24 +135,29 @@ It should prevent manual duplication across:
 - route labels
 - breadcrumbs
 - feature discovery
+- table capability decisions
 
 Suggested shape:
 
 ```ts
 type SystemEntityRegistryItem = {
   slug: string;
-  route: string;
+  route: `/${string}`;
   screenKey: string;
   icon: unknown;
   navLabelKey: string;
   breadcrumbLabelKey: string;
   titleKey: string;
   leadKey: string;
+  branchScope: "global" | "branch-aware" | "future-branch-aware";
+  infoView: "audit-only";
   supportsImport: boolean;
   supportsExport: boolean;
-  supportsBulkActions: boolean;
+  supportsRowSelection: boolean;
+  rowActions: readonly string[];
+  bulkActions: readonly string[];
   showInDashboard: boolean;
-  seedProfiles: string[];
+  seedProfiles: readonly string[];
 };
 ```
 
@@ -141,7 +177,8 @@ Each entity should have feature-owned server files:
 
 - `schemas.ts` for `zod` input schemas
 - `queries.ts` for list/detail/export logic
-- `mutations.ts` for create/update/delete/bulk logic
+- `mutations.ts` for create/update/delete/toggle/bulk logic
+- `import.ts` when import exists
 - `router.ts` for the public `tRPC` surface
 - `types.ts` for row and DTO types
 
@@ -159,23 +196,43 @@ Expected primitives:
 
 - page component
 - table columns
-- filter set
 - form dialog
 - row actions
-- details dialog, drawer, or sheet
+- audit info dialog
 
-Optional primitives:
+Conditional primitives:
 
-- import adapter
-- metrics header
-- tabs
-- timeline or activity panel
+- select column when row selection is enabled
+- action bar when row selection is enabled
+- bulk action component when bulk actions are enabled
+- import button when import is enabled
+- export button when export is enabled
+- filters when the entity needs more than global search
+- metrics header when the page needs decision support
 
 Rules:
 
 - do not place reusable entity UI under `src/app/(system-pages)/_components`
 - do not force all entities through one giant generic CRUD component
 - do reuse shared table, dialog, import, and layout primitives
+
+## Audit Info Dialog Rule
+
+The default info dialog standard is:
+
+- audit-only
+
+That means the dialog should primarily show:
+
+- `createdAt`
+- `createdBy`
+- `updatedAt`
+- `updatedBy`
+- `deletedAt`
+- `deletedBy`
+- record ID when useful for support/debugging
+
+Business fields such as product name, price, status, owner name, or member count should stay in the table, form, or dedicated detail views. They should not be mixed into the default info dialog unless the request explicitly asks for a richer detail panel.
 
 ## Route Pattern
 
@@ -213,6 +270,7 @@ These are the reusable building blocks the system should converge on.
 
 - `EntityPageHeader`
 - `EntityToolbar`
+- `EntityActionBar`
 - `EntityFiltersBar`
 - `EntityExportButton`
 - `EntityImportButton`
@@ -268,8 +326,26 @@ The entity supplies:
 
 - preview mutation
 - commit mutation
+- export query
 - column mapping
 - row summary rules
+
+## Action Pattern
+
+Row actions must be intentional, not copied between entities.
+
+Rules:
+
+- do not add copy actions by default
+- only ship actions the entity actually needs
+- register expected actions in the entity registry
+- keep state-changing actions close to the row menu unless they need a full dialog
+- if row selection exists, ship the action bar so users can see selection state and clear it quickly
+
+Examples:
+
+- branches: `set active`, `edit`, `delete`
+- products: `activate`, `deactivate`, `edit`, `archive`
 
 ## Form Pattern
 
@@ -287,45 +363,39 @@ Entity forms should follow:
 - entity-owned labels and placeholders
 - bilingual validation feedback where user-facing
 
-## Current Repo Mapping
-
-The current codebase should evolve as follows:
-
-- `src/integrations/trpc/routers/users.ts`
-  becomes a feature-owned users server module split into queries, mutations, import, and router
-
-- `src/app/(system-pages)/_components/*`
-  becomes `src/features/system/users/admin/components/*`
-
-- `src/features/core/app-shell/lib/nav.ts`
-- `src/features/core/auth/core/permissions.ts`
-- `src/proxy.ts`
-  should become registry-driven instead of manually coordinated
-
 ## Blueprint For AI Agents
 
 When asked to add an entity, an AI agent should:
 
-1. Create the schema file in the correct domain.
-2. Export it through `src/drizzle/schema.ts`.
-3. Add the entity to the central registry.
-4. Create `schemas.ts`, `queries.ts`, `mutations.ts`, `router.ts`, and `types.ts`.
-5. Create feature-owned admin UI primitives.
-6. Add a thin route file in `src/app/(system-pages)`.
-7. Add full bilingual copy.
-8. Add seed support if the entity is demo-visible.
-9. Avoid duplicating patterns that already exist in another entity feature.
+1. Ask the intake questions in this document if the feature set is not already clear.
+2. Confirm import/export, row actions, bulk actions, branch scope, and audit dialog behavior before generating code.
+3. Confirm whether row selection also requires an action bar. Default answer: yes.
+4. Create the schema file in the correct domain.
+5. Export it through `src/drizzle/schema.ts`.
+6. Add the entity to the central registry.
+7. Create `schemas.ts`, `queries.ts`, `mutations.ts`, `router.ts`, and `types.ts`.
+8. Add `import.ts` only when import is required.
+9. Create feature-owned admin UI primitives.
+10. Add a thin route file in `src/app/(system-pages)`.
+11. Add full bilingual copy.
+12. Add seed support if the entity is demo-visible.
+13. Avoid duplicating patterns that already exist in another entity feature.
 
 ## Definition Of Done
 
 An entity is not complete until all of the following are true:
 
+- the requested feature set was explicitly confirmed
 - database table exists
 - migrations are generated and applied
 - entity is registered
 - admin route exists
 - permissions work
 - nav and breadcrumb labels resolve
+- audit info dialog follows the agreed mode
+- row actions match the agreed action set
+- row selection also includes the action bar when selection is enabled
+- import/export is implemented if requested
 - bilingual copy is present
 - seed story is defined
 - docs remain accurate

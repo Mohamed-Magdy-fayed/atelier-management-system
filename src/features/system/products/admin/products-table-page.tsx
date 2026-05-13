@@ -1,13 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   ColumnPinningState,
   RowSelectionState,
   VisibilityState,
 } from "@tanstack/react-table";
 import { PlusIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +18,9 @@ import {
 import { H2, Lead } from "@/components/ui/typography";
 import {
   DataTable,
+  DataTableActionBar,
   type DataTableControlledState,
+  DataTableExportButton,
   DataTablePagination,
   DataTableToolbar,
   DataTableViewOptions,
@@ -34,6 +36,7 @@ import {
   ProductDeleteDialog,
   ProductFormDialog,
   ProductInfoModal,
+  ProductsImportButton,
   type ProductRowActionVariant,
 } from "./components";
 
@@ -41,6 +44,7 @@ type RowAction = { row: ProductGridRow; variant: ProductRowActionVariant } | nul
 
 export function ProductsTablePage() {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { t, locale } = useTranslation();
   const addProductLabel = `${t("common.add")} ${t("systemPages.productsTitle")}`;
 
@@ -58,7 +62,7 @@ export function ProductsTablePage() {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
-    left: [],
+    left: ["select"],
     right: [],
   });
   const [rowAction, setRowAction] = useState<RowAction>(null);
@@ -131,6 +135,17 @@ export function ProductsTablePage() {
 
   const closeRowAction = () => setRowAction(null);
 
+  const fetchAllRows = useCallback(async () => {
+    const result = await queryClient.fetchQuery(
+      trpc.products.exportRows.queryOptions({
+        sorting,
+        globalFilter: globalFilter || undefined,
+      }),
+    );
+
+    return result.rows;
+  }, [globalFilter, queryClient, sorting, trpc]);
+
   return (
     <div
       className={isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"}
@@ -166,9 +181,25 @@ export function ProductsTablePage() {
               <TooltipContent>{addProductLabel}</TooltipContent>
             </Tooltip>
             <DataTableViewOptions table={table} />
+            <DataTableExportButton
+              table={table}
+              exportFileName="products.csv"
+              fetchAllRows={fetchAllRows}
+              getExportRow={(row) => ({
+                code: row.code,
+                nameEn: row.nameEn,
+                nameAr: row.nameAr,
+                price: row.price,
+                isActive: row.isActive,
+                createdAt: row.createdAt,
+                updatedAt: row.updatedAt,
+              })}
+            />
+            <ProductsImportButton />
           </DataTableToolbar>
         }
         footer={<DataTablePagination table={table} />}
+        actionBar={<DataTableActionBar table={table} />}
       />
 
       <ProductFormDialog open={createOpen} onOpenChange={setCreateOpen} />

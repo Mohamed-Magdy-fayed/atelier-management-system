@@ -6,6 +6,7 @@ import { ProductsTable } from "@/drizzle/schema";
 import type {
   ProductDeleteInput,
   ProductMutationInput,
+  ProductSetActiveInput,
   ProductUpdateInput,
 } from "./schemas";
 import { assertAdminRole, getRequiredSession, type TRPCContext } from "./shared";
@@ -129,4 +130,34 @@ export async function deleteProduct(
     .where(eq(ProductsTable.id, input.id));
 
   return { deleted: true };
+}
+
+export async function setProductActive(
+  ctx: TRPCContext,
+  input: ProductSetActiveInput,
+) {
+  const session = getRequiredSession(ctx);
+  assertAdminRole(session.user.role);
+
+  const product = await ctx.db.query.ProductsTable.findFirst({
+    columns: { id: true },
+    where: and(eq(ProductsTable.id, input.id), isNull(ProductsTable.deletedAt)),
+  });
+
+  if (!product) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: ctx.t("systemPages.productNotFound"),
+    });
+  }
+
+  await ctx.db
+    .update(ProductsTable)
+    .set({
+      isActive: input.isActive,
+      updatedBy: session.user.id,
+    })
+    .where(eq(ProductsTable.id, input.id));
+
+  return { updated: true };
 }

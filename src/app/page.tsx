@@ -1,4 +1,9 @@
-import { ArrowRight, Building2, LineChart, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  CalendarClock,
+  Package,
+} from "lucide-react";
 
 import { LinkButton } from "@/components/general/link-button";
 import {
@@ -18,20 +23,20 @@ import { getT } from "@/features/core/i18n/server";
 
 const LANDING_FEATURES = [
   {
-    key: "operations",
-    Icon: Building2,
+    key: "catalog",
+    Icon: Package,
     titleKey: "landing.statOperationsTitle",
     bodyKey: "landing.statOperationsBody",
   },
   {
-    key: "visibility",
-    Icon: LineChart,
+    key: "bookings",
+    Icon: CalendarClock,
     titleKey: "landing.statVisibilityTitle",
     bodyKey: "landing.statVisibilityBody",
   },
   {
-    key: "scale",
-    Icon: Users,
+    key: "operations",
+    Icon: Building2,
     titleKey: "landing.statScaleTitle",
     bodyKey: "landing.statScaleBody",
   },
@@ -49,8 +54,8 @@ export default async function Home() {
       )?.href ?? "/dashboard")
     : "/sign-in";
 
-  const primaryHref = workspaceTarget;
-  const secondaryHref = auth.isAuthenticated ? "/dashboard" : "#capabilities";
+  const primaryHref = auth.isAuthenticated ? workspaceTarget : "#capabilities";
+  const secondaryHref = auth.isAuthenticated ? "/dashboard" : "/sign-in";
   const primaryLabel = auth.isAuthenticated
     ? t("landing.primaryAuthenticated")
     : t("landing.primaryGuest");
@@ -100,14 +105,14 @@ export default async function Home() {
 
           <Card className="border-primary/15 bg-gradient-to-br from-primary/5 via-background to-background shadow-sm">
             <CardHeader className="space-y-3">
-              <CardTitle className="text-2xl">{t("appName")}</CardTitle>
+              <CardTitle className="text-2xl">{t("landing.authPanelTitle")}</CardTitle>
               <CardDescription className="text-base leading-7">
-                {t("landing.authPanelTitle")}
+                {t("landing.authPanelLead")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Muted className="text-sm leading-6">
-                {t("landing.authPanelLead")}
+                {t("landing.badge")}
               </Muted>
               <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
                 {LANDING_FEATURES.map(({ key, Icon, titleKey, bodyKey }) => (

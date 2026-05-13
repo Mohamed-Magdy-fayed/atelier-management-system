@@ -1,6 +1,6 @@
 "use client";
 
-import { EditIcon, ListStartIcon, Plus, Trash2 } from "lucide-react";
+import { CheckIcon, EditIcon, Layers3Icon, ListStartIcon, Plus, Trash2 } from "lucide-react";
 import type { ReactElement } from "react";
 
 import {
@@ -26,6 +26,7 @@ type BranchManagerDropdownProps = {
   isPending: boolean;
   locale: string;
   onCreateBranch: () => void;
+  onClearActiveBranch: () => void;
   onDeleteBranch: (branch: EditableBranch) => void;
   onEditBranch: (branch: EditableBranch) => void;
   onSetActiveBranch: (branchId: string) => void;
@@ -38,6 +39,7 @@ export function BranchManagerDropdown({
   isPending,
   locale,
   onCreateBranch,
+  onClearActiveBranch,
   onDeleteBranch,
   onEditBranch,
   onSetActiveBranch,
@@ -59,6 +61,21 @@ export function BranchManagerDropdown({
           <DropdownMenuLabel>
             {t("authTranslations.branch.create.title")}
           </DropdownMenuLabel>
+          {branches.length > 0 ? (
+            <>
+              <DropdownMenuItem
+                disabled={isPending}
+                onClick={(event) => {
+                  event.preventDefault();
+                  onClearActiveBranch();
+                }}
+              >
+                <Layers3Icon />
+                {t("authTranslations.branch.switcher.allBranches")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          ) : null}
           {branches.length === 0 ? (
             <DropdownMenuItem disabled>
               {t("authTranslations.branch.switcher.empty")}
@@ -67,8 +84,16 @@ export function BranchManagerDropdown({
           {branches.map((branch) => (
             <DropdownMenuSub key={branch.id}>
               <DropdownMenuSubTrigger>
-                <div className="flex-1 truncate">
-                  {locale === "ar" ? branch.nameAr : branch.nameEn}
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <div className="truncate">
+                    {locale === "ar" ? branch.nameAr : branch.nameEn}
+                  </div>
+                  {branch.isCurrent ? (
+                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <CheckIcon className="size-3" />
+                      {t("authTranslations.branch.switcher.current")}
+                    </span>
+                  ) : null}
                 </div>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent alignOffset={-4} sideOffset={6}>

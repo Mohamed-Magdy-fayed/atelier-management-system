@@ -2,11 +2,15 @@ import { and, asc, count, desc, eq, ilike, isNull, or } from "drizzle-orm";
 
 import { ProductsTable } from "@/drizzle/schema";
 
-import type { ListProductsInput } from "./schemas";
+import type {
+  ExportProductsInput,
+  ListProductsInput,
+  ProductListFilterInput,
+} from "./schemas";
 import { assertAdminRole, getRequiredSession, type TRPCContext } from "./shared";
 import type { ProductGridRow } from "./types";
 
-function buildWhereClause(input: ListProductsInput) {
+function buildWhereClause(input: ProductListFilterInput) {
   const query = input.globalFilter?.trim();
   const activeClause = isNull(ProductsTable.deletedAt);
 
@@ -25,7 +29,7 @@ function buildWhereClause(input: ListProductsInput) {
   );
 }
 
-function sortExpr(input: ListProductsInput) {
+function sortExpr(input: ProductListFilterInput) {
   const firstSort = input.sorting[0];
 
   if (!firstSort) {
@@ -51,6 +55,21 @@ function sortExpr(input: ListProductsInput) {
   }
 }
 
+const productGridSelect = {
+  id: ProductsTable.id,
+  code: ProductsTable.code,
+  nameEn: ProductsTable.nameEn,
+  nameAr: ProductsTable.nameAr,
+  price: ProductsTable.price,
+  isActive: ProductsTable.isActive,
+  createdAt: ProductsTable.createdAt,
+  createdBy: ProductsTable.createdBy,
+  updatedAt: ProductsTable.updatedAt,
+  updatedBy: ProductsTable.updatedBy,
+  deletedAt: ProductsTable.deletedAt,
+  deletedBy: ProductsTable.deletedBy,
+} as const;
+
 export async function listProducts(ctx: TRPCContext, input: ListProductsInput) {
   const session = getRequiredSession(ctx);
   assertAdminRole(session.user.role);
@@ -66,20 +85,7 @@ export async function listProducts(ctx: TRPCContext, input: ListProductsInput) {
   const offset = (page - 1) * input.perPage;
 
   const rows = await ctx.db
-    .select({
-      id: ProductsTable.id,
-      code: ProductsTable.code,
-      nameEn: ProductsTable.nameEn,
-      nameAr: ProductsTable.nameAr,
-      price: ProductsTable.price,
-      isActive: ProductsTable.isActive,
-      createdAt: ProductsTable.createdAt,
-      createdBy: ProductsTable.createdBy,
-      updatedAt: ProductsTable.updatedAt,
-      updatedBy: ProductsTable.updatedBy,
-      deletedAt: ProductsTable.deletedAt,
-      deletedBy: ProductsTable.deletedBy,
-    })
+    .select(productGridSelect)
     .from(ProductsTable)
     .where(whereClause)
     .orderBy(...sortExpr(input))
@@ -90,5 +96,23 @@ export async function listProducts(ctx: TRPCContext, input: ListProductsInput) {
     rows: rows as ProductGridRow[],
     pageCount,
     total: Number(total),
+  };
+}
+
+export async function exportProducts(
+  ctx: TRPCContext,
+  input: ExportProductsInput,
+) {
+  const session = getRequiredSession(ctx);
+  assertAdminRole(session.user.role);
+
+  const rows = await ctx.db
+    .select(productGridSelect)
+    .from(ProductsTable)
+    .where(buildWhereClause(input))
+    .orderBy(...sortExpr(input));
+
+  return {
+    rows: rows as ProductGridRow[],
   };
 }

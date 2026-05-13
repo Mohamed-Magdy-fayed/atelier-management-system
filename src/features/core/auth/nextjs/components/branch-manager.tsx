@@ -8,6 +8,7 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
+    clearActiveBranchForUserAction,
     deleteBranchAction,
     setActiveBranchForUserAction,
 } from "@/features/core/auth/nextjs/actions";
@@ -71,6 +72,20 @@ export function BranchManager({
         });
     }
 
+    function clearActiveBranch() {
+        startTransition(async () => {
+            const res = await clearActiveBranchForUserAction();
+            if (res.isError) {
+                toast.error(res.message);
+                return;
+            }
+
+            toast.success(
+                t("authTranslations.branch.actions.clearActiveBranch.success"),
+            );
+        });
+    }
+
     function confirmDeleteBranch() {
         if (!deletingBranch) return;
 
@@ -89,7 +104,9 @@ export function BranchManager({
 
     const branchLabel =
         !hasActiveOrg || !activeBranch
-            ? String(t("authTranslations.branch.switcher.select"))
+            ? branches.length > 0
+                ? String(t("authTranslations.branch.switcher.allBranches"))
+                : String(t("authTranslations.branch.switcher.select"))
             : locale === "ar"
                 ? activeBranch.nameAr
                 : activeBranch.nameEn;
@@ -154,6 +171,7 @@ export function BranchManager({
                 isPending={isPending}
                 locale={locale}
                 onCreateBranch={() => setOpenDialog("branch:create")}
+                onClearActiveBranch={clearActiveBranch}
                 onDeleteBranch={setDeletingBranch}
                 onEditBranch={setEditingBranch}
                 onSetActiveBranch={setActiveBranch}

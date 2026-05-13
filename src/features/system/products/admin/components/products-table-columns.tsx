@@ -3,7 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
-import { DataTableColumnHeader } from "@/features/core/data-table";
+import { createSelectColumn, DataTableColumnHeader } from "@/features/core/data-table";
 import type { useTranslation } from "@/features/core/i18n/client";
 import type { ProductGridRow } from "@/integrations/trpc/routers/products";
 
@@ -27,6 +27,7 @@ export function buildProductColumns(opts: {
   });
 
   return [
+    createSelectColumn<ProductGridRow>(),
     {
       accessorKey: "code",
       header: ({ column }) => (

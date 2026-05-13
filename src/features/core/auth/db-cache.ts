@@ -18,9 +18,11 @@ export function revalidateAuthCache({
     branchId,
 }: {
     id: string;
-    branchId: string;
+    branchId?: string;
 }) {
     updateTag(getUserGlobalTag());
     updateTag(getUserIdTag(id));
-    updateTag(getBranchIdTag(branchId));
+    if (branchId) {
+        updateTag(getBranchIdTag(branchId));
+    }
 }

@@ -1,10 +1,12 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  CopyIcon,
+  CheckCircle2Icon,
   InfoIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  PauseCircleIcon,
   Trash2Icon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -18,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/features/core/i18n/client";
+import { useTRPC } from "@/integrations/trpc/client";
 import type { ProductGridRow } from "@/integrations/trpc/routers/products";
 
 export type ProductRowActionVariant = "info" | "edit" | "delete";
@@ -36,6 +39,36 @@ export function ProductRowActions({
   setRowAction,
 }: ProductRowActionsProps) {
   const { t } = useTranslation();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const setActiveMut = useMutation(trpc.products.setActive.mutationOptions());
+
+  async function toggleActive(isActive: boolean) {
+    try {
+      await toast
+        .promise(setActiveMut.mutateAsync({ id: row.id, isActive }), {
+          loading: String(t("common.saving")),
+          success: String(
+            t(
+              isActive
+                ? "systemPages.productActivated"
+                : "systemPages.productDeactivated",
+            ),
+          ),
+          error: (err) =>
+            err instanceof Error
+              ? err.message
+              : String(t("systemPages.productStatusChangeFailed")),
+        })
+        .unwrap();
+
+      await queryClient.invalidateQueries({
+        queryKey: trpc.products.pathKey(),
+      });
+    } catch {
+      // toast.promise already surfaced the failure.
+    }
+  }
 
   return (
     <DropdownMenu>
@@ -61,13 +94,21 @@ export function ProductRowActions({
           {String(t("common.edit"))}
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => {
-            void navigator.clipboard.writeText(row.code);
-            toast.success(String(t("systemPages.productCodeCopied")));
-          }}
+          disabled={setActiveMut.isPending}
+          onClick={() => void toggleActive(!row.isActive)}
         >
-          <CopyIcon className="size-3.5" />
-          {String(t("systemPages.productCopyCode"))}
+          {row.isActive ? (
+            <PauseCircleIcon className="size-3.5" />
+          ) : (
+            <CheckCircle2Icon className="size-3.5" />
+          )}
+          {String(
+            t(
+              row.isActive
+                ? "systemPages.productDeactivate"
+                : "systemPages.productActivate",
+            ),
+          )}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => setRowAction({ row, variant: "delete" })}>

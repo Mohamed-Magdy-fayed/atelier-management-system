@@ -33,9 +33,14 @@ export type SystemEntityRegistryItem = {
   breadcrumbLabelKey: EntityBreadcrumbTranslationKey;
   titleKey: EntityTitleKey;
   leadKey: EntityLeadKey;
+  branchScope: "global" | "branch-aware" | "future-branch-aware";
+  infoView: "audit-only";
   supportsImport: boolean;
   supportsExport: boolean;
+  supportsRowSelection: boolean;
   supportsBulkActions: boolean;
+  rowActions: readonly string[];
+  bulkActions: readonly string[];
   showInDashboard: boolean;
   seedProfiles: readonly ("baseline" | "demo" | "performance")[];
 };
@@ -50,9 +55,14 @@ export const SYSTEM_ENTITY_REGISTRY = [
     breadcrumbLabelKey: "breadcrumbCustomers",
     titleKey: "customersTitle",
     leadKey: "customersLead",
+    branchScope: "future-branch-aware",
+    infoView: "audit-only",
     supportsImport: true,
     supportsExport: true,
+    supportsRowSelection: true,
     supportsBulkActions: true,
+    rowActions: ["info", "edit", "delete"],
+    bulkActions: ["verify", "unverify", "delete"],
     showInDashboard: true,
     seedProfiles: ["baseline", "demo", "performance"],
   },
@@ -65,9 +75,14 @@ export const SYSTEM_ENTITY_REGISTRY = [
     breadcrumbLabelKey: "breadcrumbEmployees",
     titleKey: "employeesTitle",
     leadKey: "employeesLead",
+    branchScope: "future-branch-aware",
+    infoView: "audit-only",
     supportsImport: false,
     supportsExport: false,
+    supportsRowSelection: true,
     supportsBulkActions: false,
+    rowActions: ["info", "edit", "delete"],
+    bulkActions: [],
     showInDashboard: true,
     seedProfiles: ["baseline", "demo", "performance"],
   },
@@ -80,9 +95,14 @@ export const SYSTEM_ENTITY_REGISTRY = [
     breadcrumbLabelKey: "breadcrumbBranches",
     titleKey: "branchesTitle",
     leadKey: "branchesLead",
+    branchScope: "global",
+    infoView: "audit-only",
     supportsImport: false,
     supportsExport: false,
+    supportsRowSelection: false,
     supportsBulkActions: false,
+    rowActions: ["info", "setActive", "edit", "delete"],
+    bulkActions: [],
     showInDashboard: true,
     seedProfiles: ["baseline", "demo", "performance"],
   },
@@ -95,9 +115,14 @@ export const SYSTEM_ENTITY_REGISTRY = [
     breadcrumbLabelKey: "breadcrumbProducts",
     titleKey: "productsTitle",
     leadKey: "productsLead",
-    supportsImport: false,
-    supportsExport: false,
+    branchScope: "global",
+    infoView: "audit-only",
+    supportsImport: true,
+    supportsExport: true,
+    supportsRowSelection: true,
     supportsBulkActions: false,
+    rowActions: ["info", "edit", "activate", "deactivate", "delete"],
+    bulkActions: [],
     showInDashboard: true,
     seedProfiles: ["baseline", "demo", "performance"],
   },

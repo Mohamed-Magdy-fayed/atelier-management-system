@@ -47,14 +47,6 @@ export function ProductInfoModal({
       }),
     [locale],
   );
-  const moneyFmt = useMemo(
-    () =>
-      new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-EG", {
-        style: "currency",
-        currency: "EGP",
-      }),
-    [locale],
-  );
 
   if (!product) return null;
 
@@ -66,35 +58,15 @@ export function ProductInfoModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{String(t("systemPages.productInfoTitle"))}</DialogTitle>
+          <DialogTitle>{String(t("systemPages.auditInfoTitle"))}</DialogTitle>
           <DialogDescription>
-            {String(t("systemPages.productInfoDescription"))}
+            {String(t("systemPages.auditInfoDescription"))}
           </DialogDescription>
         </DialogHeader>
         <div className="divide-y divide-border">
           <InfoRow
             label={String(t("dataTable.id"))}
             value={<code className="text-[0.7rem]">{product.id}</code>}
-          />
-          <InfoRow
-            label={String(t("systemPages.productsCode"))}
-            value={<code>{product.code}</code>}
-          />
-          <InfoRow
-            label={String(t("systemPages.productsNameEn"))}
-            value={product.nameEn}
-          />
-          <InfoRow
-            label={String(t("systemPages.productsNameAr"))}
-            value={product.nameAr}
-          />
-          <InfoRow
-            label={String(t("systemPages.productsPrice"))}
-            value={moneyFmt.format(product.price)}
-          />
-          <InfoRow
-            label={String(t("systemPages.productsStatus"))}
-            value={product.isActive ? t("common.active") : t("common.inactive")}
           />
           <InfoRow
             label={String(t("common.createdAt"))}

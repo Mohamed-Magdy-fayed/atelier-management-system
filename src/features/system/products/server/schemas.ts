@@ -1,10 +1,36 @@
 import { z } from "zod";
 
+export const productListFilterInput = z.object({
+  sorting: z.array(z.object({ id: z.string(), desc: z.boolean() })).default([]),
+  globalFilter: z.string().optional(),
+});
+
 export const listProductsInput = z.object({
   page: z.number().int().min(1).default(1),
   perPage: z.number().int().min(1).max(100).default(20),
-  sorting: z.array(z.object({ id: z.string(), desc: z.boolean() })).default([]),
-  globalFilter: z.string().optional(),
+  sorting: productListFilterInput.shape.sorting,
+  globalFilter: productListFilterInput.shape.globalFilter,
+});
+
+export const exportProductsInput = productListFilterInput;
+
+export const productImportRowSchema = z.record(z.string(), z.unknown());
+
+export const previewProductsImportInput = z.object({
+  headers: z.array(z.string()).max(256),
+  rows: z.array(productImportRowSchema).max(5_000),
+});
+
+export const commitProductsImportInput = z.object({
+  rows: z
+    .array(
+      z.object({
+        rowNumber: z.number().int().min(1),
+        raw: productImportRowSchema,
+      }),
+    )
+    .min(1)
+    .max(5_000),
 });
 
 export const productMutationSchema = z.object({
@@ -23,7 +49,17 @@ export const productDeleteSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const productSetActiveSchema = z.object({
+  id: z.string().uuid(),
+  isActive: z.boolean(),
+});
+
+export type ProductListFilterInput = z.infer<typeof productListFilterInput>;
 export type ListProductsInput = z.infer<typeof listProductsInput>;
+export type ExportProductsInput = z.infer<typeof exportProductsInput>;
+export type PreviewProductsImportInput = z.infer<typeof previewProductsImportInput>;
+export type CommitProductsImportInput = z.infer<typeof commitProductsImportInput>;
 export type ProductMutationInput = z.infer<typeof productMutationSchema>;
 export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;
 export type ProductDeleteInput = z.infer<typeof productDeleteSchema>;
+export type ProductSetActiveInput = z.infer<typeof productSetActiveSchema>;
