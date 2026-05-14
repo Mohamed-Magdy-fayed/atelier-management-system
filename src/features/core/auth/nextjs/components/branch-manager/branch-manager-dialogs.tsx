@@ -2,7 +2,6 @@
 
 import { AlertTriangleIcon } from "lucide-react";
 
-import { SystemDialog } from "@/components/general/system-dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,8 +11,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { H4, Lead } from "@/components/ui/typography";
-import { BranchForm } from "@/features/core/auth/nextjs/components/branch-form";
+import {
+  BranchCreateFormDialog,
+  BranchEditFormDialog,
+} from "@/features/core/auth/nextjs/components/branch-form";
 import { useTranslation } from "@/features/core/i18n/client";
 
 import type { EditableBranch } from "./types";
@@ -62,25 +63,17 @@ export function BranchManagerDialogs({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <SystemDialog
-        titleRender={() => <H4>{t("authTranslations.branch.create.title")}</H4>}
+      <BranchCreateFormDialog
+        open={openCreateDialog}
         onOpenChange={onOpenCreateChange}
-        isOpen={openCreateDialog}
-      >
-        <BranchForm onSuccess={() => onOpenCreateChange(false)} />
-      </SystemDialog>
-      <SystemDialog
-        onOpenChange={(open) => setEditingBranch(open ? editingBranch : undefined)}
-        isOpen={editingBranch !== undefined}
-      >
-        <Lead className="mb-4">{t("authTranslations.branch.edit.title")}</Lead>
-        {editingBranch ? (
-          <BranchForm
-            branch={editingBranch}
-            onSuccess={() => setEditingBranch(undefined)}
-          />
-        ) : null}
-      </SystemDialog>
+      />
+      <BranchEditFormDialog
+        branch={editingBranch}
+        open={editingBranch !== undefined}
+        onOpenChange={(open) =>
+          setEditingBranch(open ? editingBranch : undefined)
+        }
+      />
     </>
   );
 }

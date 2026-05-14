@@ -31,7 +31,7 @@ type SystemDialogProps = PropsWithChildren<{
     triggerRender?: RenderProp<DialogTriggerState>;
     titleRender?: RenderProp<DialogTitleState>;
     descriptionRender?: RenderProp<DialogDescriptionProps>;
-    actions?: ReactElement;
+    actions?: ReactElement | null;
 }>;
 
 export function SystemDialog({
@@ -46,8 +46,8 @@ export function SystemDialog({
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange} modal>
             {triggerRender ? <DialogTrigger render={triggerRender} /> : null}
-            <DialogContent className="overflow-hidden">
-                <DialogHeader className="bg-input -m-4 p-4 rounded-lg">
+            <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-sm">
+                <DialogHeader className="shrink-0 bg-input gap-0 rounded-lg p-4">
                     <DialogTitle render={titleRender} className="px-4 py-2" />
                     <DialogDescription
                         render={descriptionRender}
@@ -55,12 +55,17 @@ export function SystemDialog({
                     />
                 </DialogHeader>
 
-                <ScrollArea className="max-h-96 px-4 -mx-4 py-4" scrollX={false}>
+                <ScrollArea
+                    className="min-h-0 flex-1 px-4 py-4"
+                    scrollX={false}
+                >
                     {children}
                 </ScrollArea>
 
                 {actions ? (
-                    <div className="px-4 -mx-4 pt-4 border-t bg-muted">{actions}</div>
+                    <div className="shrink-0 border-t bg-muted px-4 py-4">
+                        {actions}
+                    </div>
                 ) : null}
             </DialogContent>
         </Dialog>

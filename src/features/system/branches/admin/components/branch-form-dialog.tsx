@@ -2,20 +2,28 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2Icon, PlusIcon, SaveIcon, XIcon } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import type { FormEvent } from "react";
+import { useCallback, useEffect, useId, useMemo } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { useAppForm } from "@/components/forms/hooks";
+import {
+  OverlayFormBody,
+  OverlayFormFooterActions,
+  OverlayFormSubmitButton,
+} from "@/components/forms/overlay-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FieldGroup, FieldSet } from "@/components/ui/field";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { BranchGridRow } from "@/integrations/trpc/routers/branches";
@@ -92,11 +100,20 @@ export function BranchFormDialog({
 
   const pending = createMut.isPending || updateMut.isPending;
   const SubmitIcon = pending ? Loader2Icon : isEdit ? SaveIcon : PlusIcon;
+  const formId = useId();
+
+  const handleBodySubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      void form.handleSubmit();
+    },
+    [form],
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md">
+        <DialogHeader className="shrink-0 px-4 pt-4">
           <DialogTitle>
             {String(t(isEdit ? "systemPages.editBranch" : "systemPages.addBranch"))}
           </DialogTitle>
@@ -110,35 +127,37 @@ export function BranchFormDialog({
             )}
           </DialogDescription>
         </DialogHeader>
-        <form
-          className="space-y-4"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void form.handleSubmit();
-          }}
-        >
-          <FieldSet disabled={pending}>
-            <FieldGroup>
-              <form.AppField name="nameEn">
-                {(field) => (
-                  <field.StringField
-                    label={String(t("systemPages.branchesNameEn"))}
-                    placeholder={String(t("authTranslations.branch.create.namePlaceholder"))}
-                    autoFocus
-                  />
-                )}
-              </form.AppField>
-              <form.AppField name="nameAr">
-                {(field) => (
-                  <field.StringField
-                    label={String(t("systemPages.branchesNameAr"))}
-                    placeholder={String(t("authTranslations.branch.create.namePlaceholder"))}
-                  />
-                )}
-              </form.AppField>
-            </FieldGroup>
-          </FieldSet>
-          <div className="flex justify-end gap-2">
+        <ScrollArea className="min-h-0 flex-1 px-4 py-4" scrollX={false}>
+          <OverlayFormBody
+            formId={formId}
+            className="space-y-4"
+            onSubmit={handleBodySubmit}
+          >
+            <FieldSet disabled={pending}>
+              <FieldGroup>
+                <form.AppField name="nameEn">
+                  {(field) => (
+                    <field.StringField
+                      label={String(t("systemPages.branchesNameEn"))}
+                      placeholder={String(t("authTranslations.branch.create.namePlaceholder"))}
+                      autoFocus
+                    />
+                  )}
+                </form.AppField>
+                <form.AppField name="nameAr">
+                  {(field) => (
+                    <field.StringField
+                      label={String(t("systemPages.branchesNameAr"))}
+                      placeholder={String(t("authTranslations.branch.create.namePlaceholder"))}
+                    />
+                  )}
+                </form.AppField>
+              </FieldGroup>
+            </FieldSet>
+          </OverlayFormBody>
+        </ScrollArea>
+        <DialogFooter className="shrink-0 border-t bg-muted px-4 py-4 sm:flex-row sm:justify-end">
+          <OverlayFormFooterActions>
             <Button
               type="button"
               variant="outline"
@@ -149,7 +168,11 @@ export function BranchFormDialog({
               <XIcon className="size-3.5" />
               {String(t("common.cancel"))}
             </Button>
-            <Button type="submit" size="default" disabled={pending}>
+            <OverlayFormSubmitButton
+              formId={formId}
+              size="default"
+              disabled={pending}
+            >
               <SubmitIcon
                 className={pending ? "size-3.5 animate-spin" : "size-3.5"}
               />
@@ -158,9 +181,9 @@ export function BranchFormDialog({
                 : isEdit
                   ? String(t("common.save"))
                   : String(t("common.create"))}
-            </Button>
-          </div>
-        </form>
+            </OverlayFormSubmitButton>
+          </OverlayFormFooterActions>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -489,6 +489,57 @@ Entity forms should follow:
 - entity-owned labels and placeholders
 - bilingual validation feedback where user-facing
 
+### Overlay forms (modals and sheets)
+
+Use this pattern whenever a form lives inside a **dialog** or **sheet**: keep **fields** in a **scrollable** middle region and put **primary actions** (submit, cancel, etc.) in a **fixed footer** outside the scrolling area. That matches system dialogs and admin CRUD modals and avoids submit buttons scrolling away on long forms.
+
+#### Primitives
+
+- **`useAppForm`** — shared TanStack Form hook with field components and invalid-submit toast behavior: [`src/components/forms/hooks.tsx`](../src/components/forms/hooks.tsx).
+- **`OverlayFormBody`** — the real `<form>` in the scrollable body. Takes a stable **`formId`** (from `useId()`), **`onSubmit`** (`preventDefault` + `form.handleSubmit()`).
+- **`OverlayFormSubmitButton`** — submit control that lives **outside** the `<form>` but stays associated via the native **`form` attribute** (`type="submit"` + `form={formId}`). Required for footer placement.
+- **`OverlayFormFooterActions`** — optional flex row/column wrapper for cancel + submit aligned like other admin dialogs.
+
+Source: [`src/components/forms/overlay-form.tsx`](../src/components/forms/overlay-form.tsx).
+
+#### Admin entity form dialog (raw `Dialog`)
+
+Standard layout for entity `*-form-dialog.tsx` files:
+
+1. **`DialogContent`**: `className` includes `gap-0 overflow-hidden p-0` plus width (e.g. `sm:max-w-md`) so header, body, and footer are explicit regions.
+2. **`DialogHeader`**: title and description; `shrink-0` + horizontal padding.
+3. **`ScrollArea`**: `className="min-h-0 flex-1 px-4 py-4"` with `scrollX={false}` wrapping **`OverlayFormBody`** (fields only inside the form).
+4. **`DialogFooter`**: `shrink-0 border-t bg-muted px-4 py-4` with cancel (`type="button"`) and **`OverlayFormSubmitButton`** (`formId={formId}`).
+
+The dialog shell uses a column flex layout from [`src/components/ui/dialog.tsx`](../src/components/ui/dialog.tsx) (`max-h`, `min-h-0`) so the scroll area gets a bounded height.
+
+References: `product-form-dialog.tsx`, `branch-form-dialog.tsx`, `user-form-dialog.tsx` under each entity’s `admin/components/`.
+
+#### System dialog (`SystemDialog`)
+
+[`src/components/general/system-dialog.tsx`](../src/components/general/system-dialog.tsx) already splits **header**, **scrollable body**, and **`actions`** footer.
+
+- Put **`OverlayFormBody`** (and field content) in **`children`** (inside the scroll region).
+- Pass footer controls to **`actions`**. For TanStack state such as `isSubmitting`, wrap the dialog content tree from the same component in **`<form.AppForm>`** (from `useAppForm`) so **`form.Subscribe`** in `actions` still sees the form context (React context flows through the dialog portal in React 18+).
+
+Use **`OverlayFormSubmitButton`** with the same **`formId`** as **`OverlayFormBody`** for the primary submit in `actions`.
+
+References: auth profile / email / password / branch-manager flows that embed `SystemDialog` with footer submit.
+
+#### Opening dialogs from menus (nested dialogs)
+
+Base UI suppresses the dialog **backdrop** when the dialog is opened from another floating surface (e.g. dropdown menu) unless the backdrop opts in. The shared **`DialogOverlay`** / **`SheetOverlay`** default **`forceRender={true}`** on the backdrop so modals opened from the Auth Manager (and similar) still show the dimmer and dismiss correctly. Do not remove that default unless you intentionally want nested dialog stacking without a second scrim.
+
+#### Blueprint For AI Agents (forms)
+
+When adding or editing an entity form in a modal:
+
+1. Use **`useAppForm`** + **`form.AppField`** / shared field components as today.
+2. Use **`useId()`** for **`formId`**; wire **`OverlayFormBody`** + **`OverlayFormSubmitButton`** (and optional **`OverlayFormFooterActions`**).
+3. Keep mutations, `toast.promise`, `FieldSet disabled={pending}`, and **`form.reset`** behavior in the feature; only the **layout and submit wiring** are standardized.
+4. For **`SystemDialog`**, prefer footer **`actions`** + **`OverlayFormBody`** in **`children`**; use **`<form.AppForm>`** when the footer needs **`form.Subscribe`**.
+5. After substantive form or dialog changes, run **`npm run build`** (project standard sanity check).
+
 ## Blueprint For AI Agents
 
 When asked to add an entity, an AI agent should:
@@ -508,6 +559,7 @@ When asked to add an entity, an AI agent should:
 13. Add full bilingual copy.
 14. Add seed support if the entity is demo-visible.
 15. Avoid duplicating patterns that already exist in another entity feature.
+16. For **create/edit form modals**, follow **Form Pattern → Overlay forms** (scrollable body, footer actions, `overlay-form` primitives).
 
 ## Definition Of Done
 
@@ -528,4 +580,5 @@ An entity is not complete until all of the following are true:
 - import/export is implemented if requested
 - bilingual copy is present
 - seed story is defined
+- create/edit **form dialogs** follow **Form Pattern → Overlay forms** (footer submit via `overlay-form`, scrollable field region)
 - docs remain accurate
