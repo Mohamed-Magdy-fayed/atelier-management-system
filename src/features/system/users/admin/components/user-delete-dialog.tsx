@@ -75,13 +75,17 @@ export function UserDeleteDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>
+          <AlertDialogCancel
+            disabled={pending}
+            data-testid="user-delete-dialog-cancel"
+          >
             <XIcon className="size-3.5" />
             {String(t("common.cancel"))}
           </AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={pending}
+            data-testid="user-delete-dialog-confirm"
             onClick={(e) => {
               e.preventDefault();
               void handleConfirm();

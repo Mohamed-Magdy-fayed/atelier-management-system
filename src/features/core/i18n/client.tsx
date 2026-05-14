@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   createContext,
   type ReactNode,
@@ -13,7 +14,11 @@ import { buttonVariants } from "@/components/ui/button";
 import { Swap, SwapOff, SwapOn } from "@/components/ui/swap";
 import { mainTranslations } from "@/features/core/i18n/global";
 import { setLocaleCookie } from "@/features/core/i18n/server";
-import { createI18n, type LanguageMessages } from "./lib";
+import {
+  createI18n,
+  type LanguageMessages,
+  LOCALE_COOKIE_NAME,
+} from "./lib";
 
 const TranslationContext = createContext({
   locale: "en",
@@ -46,6 +51,7 @@ export function TranslationProvider({
 export function useTranslation<
   const T extends Record<string, LanguageMessages>,
 >(translations?: T) {
+  const router = useRouter();
   const context = useContext(TranslationContext);
   if (!context) {
     throw new Error("useTranslation must be used within a LocaleProvider");
@@ -68,9 +74,12 @@ export function useTranslation<
     document.dir = newDir;
     document.documentElement.setAttribute("dir", newDir);
     context.setLocale(newLocale);
+    document.cookie = `${LOCALE_COOKIE_NAME}=${encodeURIComponent(newLocale)}; path=/; samesite=lax`;
 
     startTransition(() => {
-      setLocaleCookie(newLocale);
+      void setLocaleCookie(newLocale).then(() => {
+        router.refresh();
+      });
     });
   };
 

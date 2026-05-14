@@ -13,7 +13,10 @@ export async function getT() {
 
 export async function setLocaleCookie(locale: string) {
   const cookieStore = await cookies();
-  cookieStore.set(LOCALE_COOKIE_NAME, locale);
+  cookieStore.set(LOCALE_COOKIE_NAME, locale, {
+    path: "/",
+    sameSite: "lax",
+  });
 }
 
 export async function getLocaleCookie() {

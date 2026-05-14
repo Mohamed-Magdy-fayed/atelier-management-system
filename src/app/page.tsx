@@ -9,9 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { H1, Lead, Muted } from "@/components/ui/typography";
-import { SYSTEM_NAV_ITEMS } from "@/features/core/app-shell/lib/nav";
-import { hasPermission } from "@/features/core/auth/core/permissions";
 import { getAuth } from "@/features/core/auth/nextjs/actions";
+import { getPostAuthRedirect } from "@/features/core/auth/nextjs/lib/post-auth-redirect";
 import { ThemeToggle } from "@/features/core/color-theme/client";
 import { LanguageToggle } from "@/features/core/i18n/client";
 import { getT } from "@/features/core/i18n/server";
@@ -42,11 +41,7 @@ export default async function Home() {
   const auth = await getAuth();
 
   const workspaceTarget = auth.isAuthenticated
-    ? (SYSTEM_NAV_ITEMS.find((item) =>
-        hasPermission(auth.session.user, "screens", "view", {
-          screenKey: item.screenKey,
-        }),
-      )?.href ?? "/dashboard")
+    ? getPostAuthRedirect(auth.session.user)
     : "/sign-in";
 
   const primaryHref = auth.isAuthenticated ? workspaceTarget : "#capabilities";

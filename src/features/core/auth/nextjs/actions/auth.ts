@@ -24,6 +24,7 @@ import {
 } from "@/features/core/auth/core/session";
 import { validateInput } from "@/features/core/auth/nextjs/actions/helpers";
 import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
+import { getPostAuthRedirect } from "@/features/core/auth/nextjs/lib/post-auth-redirect";
 import { signInSchema, signUpSchema } from "@/features/core/auth/schemas";
 import type {
   AuthState,
@@ -39,6 +40,7 @@ export async function signInAction(
   const { password, email } = await validateInput(signInSchema, rawInput);
 
   const normalizedEmail = normalizeEmail(email);
+  let signedInUser: PartialUser | null = null;
 
   try {
     const user = await db.query.UsersTable.findFirst({
@@ -74,11 +76,19 @@ export async function signInAction(
     }
 
     await createUserSession(user, await cookies());
+    signedInUser = user;
   } catch (error) {
     return authError(error);
   }
 
-  redirect("/");
+  if (!signedInUser) {
+    return {
+      isError: true,
+      message: t("authTranslations.error.credentials"),
+    };
+  }
+
+  redirect(getPostAuthRedirect(signedInUser));
 }
 
 export async function signUpAction(
@@ -143,7 +153,7 @@ export async function signUpAction(
   if (result.isError) return { isError: true, message: result.message };
   await createUserSession(result.user, await cookies());
 
-  redirect("/");
+  redirect(getPostAuthRedirect(result.user));
 }
 
 export async function oAuthSignIn(provider: OAuthProvider) {

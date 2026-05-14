@@ -18,6 +18,7 @@ import {
   normalizeEmail,
 } from "@/features/core/auth/core";
 import { getUserIdTag } from "@/features/core/auth/db-cache";
+import { getPostAuthRedirect } from "@/features/core/auth/nextjs/lib/post-auth-redirect";
 import type { PartialUser } from "@/features/core/auth/types";
 
 const OAUTH_POPUP_MODE_COOKIE = "oAuthPopupMode";
@@ -52,10 +53,10 @@ export async function GET(
   const currentSession = await getUserSession(cookieJar);
   const oAuthClient = getOAuthClient(provider);
   let oAuthErrorMessage: string | null = null;
+  let authenticatedUser: PartialUser | null = null;
 
   try {
     const oAuthUser = await oAuthClient.fetchUser(code, state, cookieJar);
-
     let user: PartialUser | null = null;
 
     if (currentSession?.user.id) {
@@ -73,6 +74,7 @@ export async function GET(
     }
 
     await createUserSession(user, cookieJar);
+    authenticatedUser = user;
   } catch (error) {
     console.error(error);
 
@@ -109,7 +111,11 @@ export async function GET(
     redirect(getOAuthCompleteUrl({ status: "success", provider }));
   }
 
-  redirect("/");
+  if (!authenticatedUser) {
+    redirect("/sign-in");
+  }
+
+  redirect(getPostAuthRedirect(authenticatedUser));
 }
 
 function getOAuthCompleteUrl({

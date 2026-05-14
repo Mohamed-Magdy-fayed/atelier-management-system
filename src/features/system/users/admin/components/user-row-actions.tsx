@@ -40,6 +40,7 @@ export function UserRowActions({ row, setRowAction }: UserRowActionsProps) {
       size="icon-sm"
       className="size-8"
       aria-label={String(t("common.openMenu"))}
+      data-testid={`user-row-actions-trigger-${row.id}`}
     >
       <MoreHorizontalIcon className="size-3.5" />
     </Button>
@@ -72,6 +73,7 @@ export function UserRowActions({ row, setRowAction }: UserRowActionsProps) {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
+          data-testid={`user-row-actions-delete-${row.id}`}
           onClick={() => setRowAction({ row, variant: "delete" })}
         >
           <Trash2Icon className="size-3.5 text-destructive" />

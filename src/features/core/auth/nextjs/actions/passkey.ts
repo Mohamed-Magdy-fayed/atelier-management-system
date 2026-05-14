@@ -32,6 +32,7 @@ import {
   getUserIdTag,
   revalidateAuthCache,
 } from "@/features/core/auth/db-cache";
+import { getPostAuthRedirect } from "@/features/core/auth/nextjs/lib/post-auth-redirect";
 import { validateInput } from "@/features/core/auth/nextjs/actions/helpers";
 import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
 import type {
@@ -437,7 +438,7 @@ export async function completePasskeyAuthenticationAction(
 
   await createUserSession(user, await cookies());
 
-  redirect("/");
+  redirect(getPostAuthRedirect(user));
 }
 
 export async function completePasskeyRegistrationAction(
