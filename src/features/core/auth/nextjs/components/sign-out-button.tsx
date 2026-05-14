@@ -1,9 +1,9 @@
 "use client";
 
 import {
-	type ButtonHTMLAttributes,
-	type ReactNode,
-	useTransition,
+  type ButtonHTMLAttributes,
+  type ReactNode,
+  useTransition,
 } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -14,40 +14,40 @@ import { useTranslation } from "@/features/core/i18n/client";
 type ButtonLikeProps = React.ComponentProps<typeof Button>;
 
 type SignOutButtonProps = { children?: ReactNode } & Pick<
-	ButtonLikeProps,
-	"variant" | "size" | "className" | "disabled"
+  ButtonLikeProps,
+  "variant" | "size" | "className" | "disabled"
 > &
-	Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick">;
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick">;
 
 export function SignOutButton({
-	children,
-	variant = "destructive",
-	size,
-	className,
-	disabled,
-	...buttonProps
+  children,
+  variant = "destructive",
+  size,
+  className,
+  disabled,
+  ...buttonProps
 }: SignOutButtonProps) {
-	const { t } = useTranslation();
+  const { t } = useTranslation();
 
-	const [isLoading, startTransition] = useTransition();
+  const [isLoading, startTransition] = useTransition();
 
-	const handleSignOut = async () => {
-		startTransition(async () => {
-			signOutAction();
-		});
-	};
+  const handleSignOut = async () => {
+    startTransition(async () => {
+      signOutAction();
+    });
+  };
 
-	return (
-		<Button
-			className={className}
-			disabled={disabled || isLoading}
-			onClick={handleSignOut}
-			size={size}
-			variant={variant}
-			data-icon="inline-start"
-			{...buttonProps}
-		>
-			{isLoading ? <Spinner /> : (children ?? t("authTranslations.signOut"))}
-		</Button>
-	);
+  return (
+    <Button
+      className={className}
+      disabled={disabled || isLoading}
+      onClick={handleSignOut}
+      size={size}
+      variant={variant}
+      data-icon="inline-start"
+      {...buttonProps}
+    >
+      {isLoading ? <Spinner /> : (children ?? t("authTranslations.signOut"))}
+    </Button>
+  );
 }

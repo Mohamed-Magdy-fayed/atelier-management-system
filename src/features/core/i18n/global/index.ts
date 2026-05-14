@@ -5,7 +5,7 @@ import type { TranslationKey } from "@/features/core/i18n/lib";
 export const mainTranslations = { en, ar };
 
 export function translationKey<
-    T extends TranslationKey<typeof mainTranslations>,
+  T extends TranslationKey<typeof mainTranslations>,
 >(key: T): T {
-    return key;
+  return key;
 }

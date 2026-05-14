@@ -1,4 +1,4 @@
-import { pgTable, boolean, integer, varchar } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, varchar } from "drizzle-orm/pg-core";
 
 import {
   createdAt,

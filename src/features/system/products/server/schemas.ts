@@ -70,11 +70,17 @@ export const productBulkArchiveSchema = z.object({
 export type ProductListFilterInput = z.infer<typeof productListFilterInput>;
 export type ListProductsInput = z.infer<typeof listProductsInput>;
 export type ExportProductsInput = z.infer<typeof exportProductsInput>;
-export type PreviewProductsImportInput = z.infer<typeof previewProductsImportInput>;
-export type CommitProductsImportInput = z.infer<typeof commitProductsImportInput>;
+export type PreviewProductsImportInput = z.infer<
+  typeof previewProductsImportInput
+>;
+export type CommitProductsImportInput = z.infer<
+  typeof commitProductsImportInput
+>;
 export type ProductMutationInput = z.infer<typeof productMutationSchema>;
 export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;
 export type ProductDeleteInput = z.infer<typeof productDeleteSchema>;
 export type ProductSetActiveInput = z.infer<typeof productSetActiveSchema>;
-export type ProductBulkSetActiveInput = z.infer<typeof productBulkSetActiveSchema>;
+export type ProductBulkSetActiveInput = z.infer<
+  typeof productBulkSetActiveSchema
+>;
 export type ProductBulkArchiveInput = z.infer<typeof productBulkArchiveSchema>;

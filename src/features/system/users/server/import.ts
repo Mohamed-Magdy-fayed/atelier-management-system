@@ -9,7 +9,11 @@ import type {
   PreviewImportInput,
   UserImportRole,
 } from "./schemas";
-import { assertStaffRole, getRequiredSession, type TRPCContext } from "./shared";
+import {
+  assertStaffRole,
+  getRequiredSession,
+  type TRPCContext,
+} from "./shared";
 import type {
   UserImportAction,
   UserImportCommitRow,
@@ -81,7 +85,11 @@ function normalizeImportedUserRow(
   ctx: Pick<TRPCContext, "t">,
   role: UserImportRole,
   raw: Record<string, unknown>,
-): { candidateId: string | null; values: UserImportRowValues; reasons: string[] } {
+): {
+  candidateId: string | null;
+  values: UserImportRowValues;
+  reasons: string[];
+} {
   const name = trimNullableImportString(readImportCell(raw, "name"));
   const email = trimImportString(readImportCell(raw, "email"));
   const phone = trimNullableImportString(readImportCell(raw, "phone"));
@@ -146,10 +154,16 @@ function countImportDuplicates(
   for (const row of preparedRows) {
     if (row.baseReasons.length > 0) continue;
     if (row.values.email) {
-      emailCounts.set(row.values.email, (emailCounts.get(row.values.email) ?? 0) + 1);
+      emailCounts.set(
+        row.values.email,
+        (emailCounts.get(row.values.email) ?? 0) + 1,
+      );
     }
     if (row.values.phone) {
-      phoneCounts.set(row.values.phone, (phoneCounts.get(row.values.phone) ?? 0) + 1);
+      phoneCounts.set(
+        row.values.phone,
+        (phoneCounts.get(row.values.phone) ?? 0) + 1,
+      );
     }
   }
 
@@ -164,13 +178,23 @@ async function loadExistingImportUsers(
   }[],
 ) {
   const ids = Array.from(
-    new Set(rows.map((row) => row.candidateId).filter((value): value is string => value != null)),
+    new Set(
+      rows
+        .map((row) => row.candidateId)
+        .filter((value): value is string => value != null),
+    ),
   );
   const emails = Array.from(
-    new Set(rows.map((row) => row.values.email).filter((value) => value.length > 0)),
+    new Set(
+      rows.map((row) => row.values.email).filter((value) => value.length > 0),
+    ),
   );
   const phones = Array.from(
-    new Set(rows.map((row) => row.values.phone).filter((value): value is string => value != null)),
+    new Set(
+      rows
+        .map((row) => row.values.phone)
+        .filter((value): value is string => value != null),
+    ),
   );
 
   const conditions: SQL[] = [];
@@ -179,7 +203,8 @@ async function loadExistingImportUsers(
   if (phones.length > 0) conditions.push(inArray(UsersTable.phone, phones));
   if (conditions.length === 0) return [] as ExistingImportUser[];
 
-  const whereClause = conditions.length === 1 ? conditions[0] : or(...conditions)!;
+  const whereClause =
+    conditions.length === 1 ? conditions[0] : or(...conditions)!;
 
   const rowsResult = await ctx.db
     .select({
@@ -214,8 +239,12 @@ async function prepareUserImportRows(
   const { emailCounts, phoneCounts } = countImportDuplicates(normalizedRows);
   const existingUsers = await loadExistingImportUsers(ctx, normalizedRows);
 
-  const existingUsersById = new Map(existingUsers.map((user) => [user.id, user]));
-  const existingUsersByEmail = new Map(existingUsers.map((user) => [user.email, user]));
+  const existingUsersById = new Map(
+    existingUsers.map((user) => [user.id, user]),
+  );
+  const existingUsersByEmail = new Map(
+    existingUsers.map((user) => [user.email, user]),
+  );
   const existingUsersByPhone = new Map(
     existingUsers
       .filter((user) => user.phone != null)
@@ -389,10 +418,9 @@ export async function commitUsersImport(
         rowNumber: row.rowNumber,
         status: "invalid",
         action: "skip",
-        reasons:
-          freshRow?.preview.reasons.length
-            ? freshRow.preview.reasons
-            : [ctx.t("dataTable.importReasonChangedBeforeCommit")],
+        reasons: freshRow?.preview.reasons.length
+          ? freshRow.preview.reasons
+          : [ctx.t("dataTable.importReasonChangedBeforeCommit")],
         targetUserId: null,
       });
     }

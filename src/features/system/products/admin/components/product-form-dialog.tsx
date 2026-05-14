@@ -72,21 +72,28 @@ export function ProductFormDialog({
     defaultValues,
     validators: { onSubmit: productFormSchema },
     onSubmit: async ({ value }) => {
-      const action: Promise<unknown> = isEdit && product
-        ? updateMut.mutateAsync({ id: product.id, ...value })
-        : createMut.mutateAsync(value);
+      const action: Promise<unknown> =
+        isEdit && product
+          ? updateMut.mutateAsync({ id: product.id, ...value })
+          : createMut.mutateAsync(value);
 
       try {
-        await toast.promise(action, {
-          loading: String(t("common.saving")),
-          success: String(
-            t(isEdit ? "systemPages.productUpdated" : "systemPages.productCreated"),
-          ),
-          error: (err) =>
-            err instanceof Error
-              ? err.message
-              : String(t("systemPages.productSaveFailed")),
-        }).unwrap();
+        await toast
+          .promise(action, {
+            loading: String(t("common.saving")),
+            success: String(
+              t(
+                isEdit
+                  ? "systemPages.productUpdated"
+                  : "systemPages.productCreated",
+              ),
+            ),
+            error: (err) =>
+              err instanceof Error
+                ? err.message
+                : String(t("systemPages.productSaveFailed")),
+          })
+          .unwrap();
         await queryClient.invalidateQueries({
           queryKey: trpc.products.pathKey(),
         });
@@ -121,7 +128,9 @@ export function ProductFormDialog({
       <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md">
         <DialogHeader className="shrink-0 px-4 pt-4">
           <DialogTitle>
-            {String(t(isEdit ? "systemPages.editProduct" : "systemPages.addProduct"))}
+            {String(
+              t(isEdit ? "systemPages.editProduct" : "systemPages.addProduct"),
+            )}
           </DialogTitle>
           <DialogDescription>
             {String(
@@ -145,7 +154,9 @@ export function ProductFormDialog({
                   {(field) => (
                     <field.StringField
                       label={String(t("systemPages.productsCode"))}
-                      placeholder={String(t("systemPages.productsCodePlaceholder"))}
+                      placeholder={String(
+                        t("systemPages.productsCodePlaceholder"),
+                      )}
                       autoFocus
                     />
                   )}
@@ -154,7 +165,9 @@ export function ProductFormDialog({
                   {(field) => (
                     <field.StringField
                       label={String(t("systemPages.productsNameEn"))}
-                      placeholder={String(t("systemPages.productsNameEnPlaceholder"))}
+                      placeholder={String(
+                        t("systemPages.productsNameEnPlaceholder"),
+                      )}
                     />
                   )}
                 </form.AppField>
@@ -162,7 +175,9 @@ export function ProductFormDialog({
                   {(field) => (
                     <field.StringField
                       label={String(t("systemPages.productsNameAr"))}
-                      placeholder={String(t("systemPages.productsNameArPlaceholder"))}
+                      placeholder={String(
+                        t("systemPages.productsNameArPlaceholder"),
+                      )}
                     />
                   )}
                 </form.AppField>
@@ -170,7 +185,9 @@ export function ProductFormDialog({
                   {(field) => (
                     <field.NumberField
                       label={String(t("systemPages.productsPrice"))}
-                      placeholder={String(t("systemPages.productsPricePlaceholder"))}
+                      placeholder={String(
+                        t("systemPages.productsPricePlaceholder"),
+                      )}
                     />
                   )}
                 </form.AppField>
@@ -178,7 +195,9 @@ export function ProductFormDialog({
                   {(field) => (
                     <field.BooleanField
                       label={String(t("systemPages.productsActiveLabel"))}
-                      description={String(t("systemPages.productsActiveDescription"))}
+                      description={String(
+                        t("systemPages.productsActiveDescription"),
+                      )}
                     />
                   )}
                 </form.AppField>

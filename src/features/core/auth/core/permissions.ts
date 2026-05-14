@@ -1,6 +1,6 @@
 import type { UserRole } from "@/drizzle/schema";
 import type { PartialUser } from "@/features/core/auth/types";
-import { screenKeys, type ScreenKey } from "@/features/system/registry";
+import { type ScreenKey, screenKeys } from "@/features/system/registry";
 
 export type DefaultAction = "view" | "update" | "create" | "delete";
 
@@ -62,7 +62,8 @@ export const rolesPermissions = {
       delete: (user: PartialUser, data: PartialUser) => user.id === data.id,
     },
     branches: {
-      view: (user: PartialUser, branch: BranchPermissionData) => user.id === branch.userId,
+      view: (user: PartialUser, branch: BranchPermissionData) =>
+        user.id === branch.userId,
     },
   },
   customer: {
@@ -71,11 +72,12 @@ export const rolesPermissions = {
       update: (user: PartialUser, data: PartialUser) => user.id === data.id,
     },
     screens: {
-      view: (_, data: { screenKey: ScreenKey }) => data.screenKey === "my-account"
+      view: (_, data: { screenKey: ScreenKey }) =>
+        data.screenKey === "my-account",
     },
     branches: {
       view: true,
-    }
+    },
   },
 } as const satisfies RolesWithPermissions;
 

@@ -18,7 +18,7 @@ import { createI18n, type LanguageMessages } from "./lib";
 const TranslationContext = createContext({
   locale: "en",
   dir: "ltr" as "rtl" | "ltr",
-  setLocale: (_: string) => { },
+  setLocale: (_: string) => {},
   fallbackLocale: "en",
 });
 

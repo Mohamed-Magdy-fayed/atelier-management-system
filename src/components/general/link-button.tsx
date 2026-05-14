@@ -6,38 +6,38 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type ButtonStyleProps = VariantProps<typeof buttonVariants> & {
-    className?: string;
+  className?: string;
 };
 
 type LinkButtonProps = Omit<React.ComponentProps<typeof Link>, "className"> &
-    ButtonStyleProps;
+  ButtonStyleProps;
 
 export function LinkButton({
-    variant = "default",
-    size = "default",
-    className,
-    ...props
+  variant = "default",
+  size = "default",
+  className,
+  ...props
 }: LinkButtonProps) {
-    return (
-        <Link
-            className={cn(buttonVariants({ variant, size, className }))}
-            {...props}
-        />
-    );
+  return (
+    <Link
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  );
 }
 
 type AnchorButtonProps = React.ComponentProps<"a"> & ButtonStyleProps;
 
 export function AnchorButton({
-    variant = "default",
-    size = "default",
-    className,
-    ...props
+  variant = "default",
+  size = "default",
+  className,
+  ...props
 }: AnchorButtonProps) {
-    return (
-        <a
-            className={cn(buttonVariants({ variant, size, className }))}
-            {...props}
-        />
-    );
+  return (
+    <a
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  );
 }

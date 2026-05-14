@@ -36,13 +36,16 @@ import {
   ProductDeleteDialog,
   ProductFormDialog,
   ProductInfoModal,
+  type ProductRowActionVariant,
   ProductsBulkActions,
   ProductsGridFilters,
   ProductsImportButton,
-  type ProductRowActionVariant,
 } from "./components";
 
-type RowAction = { row: ProductGridRow; variant: ProductRowActionVariant } | null;
+type RowAction = {
+  row: ProductGridRow;
+  variant: ProductRowActionVariant;
+} | null;
 
 export function ProductsTablePage() {
   const trpc = useTRPC();
@@ -78,7 +81,13 @@ export function ProductsTablePage() {
       columnFilters,
       globalFilter: globalFilter || undefined,
     }),
-    [columnFilters, globalFilter, pagination.pageIndex, pagination.pageSize, sorting],
+    [
+      columnFilters,
+      globalFilter,
+      pagination.pageIndex,
+      pagination.pageSize,
+      sorting,
+    ],
   );
 
   const { data, isFetching } = useQuery(
@@ -152,7 +161,9 @@ export function ProductsTablePage() {
 
   return (
     <div
-      className={isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"}
+      className={
+        isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"
+      }
     >
       <div className="space-y-1">
         <H2>{t("systemPages.productsTitle")}</H2>

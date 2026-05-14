@@ -1,19 +1,23 @@
-import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { eq } from "drizzle-orm";
 
-import {
-  BranchesTable,
-  BranchMembershipsTable,
-} from "@/drizzle/schema";
+import { BranchesTable, BranchMembershipsTable } from "@/drizzle/schema";
 
 import type {
   BranchDeleteInput,
   BranchMutationInput,
   BranchUpdateInput,
 } from "./schemas";
-import { assertAdminRole, getRequiredSession, type TRPCContext } from "./shared";
+import {
+  assertAdminRole,
+  getRequiredSession,
+  type TRPCContext,
+} from "./shared";
 
-export async function createBranch(ctx: TRPCContext, input: BranchMutationInput) {
+export async function createBranch(
+  ctx: TRPCContext,
+  input: BranchMutationInput,
+) {
   const session = getRequiredSession(ctx);
   assertAdminRole(session.user.role);
 
@@ -42,10 +46,7 @@ export async function createBranch(ctx: TRPCContext, input: BranchMutationInput)
   return { branchId };
 }
 
-export async function updateBranch(
-  ctx: TRPCContext,
-  input: BranchUpdateInput,
-) {
+export async function updateBranch(ctx: TRPCContext, input: BranchUpdateInput) {
   const session = getRequiredSession(ctx);
   assertAdminRole(session.user.role);
 
@@ -72,10 +73,7 @@ export async function updateBranch(
   return { updated: true };
 }
 
-export async function deleteBranch(
-  ctx: TRPCContext,
-  input: BranchDeleteInput,
-) {
+export async function deleteBranch(ctx: TRPCContext, input: BranchDeleteInput) {
   const session = getRequiredSession(ctx);
   assertAdminRole(session.user.role);
 

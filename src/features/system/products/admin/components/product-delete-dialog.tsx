@@ -43,14 +43,16 @@ export function ProductDeleteDialog({
 
     setPending(true);
     try {
-      await toast.promise(deleteMut.mutateAsync({ id: product.id }), {
-        loading: String(t("common.deleting")),
-        success: String(t("systemPages.productDeleted")),
-        error: (err) =>
-          err instanceof Error
-            ? err.message
-            : String(t("systemPages.productDeleteFailed")),
-      }).unwrap();
+      await toast
+        .promise(deleteMut.mutateAsync({ id: product.id }), {
+          loading: String(t("common.deleting")),
+          success: String(t("systemPages.productDeleted")),
+          error: (err) =>
+            err instanceof Error
+              ? err.message
+              : String(t("systemPages.productDeleteFailed")),
+        })
+        .unwrap();
       await queryClient.invalidateQueries({
         queryKey: trpc.products.pathKey(),
       });
@@ -67,7 +69,9 @@ export function ProductDeleteDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{String(t("systemPages.deleteProductsTitle"))}</AlertDialogTitle>
+          <AlertDialogTitle>
+            {String(t("systemPages.deleteProductsTitle"))}
+          </AlertDialogTitle>
           <AlertDialogDescription>
             {product
               ? String(

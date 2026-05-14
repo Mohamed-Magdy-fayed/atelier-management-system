@@ -37,12 +37,18 @@ function selectedIds(table: Table<ProductGridRow>): string[] {
   return table.getFilteredSelectedRowModel().rows.map((row) => row.original.id);
 }
 
-export function ProductsBulkActions({ table }: { table: Table<ProductGridRow> }) {
+export function ProductsBulkActions({
+  table,
+}: {
+  table: Table<ProductGridRow>;
+}) {
   const { t } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const setActiveMut = useMutation(trpc.products.bulkSetActive.mutationOptions());
+  const setActiveMut = useMutation(
+    trpc.products.bulkSetActive.mutationOptions(),
+  );
   const archiveMut = useMutation(trpc.products.bulkArchive.mutationOptions());
   const [archiveOpen, setArchiveOpen] = useState(false);
 
@@ -132,7 +138,9 @@ export function ProductsBulkActions({ table }: { table: Table<ProductGridRow> })
             </Button>
           }
         />
-        <TooltipContent>{String(t("systemPages.bulkActivateProducts"))}</TooltipContent>
+        <TooltipContent>
+          {String(t("systemPages.bulkActivateProducts"))}
+        </TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger
@@ -149,7 +157,9 @@ export function ProductsBulkActions({ table }: { table: Table<ProductGridRow> })
             </Button>
           }
         />
-        <TooltipContent>{String(t("systemPages.bulkDeactivateProducts"))}</TooltipContent>
+        <TooltipContent>
+          {String(t("systemPages.bulkDeactivateProducts"))}
+        </TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger
@@ -167,7 +177,9 @@ export function ProductsBulkActions({ table }: { table: Table<ProductGridRow> })
             </Button>
           }
         />
-        <TooltipContent>{String(t("systemPages.bulkArchiveProducts"))}</TooltipContent>
+        <TooltipContent>
+          {String(t("systemPages.bulkArchiveProducts"))}
+        </TooltipContent>
       </Tooltip>
 
       <AlertDialog open={archiveOpen} onOpenChange={setArchiveOpen}>

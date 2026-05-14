@@ -19,7 +19,10 @@ export {
 } from "./hooks/use-data-table";
 export { useTableUrlState } from "./hooks/use-table-url-state";
 export { downloadCsv, parseCsvToObjects, rowsToCsv } from "./lib/csv";
-export type { DataTableDateRangeValue, DataTableNumberRangeValue } from "./lib/filter-values";
+export type {
+  DataTableDateRangeValue,
+  DataTableNumberRangeValue,
+} from "./lib/filter-values";
 export {
   dateRangeToWireBounds,
   isDateRangeValue,

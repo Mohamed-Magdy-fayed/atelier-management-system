@@ -58,7 +58,9 @@ async function Suspended({ children }: { children: React.ReactNode }) {
       suppressHydrationWarning
     >
       <body>
-        <Providers locale={locale} theme={theme}>{children}</Providers>
+        <Providers locale={locale} theme={theme}>
+          {children}
+        </Providers>
       </body>
     </html>
   );

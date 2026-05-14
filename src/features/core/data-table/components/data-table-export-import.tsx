@@ -56,16 +56,16 @@ export function DataTableExportButton<T>({
         rows = await fetchAllRows();
       } else {
         // 3. Client mode — current filter, all pages already in memory.
-        rows = table
-          .getFilteredRowModel()
-          .rows.map((r) => r.original);
+        rows = table.getFilteredRowModel().rows.map((r) => r.original);
       }
 
       const csv = rowsToCsv(headers, rows.map(getExportRow));
       downloadCsv(exportFileName, csv);
       toast.success(t("dataTable.exportSuccess", { count: rows.length }));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("dataTable.exportFailed"));
+      toast.error(
+        err instanceof Error ? err.message : t("dataTable.exportFailed"),
+      );
     } finally {
       setExporting(false);
     }

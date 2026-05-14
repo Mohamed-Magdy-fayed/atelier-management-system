@@ -8,10 +8,7 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
     <ScrollArea className="w-full rounded-md border border-border">
       <table
         data-slot="table"
-        className={cn(
-          "w-max min-w-full caption-bottom text-xs",
-          className,
-        )}
+        className={cn("w-max min-w-full caption-bottom text-xs", className)}
         {...props}
       />
     </ScrollArea>

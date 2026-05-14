@@ -96,7 +96,11 @@ const productTemplates = [
   { nameEn: "Pistachio Cake Slice", nameAr: "قطعة كيك بالفستق", price: 160 },
   { nameEn: "Fresh Orange Juice", nameAr: "عصير برتقال طازج", price: 95 },
   { nameEn: "Vanilla Cheesecake", nameAr: "تشيزكيك بالفانيليا", price: 175 },
-  { nameEn: "Granola Breakfast Jar", nameAr: "برطمان جرانولا للفطور", price: 135 },
+  {
+    nameEn: "Granola Breakfast Jar",
+    nameAr: "برطمان جرانولا للفطور",
+    price: 135,
+  },
   { nameEn: "Cold Brew Bottle", nameAr: "زجاجة كولد برو", price: 145 },
   { nameEn: "House Sandwich Combo", nameAr: "وجبة ساندويتش هاوس", price: 230 },
 ] as const;
@@ -147,7 +151,11 @@ function pickCreatedAt(i: number, now: number): Date {
   return new Date(now - daysBack * DAY_MS);
 }
 
-function pickLastSignInAt(i: number, now: number, createdAt: Date): Date | null {
+function pickLastSignInAt(
+  i: number,
+  now: number,
+  createdAt: Date,
+): Date | null {
   if (i % 4 === 0) return null;
   const span = Math.max(1, Math.floor((now - createdAt.getTime()) / DAY_MS));
   const daysAgo = (i * 23) % Math.min(span, 540);
@@ -222,10 +230,8 @@ function buildSeedProducts(
 
     return {
       code: `PRD-${String(i).padStart(3, "0")}`,
-      nameEn:
-        cycle === 0 ? template.nameEn : `${template.nameEn} ${cycle + 1}`,
-      nameAr:
-        cycle === 0 ? template.nameAr : `${template.nameAr} ${cycle + 1}`,
+      nameEn: cycle === 0 ? template.nameEn : `${template.nameEn} ${cycle + 1}`,
+      nameAr: cycle === 0 ? template.nameAr : `${template.nameAr} ${cycle + 1}`,
       price: template.price + cycle * 25,
       isActive: i % 9 !== 0,
       createdBy,
@@ -290,7 +296,10 @@ export async function seedScenario(
       .values(buildSeedProducts(SEED_SYSTEM_ACTOR, config.productCount))
       .returning({ id: ProductsTable.id });
 
-    const employees = buildSeedEmployees(SEED_SYSTEM_ACTOR, config.employeeCount);
+    const employees = buildSeedEmployees(
+      SEED_SYSTEM_ACTOR,
+      config.employeeCount,
+    );
     const seededEmployees = await tx
       .insert(UsersTable)
       .values(employees)

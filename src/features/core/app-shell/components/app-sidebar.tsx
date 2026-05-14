@@ -119,10 +119,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
                       {user.email}
                     </span>
                   </div>
-                  <ChevronsUpDownIcon
-                    className="ms-auto size-4"
-                    aria-hidden
-                  />
+                  <ChevronsUpDownIcon className="ms-auto size-4" aria-hidden />
                 </SidebarMenuButton>
               }
             />

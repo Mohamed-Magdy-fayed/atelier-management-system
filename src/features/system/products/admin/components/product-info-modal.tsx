@@ -18,13 +18,7 @@ type ProductInfoModalProps = {
   product: ProductGridRow | null;
 };
 
-function InfoRow({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
+function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[8rem_1fr] items-start gap-2 py-1.5 text-xs">
       <span className="text-muted-foreground">{label}</span>

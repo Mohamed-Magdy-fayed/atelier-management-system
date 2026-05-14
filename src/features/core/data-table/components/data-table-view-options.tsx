@@ -49,9 +49,7 @@ export function DataTableViewOptions<T>({
             />
           }
         />
-        <TooltipContent>
-          {String(t("dataTable.toggleColumns"))}
-        </TooltipContent>
+        <TooltipContent>{String(t("dataTable.toggleColumns"))}</TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuGroup>
@@ -64,8 +62,8 @@ export function DataTableViewOptions<T>({
               checked={column.getIsVisible()}
               onCheckedChange={(v) => column.toggleVisibility(!!v)}
             >
-              {(column.columnDef.meta as { label?: string } | undefined)?.label ??
-                column.id}
+              {(column.columnDef.meta as { label?: string } | undefined)
+                ?.label ?? column.id}
             </DropdownMenuCheckboxItem>
           ))}
         </DropdownMenuGroup>

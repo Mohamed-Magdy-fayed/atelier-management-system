@@ -43,14 +43,16 @@ export function BranchDeleteDialog({
 
     setPending(true);
     try {
-      await toast.promise(deleteMut.mutateAsync({ id: branch.id }), {
-        loading: String(t("common.deleting")),
-        success: String(t("systemPages.branchDeleted")),
-        error: (err) =>
-          err instanceof Error
-            ? err.message
-            : String(t("systemPages.branchDeleteFailed")),
-      }).unwrap();
+      await toast
+        .promise(deleteMut.mutateAsync({ id: branch.id }), {
+          loading: String(t("common.deleting")),
+          success: String(t("systemPages.branchDeleted")),
+          error: (err) =>
+            err instanceof Error
+              ? err.message
+              : String(t("systemPages.branchDeleteFailed")),
+        })
+        .unwrap();
       await queryClient.invalidateQueries({
         queryKey: trpc.branches.pathKey(),
       });

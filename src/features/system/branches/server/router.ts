@@ -1,13 +1,13 @@
 import { createTRPCRouter, protectedProcedure } from "@/integrations/trpc/init";
 
 import { createBranch, deleteBranch, updateBranch } from "./mutations";
+import { listBranches } from "./queries";
 import {
   branchDeleteSchema,
   branchMutationSchema,
   branchUpdateSchema,
   listBranchesInput,
 } from "./schemas";
-import { listBranches } from "./queries";
 
 export const branchesRouter = createTRPCRouter({
   list: protectedProcedure

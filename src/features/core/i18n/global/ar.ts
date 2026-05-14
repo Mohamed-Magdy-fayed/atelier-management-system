@@ -154,8 +154,7 @@ export default {
     badge: "منتجات وخدمات وحجوزات",
     title:
       "بِع المنتجات، واستقبل الحجوزات، وأدر كل فرع من خلال نظام أعمال حديث واحد.",
-    lead:
-      "تمنحك فانتاستك واجهة احترافية للعملاء، مع مساحة عمل ثنائية اللغة وقوية للفريق الذي يدير التشغيل اليومي.",
+    lead: "تمنحك فانتاستك واجهة احترافية للعملاء، مع مساحة عمل ثنائية اللغة وقوية للفريق الذي يدير التشغيل اليومي.",
     primaryGuest: "استكشف ما نقدمه",
     primaryAuthenticated: "فتح مساحة العمل",
     secondaryGuest: "دخول الموظفين",
@@ -190,8 +189,7 @@ export default {
     dashboardTitle: "لوحة التحكم",
     dashboardLead: "نظرة تشغيلية مباشرة على الفروع والفرق ونشاط العملاء.",
     dashboardBranchesTitle: "الفروع النشطة",
-    dashboardBranchesDescription:
-      "الفروع المتاحة حاليًا للتشغيل وتوزيع الفرق.",
+    dashboardBranchesDescription: "الفروع المتاحة حاليًا للتشغيل وتوزيع الفرق.",
     dashboardEmployeesTitle: "الموظفون",
     dashboardEmployeesDescription:
       "سجلات الموظفين الجاهزة للتوزيع والصلاحيات والمتابعة.",
@@ -205,11 +203,9 @@ export default {
     dashboardRecentSignInsDescription:
       "المستخدمون الذين دخلوا النظام خلال آخر 30 يومًا.",
     dashboardCoverageTitle: "نسبة التوثيق",
-    dashboardCoverageDescription:
-      "نسبة العملاء الجاهزين للتواصل الموثوق.",
+    dashboardCoverageDescription: "نسبة العملاء الجاهزين للتواصل الموثوق.",
     dashboardActionsTitle: "إجراءات الإدارة",
-    dashboardActionsDescription:
-      "انتقل بسرعة إلى أكثر مناطق العمل تأثيرًا.",
+    dashboardActionsDescription: "انتقل بسرعة إلى أكثر مناطق العمل تأثيرًا.",
     dashboardActionsCustomers: "إدارة العملاء",
     dashboardActionsEmployees: "إدارة الموظفين",
     dashboardActionsBranches: "إدارة الفروع",
@@ -258,7 +254,8 @@ export default {
     productsPricePlaceholder: "1200",
     productsStatus: "الحالة",
     productsActiveLabel: "متاح للتشغيل",
-    productsActiveDescription: "أوقف هذا الخيار لإخفاء المنتج من الكتالوج النشط في التشغيل.",
+    productsActiveDescription:
+      "أوقف هذا الخيار لإخفاء المنتج من الكتالوج النشط في التشغيل.",
     addProduct: "إضافة منتج",
     editProduct: "تعديل المنتج",
     addProductDescription: "أنشئ سجل منتج جديد للكتالوج وجاهزية الطلبات.",
@@ -281,12 +278,18 @@ export default {
     bulkArchiveProductsTitle: "أرشفة المنتجات المحددة؟",
     bulkArchiveProductsDescription:
       "ستتم أرشفة {count:number} من المنتجات المحددة. ستختفي من قوائم الإدارة النشطة لكنها ستبقى في سجل التدقيق.",
-    bulkProductsActivatedSuccess: dt("تم تفعيل {count:number} من المنتجات المحددة.", {}),
+    bulkProductsActivatedSuccess: dt(
+      "تم تفعيل {count:number} من المنتجات المحددة.",
+      {},
+    ),
     bulkProductsDeactivatedSuccess: dt(
       "تم تعطيل {count:number} من المنتجات المحددة.",
       {},
     ),
-    bulkProductsArchivedSuccess: dt("تمت أرشفة {count:number} من المنتجات المحددة.", {}),
+    bulkProductsArchivedSuccess: dt(
+      "تمت أرشفة {count:number} من المنتجات المحددة.",
+      {},
+    ),
     bulkProductStatusFailed: "تعذر تحديث المنتجات المحددة.",
     bulkProductArchiveFailed: "تعذر أرشفة المنتجات المحددة.",
     deleteProductsTitle: "أرشفة المنتج؟",
@@ -379,7 +382,8 @@ export default {
     pinRight: "تثبيت يمينًا",
     unpin: "إلغاء التثبيت",
     importCsv: "استيراد CSV",
-    importHint: "اختر ملف CSV بترميز UTF-8. يجب أن يكون الصف الأول عناوين الأعمدة.",
+    importHint:
+      "اختر ملف CSV بترميز UTF-8. يجب أن يكون الصف الأول عناوين الأعمدة.",
     importApply: "تحميل الصفوف",
     importInvalid: "تعذّر قراءة ملف CSV.",
     importParsed: dt("تم تحليل {count:number} صف(وف).", {}),
@@ -388,7 +392,8 @@ export default {
       "راجع كل صف قبل تطبيق التغييرات. الإلغاء هنا يُبقي قاعدة البيانات دون تغيير.",
     importChooseFile: "اختر ملفًا",
     importReplaceFile: "استبدال الملف",
-    importChooseFileHint: "اختر ملف CSV لمعاينة الصفوف التي ستتم إضافتها أو استعادتها.",
+    importChooseFileHint:
+      "اختر ملف CSV لمعاينة الصفوف التي ستتم إضافتها أو استعادتها.",
     importPreviewing: "جارٍ التحقق من الصفوف...",
     importPreviewEmpty: "لا توجد صفوف متاحة للمعاينة في هذا الملف.",
     importPreviewFailed: "تعذر التحقق من هذا الاستيراد.",

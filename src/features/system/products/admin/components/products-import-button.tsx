@@ -5,13 +5,17 @@ import { UploadIcon } from "lucide-react";
 import { useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useTranslation } from "@/features/core/i18n/client";
+import {
+  type ImportReviewColumn,
   ImportReviewDialog,
   ImportReviewStatusBadge,
-  type ImportReviewColumn,
 } from "@/features/core/import-review";
-import { useTranslation } from "@/features/core/i18n/client";
 import { useTRPC } from "@/integrations/trpc/client";
 import type {
   ProductImportCommitRow,
@@ -26,7 +30,9 @@ function mergeCommitRows(
   rows: ProductsImportRow[],
   commits: ProductImportCommitRow[],
 ) {
-  const commitsByRowNumber = new Map(commits.map((row) => [row.rowNumber, row]));
+  const commitsByRowNumber = new Map(
+    commits.map((row) => [row.rowNumber, row]),
+  );
 
   return rows.map((row) => {
     const commit = commitsByRowNumber.get(row.rowNumber);
@@ -47,8 +53,12 @@ export function ProductsImportButton() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const previewMutation = useMutation(trpc.products.previewImport.mutationOptions());
-  const commitMutation = useMutation(trpc.products.commitImport.mutationOptions());
+  const previewMutation = useMutation(
+    trpc.products.previewImport.mutationOptions(),
+  );
+  const commitMutation = useMutation(
+    trpc.products.commitImport.mutationOptions(),
+  );
 
   const columns = useMemo<ImportReviewColumn<ProductsImportRow>[]>(
     () => [

@@ -17,15 +17,16 @@ export interface SendMessageParams {
   text: string;
 }
 
-type InstanceStatus = `instances/${string}/status`
-type SendMessage = `${string}/send-message`
-type GetPNId = `lookup/lid/pn/${string}`
+type InstanceStatus = `instances/${string}/status`;
+type SendMessage = `${string}/send-message`;
+type GetPNId = `lookup/lid/pn/${string}`;
 
-export type EndpointsMap = {
-  endpoint: SendMessage;
-  body: SendMessageParams;
-} | {
-  endpoint: InstanceStatus | GetPNId;
-  body?: undefined;
-}
-
+export type EndpointsMap =
+  | {
+      endpoint: SendMessage;
+      body: SendMessageParams;
+    }
+  | {
+      endpoint: InstanceStatus | GetPNId;
+      body?: undefined;
+    };

@@ -27,8 +27,8 @@ import {
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
-import { UsersImportButton } from "@/features/core/import-review";
 import { useTranslation } from "@/features/core/i18n/client";
+import { UsersImportButton } from "@/features/core/import-review";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { UserGridRow } from "@/integrations/trpc/routers/users";
 
@@ -155,7 +155,9 @@ export function CustomersTablePage() {
 
   return (
     <div
-      className={isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"}
+      className={
+        isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"
+      }
     >
       <div className="space-y-1">
         <H2>{t("systemPages.customersTitle")}</H2>

@@ -50,8 +50,7 @@ export function DataTableToolbar<T>({
   const activeColumnFilterCount = table.getState().columnFilters.length;
   // The text filter counts toward "active" too — that's why the search input
   // lives alongside the column filter triggers (and inside the mobile popover).
-  const activeFilterCount =
-    activeColumnFilterCount + (globalFilter ? 1 : 0);
+  const activeFilterCount = activeColumnFilterCount + (globalFilter ? 1 : 0);
   const isFiltered = activeFilterCount > 0;
 
   const searchInput = (

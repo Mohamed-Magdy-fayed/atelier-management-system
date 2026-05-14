@@ -14,47 +14,47 @@ export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
 
 let browserQueryClient: QueryClient;
 function getQueryClient() {
-    if (typeof window === "undefined") {
-        return makeQueryClient();
-    }
-    if (!browserQueryClient) browserQueryClient = makeQueryClient();
-    return browserQueryClient;
+  if (typeof window === "undefined") {
+    return makeQueryClient();
+  }
+  if (!browserQueryClient) browserQueryClient = makeQueryClient();
+  return browserQueryClient;
 }
 
 function getUrl() {
-    const base = (() => {
-        if (typeof window !== "undefined") return "";
-        if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-        return "http://localhost:3000";
-    })();
-    return `${base}/api/trpc`;
+  const base = (() => {
+    if (typeof window !== "undefined") return "";
+    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+    return "http://localhost:3000";
+  })();
+  return `${base}/api/trpc`;
 }
 
 export function TRPCReactProvider(
-    props: Readonly<{
-        children: React.ReactNode;
-    }>,
+  props: Readonly<{
+    children: React.ReactNode;
+  }>,
 ) {
-    const queryClient = getQueryClient();
+  const queryClient = getQueryClient();
 
-    const [trpcClient] = useState(() =>
-        createTRPCClient<AppRouter>({
-            links: [
-                httpBatchLink({
-                    transformer: SuperJSON,
-                    url: getUrl(),
-                    fetch: (input, init) =>
-                        fetch(input as RequestInfo, { ...init, credentials: "include" }),
-                }),
-            ],
+  const [trpcClient] = useState(() =>
+    createTRPCClient<AppRouter>({
+      links: [
+        httpBatchLink({
+          transformer: SuperJSON,
+          url: getUrl(),
+          fetch: (input, init) =>
+            fetch(input as RequestInfo, { ...init, credentials: "include" }),
         }),
-    );
+      ],
+    }),
+  );
 
-    return (
-        <QueryClientProvider client={queryClient}>
-            <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-                {props.children}
-            </TRPCProvider>
-        </QueryClientProvider>
-    );
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+        {props.children}
+      </TRPCProvider>
+    </QueryClientProvider>
+  );
 }

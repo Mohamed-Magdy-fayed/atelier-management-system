@@ -2,11 +2,11 @@ import { clearDb } from "@/drizzle/seed/clear-db";
 
 import {
   DEFAULT_SEED_PROFILE,
-  type SeedProfileName,
   SEED_ADMIN_EMAIL,
   SEED_ADMIN_ID,
   SEED_ADMIN_PASSWORD,
   SEED_SYSTEM_ACTOR,
+  type SeedProfileName,
 } from "./constants";
 import { seedBaselineProfile } from "./profiles/baseline";
 import { seedDemoProfile } from "./profiles/demo";
@@ -16,11 +16,14 @@ const profileRunners = {
   baseline: seedBaselineProfile,
   demo: seedDemoProfile,
   performance: seedPerformanceProfile,
-} satisfies Record<SeedProfileName, () => Promise<{
-  profile: SeedProfileName;
-  seededCustomerCount: number;
-  seededEmployees: Array<{ id: string }>;
-}>>;
+} satisfies Record<
+  SeedProfileName,
+  () => Promise<{
+    profile: SeedProfileName;
+    seededCustomerCount: number;
+    seededEmployees: Array<{ id: string }>;
+  }>
+>;
 
 export {
   DEFAULT_SEED_PROFILE,

@@ -7,7 +7,10 @@ export type ProtectedTRPCSession = NonNullable<TRPCContext["session"]>;
 
 export function assertStaffRole(role: string) {
   if (role !== "admin" && role !== "employee") {
-    throw new TRPCError({ code: "FORBIDDEN", message: "Insufficient permissions" });
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Insufficient permissions",
+    });
   }
 }
 

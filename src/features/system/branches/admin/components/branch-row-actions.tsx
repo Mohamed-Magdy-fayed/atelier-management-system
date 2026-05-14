@@ -33,10 +33,7 @@ type BranchRowActionsProps = {
   setRowAction: SetBranchRowAction;
 };
 
-export function BranchRowActions({
-  row,
-  setRowAction,
-}: BranchRowActionsProps) {
+export function BranchRowActions({ row, setRowAction }: BranchRowActionsProps) {
   const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
 
@@ -48,7 +45,9 @@ export function BranchRowActions({
         return;
       }
 
-      toast.success(String(t("authTranslations.branch.actions.setActiveBranch.success")));
+      toast.success(
+        String(t("authTranslations.branch.actions.setActiveBranch.success")),
+      );
     });
   }
 
@@ -67,20 +66,29 @@ export function BranchRowActions({
         }
       />
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem onClick={() => setRowAction({ row, variant: "info" })}>
+        <DropdownMenuItem
+          onClick={() => setRowAction({ row, variant: "info" })}
+        >
           <InfoIcon className="size-3.5" />
           {String(t("common.info"))}
         </DropdownMenuItem>
-        <DropdownMenuItem disabled={isPending} onClick={() => void setActiveBranch()}>
+        <DropdownMenuItem
+          disabled={isPending}
+          onClick={() => void setActiveBranch()}
+        >
           <ListStartIcon className="size-3.5" />
           {String(t("authTranslations.branch.switcher.setActive"))}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setRowAction({ row, variant: "edit" })}>
+        <DropdownMenuItem
+          onClick={() => setRowAction({ row, variant: "edit" })}
+        >
           <PencilIcon className="size-3.5" />
           {String(t("common.edit"))}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => setRowAction({ row, variant: "delete" })}>
+        <DropdownMenuItem
+          onClick={() => setRowAction({ row, variant: "delete" })}
+        >
           <Trash2Icon className="size-3.5 text-destructive" />
           <span className="text-destructive">{String(t("common.delete"))}</span>
         </DropdownMenuItem>

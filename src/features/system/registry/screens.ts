@@ -1,5 +1,11 @@
 import type { LucideIcon } from "lucide-react";
-import { Box, Building2, LayoutDashboard, UserCircle, Users } from "lucide-react";
+import {
+  Box,
+  Building2,
+  LayoutDashboard,
+  UserCircle,
+  Users,
+} from "lucide-react";
 
 type NavTranslationKey =
   | "navDashboard"

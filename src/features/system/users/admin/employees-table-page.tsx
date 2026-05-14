@@ -21,8 +21,8 @@ import {
   DataTableViewOptions,
   useDataTable,
 } from "@/features/core/data-table";
-import { UsersImportButton } from "@/features/core/import-review";
 import { useTranslation } from "@/features/core/i18n/client";
+import { UsersImportButton } from "@/features/core/import-review";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { UserGridRow } from "@/integrations/trpc/routers/users";
 
@@ -49,7 +49,9 @@ export function EmployeesTablePage() {
   const trpc = useTRPC();
   const { t, locale } = useTranslation();
   const addEmployeeLabel = `${t("common.add")} ${t("systemPages.roleEmployee")}`;
-  const { data, isFetching } = useQuery(trpc.users.listEmployees.queryOptions());
+  const { data, isFetching } = useQuery(
+    trpc.users.listEmployees.queryOptions(),
+  );
 
   const [rowAction, setRowAction] = useState<RowAction>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -73,7 +75,9 @@ export function EmployeesTablePage() {
 
   return (
     <div
-      className={isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"}
+      className={
+        isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"
+      }
     >
       <div className="space-y-1">
         <H2>{t("systemPages.employeesTitle")}</H2>

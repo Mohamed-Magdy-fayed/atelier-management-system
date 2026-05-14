@@ -1,9 +1,4 @@
-import {
-  ArrowRight,
-  Building2,
-  CalendarClock,
-  Package,
-} from "lucide-react";
+import { ArrowRight, Building2, CalendarClock, Package } from "lucide-react";
 
 import { LinkButton } from "@/components/general/link-button";
 import {
@@ -14,10 +9,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { H1, Lead, Muted } from "@/components/ui/typography";
+import { SYSTEM_NAV_ITEMS } from "@/features/core/app-shell/lib/nav";
 import { hasPermission } from "@/features/core/auth/core/permissions";
 import { getAuth } from "@/features/core/auth/nextjs/actions";
 import { ThemeToggle } from "@/features/core/color-theme/client";
-import { SYSTEM_NAV_ITEMS } from "@/features/core/app-shell/lib/nav";
 import { LanguageToggle } from "@/features/core/i18n/client";
 import { getT } from "@/features/core/i18n/server";
 
@@ -105,15 +100,15 @@ export default async function Home() {
 
           <Card className="border-primary/15 bg-gradient-to-br from-primary/5 via-background to-background shadow-sm">
             <CardHeader className="space-y-3">
-              <CardTitle className="text-2xl">{t("landing.authPanelTitle")}</CardTitle>
+              <CardTitle className="text-2xl">
+                {t("landing.authPanelTitle")}
+              </CardTitle>
               <CardDescription className="text-base leading-7">
                 {t("landing.authPanelLead")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Muted className="text-sm leading-6">
-                {t("landing.badge")}
-              </Muted>
+              <Muted className="text-sm leading-6">{t("landing.badge")}</Muted>
               <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
                 {LANDING_FEATURES.map(({ key, Icon, titleKey, bodyKey }) => (
                   <div

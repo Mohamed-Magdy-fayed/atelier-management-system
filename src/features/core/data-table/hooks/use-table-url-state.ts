@@ -95,9 +95,7 @@ export function useTableUrlState(defaults: Defaults = {}) {
     ),
   );
 
-  const lastSerialized = useRef<string>(
-    buildSearchParams(state, fullDefaults),
-  );
+  const lastSerialized = useRef<string>(buildSearchParams(state, fullDefaults));
   const timer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -129,7 +127,8 @@ export function useTableUrlState(defaults: Defaults = {}) {
     (updater: SortingState | ((prev: SortingState) => SortingState)) =>
       setState((prev) => ({
         ...prev,
-        sorting: typeof updater === "function" ? updater(prev.sorting) : updater,
+        sorting:
+          typeof updater === "function" ? updater(prev.sorting) : updater,
       })),
     [],
   );

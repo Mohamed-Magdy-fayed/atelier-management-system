@@ -44,11 +44,16 @@ export function buildUserGridColumns(opts: {
     {
       accessorKey: "name",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={String(t("forms.name"))} />
+        <DataTableColumnHeader
+          column={column}
+          title={String(t("forms.name"))}
+        />
       ),
       meta: { label: String(t("forms.name")), filterVariant: "text" },
       filterFn: (row, _id, value) => {
-        const q = String(value ?? "").trim().toLowerCase();
+        const q = String(value ?? "")
+          .trim()
+          .toLowerCase();
         if (!q) return true;
         const n = row.original.name?.toLowerCase() ?? "";
         return n.includes(q);
@@ -62,9 +67,14 @@ export function buildUserGridColumns(opts: {
           title={String(t("dataTable.columnEmail"))}
         />
       ),
-      meta: { label: String(t("dataTable.columnEmail")), filterVariant: "text" },
+      meta: {
+        label: String(t("dataTable.columnEmail")),
+        filterVariant: "text",
+      },
       filterFn: (row, _id, value) => {
-        const q = String(value ?? "").trim().toLowerCase();
+        const q = String(value ?? "")
+          .trim()
+          .toLowerCase();
         if (!q) return true;
         return row.original.email.toLowerCase().includes(q);
       },
@@ -72,12 +82,17 @@ export function buildUserGridColumns(opts: {
     {
       accessorKey: "phone",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={String(t("dataTable.phone"))} />
+        <DataTableColumnHeader
+          column={column}
+          title={String(t("dataTable.phone"))}
+        />
       ),
       meta: { label: String(t("dataTable.phone")), filterVariant: "text" },
       cell: ({ row }) => row.original.phone ?? "—",
       filterFn: (row, _id, value) => {
-        const q = String(value ?? "").trim().toLowerCase();
+        const q = String(value ?? "")
+          .trim()
+          .toLowerCase();
         if (!q) return true;
         const p = row.original.phone?.toLowerCase() ?? "";
         return p.includes(q);
@@ -117,7 +132,9 @@ export function buildUserGridColumns(opts: {
       },
       cell: ({ row }) =>
         row.original.emailVerifiedAt ? (
-          <Badge variant="secondary">{String(t("dataTable.verifiedYes"))}</Badge>
+          <Badge variant="secondary">
+            {String(t("dataTable.verifiedYes"))}
+          </Badge>
         ) : (
           <Badge variant="outline">{String(t("dataTable.verifiedNo"))}</Badge>
         ),
@@ -155,7 +172,10 @@ export function buildUserGridColumns(opts: {
           title={String(t("dataTable.lastSignIn"))}
         />
       ),
-      meta: { label: String(t("dataTable.lastSignIn")), filterVariant: "dateRange" },
+      meta: {
+        label: String(t("dataTable.lastSignIn")),
+        filterVariant: "dateRange",
+      },
       cell: ({ row }) =>
         row.original.lastSignInAt
           ? dateTimeFmt.format(new Date(row.original.lastSignInAt))
@@ -173,7 +193,9 @@ export function buildUserGridColumns(opts: {
       size: 48,
       meta: { label: String(t("common.actions")) },
       header: () => (
-        <span className="text-xs font-medium">{String(t("common.actions"))}</span>
+        <span className="text-xs font-medium">
+          {String(t("common.actions"))}
+        </span>
       ),
       cell: ({ row }) => (
         <UserRowActions row={row.original} setRowAction={setRowAction} />

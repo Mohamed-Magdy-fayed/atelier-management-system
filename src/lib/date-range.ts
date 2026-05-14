@@ -1,10 +1,10 @@
 export interface DateRangeValue {
-    from: Date;
-    to: Date;
+  from: Date;
+  to: Date;
 }
 
 export interface DateRangePreset {
-    id: string;
-    label: string;
-    getRange: () => DateRangeValue;
+  id: string;
+  label: string;
+  getRange: () => DateRangeValue;
 }

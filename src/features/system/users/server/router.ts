@@ -1,5 +1,12 @@
 import { createTRPCRouter, protectedProcedure } from "@/integrations/trpc/init";
-
+import { commitUsersImport, previewUsersImport } from "./import";
+import {
+  bulkSetVerified,
+  createUser,
+  softDeleteUsers,
+  updateUser,
+} from "./mutations";
+import { exportRows, listCustomers, listEmployees } from "./queries";
 import {
   bulkSetVerifiedInput,
   commitImportInput,
@@ -10,12 +17,11 @@ import {
   userMutationSchema,
   userUpdateSchema,
 } from "./schemas";
-import { bulkSetVerified, createUser, softDeleteUsers, updateUser } from "./mutations";
-import { commitUsersImport, previewUsersImport } from "./import";
-import { exportRows, listCustomers, listEmployees } from "./queries";
 
 export const usersRouter = createTRPCRouter({
-  listEmployees: protectedProcedure.query(async ({ ctx }) => listEmployees(ctx)),
+  listEmployees: protectedProcedure.query(async ({ ctx }) =>
+    listEmployees(ctx),
+  ),
   listCustomers: protectedProcedure
     .input(listCustomersInput)
     .query(async ({ ctx, input }) => listCustomers(ctx, input)),

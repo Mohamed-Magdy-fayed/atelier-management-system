@@ -38,7 +38,9 @@ export function DataTablePagination<T>({ table }: DataTablePaginationProps<T>) {
     <div className="flex flex-col-reverse gap-3 py-2 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-muted-foreground inline-flex items-center gap-2 text-xs whitespace-nowrap">
         <span>{t("dataTable.totalRows", { count: totalRows })}</span>
-        <span aria-hidden className="opacity-50">·</span>
+        <span aria-hidden className="opacity-50">
+          ·
+        </span>
         <span>{t("dataTable.pageOf", { page, total: totalPages })}</span>
       </p>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">

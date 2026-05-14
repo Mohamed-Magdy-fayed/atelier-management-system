@@ -7,13 +7,17 @@ export const listCustomersInput = z.object({
   perPage: z.number().int().min(1).max(100).default(20),
   sorting: z.array(z.object({ id: z.string(), desc: z.boolean() })).default([]),
   globalFilter: z.string().optional(),
-  columnFilters: z.array(z.object({ id: z.string(), value: z.unknown() })).default([]),
+  columnFilters: z
+    .array(z.object({ id: z.string(), value: z.unknown() }))
+    .default([]),
 });
 
 export const listFilterInput = z.object({
   sorting: z.array(z.object({ id: z.string(), desc: z.boolean() })).default([]),
   globalFilter: z.string().optional(),
-  columnFilters: z.array(z.object({ id: z.string(), value: z.unknown() })).default([]),
+  columnFilters: z
+    .array(z.object({ id: z.string(), value: z.unknown() }))
+    .default([]),
 });
 
 export const exportRowsInput = listFilterInput.extend({
@@ -50,8 +54,12 @@ export const userMutationSchema = z.object({
   role: z.enum(userRoleValues).default("customer"),
 });
 
-export const userUpdateSchema = userMutationSchema.extend({ id: z.string().uuid() });
-export const softDeleteInput = z.object({ ids: z.array(z.string().uuid()).min(1) });
+export const userUpdateSchema = userMutationSchema.extend({
+  id: z.string().uuid(),
+});
+export const softDeleteInput = z.object({
+  ids: z.array(z.string().uuid()).min(1),
+});
 export const bulkSetVerifiedInput = z.object({
   ids: z.array(z.string().uuid()).min(1),
   verified: z.boolean(),

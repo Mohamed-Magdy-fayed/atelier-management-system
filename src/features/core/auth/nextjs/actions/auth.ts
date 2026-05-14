@@ -6,174 +6,174 @@ import { redirect } from "next/navigation";
 
 import { db } from "@/drizzle";
 import {
-    type OAuthProvider,
-    type User,
-    UserCredentialsTable,
-    UsersTable,
+  type OAuthProvider,
+  type User,
+  UserCredentialsTable,
+  UsersTable,
 } from "@/drizzle/schema";
 import { getOAuthClient } from "@/features/core/auth/core";
 import { authError, normalizeEmail } from "@/features/core/auth/core/helpers";
 import {
-    comparePasswords,
-    generateSalt,
-    hashPassword,
+  comparePasswords,
+  generateSalt,
+  hashPassword,
 } from "@/features/core/auth/core/passwordHasher";
 import {
-    createUserSession,
-    removeUserFromSession,
+  createUserSession,
+  removeUserFromSession,
 } from "@/features/core/auth/core/session";
 import { validateInput } from "@/features/core/auth/nextjs/actions/helpers";
 import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
 import { signInSchema, signUpSchema } from "@/features/core/auth/schemas";
 import type {
-    AuthState,
-    PartialUser,
-    TypedResponse,
+  AuthState,
+  PartialUser,
+  TypedResponse,
 } from "@/features/core/auth/types";
 import { getT } from "@/features/core/i18n/server";
 
 export async function signInAction(
-    rawInput: unknown,
+  rawInput: unknown,
 ): Promise<TypedResponse<{ user: PartialUser }>> {
-    const { t } = await getT();
-    const { password, email } = await validateInput(signInSchema, rawInput);
+  const { t } = await getT();
+  const { password, email } = await validateInput(signInSchema, rawInput);
 
-    const normalizedEmail = normalizeEmail(email);
+  const normalizedEmail = normalizeEmail(email);
 
-    try {
-        const user = await db.query.UsersTable.findFirst({
-            columns: { id: true, role: true },
-            where: eq(UsersTable.email, normalizedEmail),
-            with: {
-                credentials: { columns: { passwordHash: true, passwordSalt: true } },
-            },
-        });
+  try {
+    const user = await db.query.UsersTable.findFirst({
+      columns: { id: true, role: true },
+      where: eq(UsersTable.email, normalizedEmail),
+      with: {
+        credentials: { columns: { passwordHash: true, passwordSalt: true } },
+      },
+    });
 
-        if (
-            !user ||
-            !user.credentials?.passwordHash ||
-            !user.credentials?.passwordSalt
-        ) {
-            return {
-                isError: true,
-                message: t("authTranslations.error.credentials"),
-            };
-        }
-
-        const isValid = await comparePasswords({
-            password,
-            hashedPassword: user.credentials.passwordHash,
-            salt: user.credentials.passwordSalt,
-        });
-
-        if (!isValid) {
-            return {
-                isError: true,
-                message: t("authTranslations.error.credentials"),
-            };
-        }
-
-        await createUserSession(user, await cookies());
-    } catch (error) {
-        return authError(error);
+    if (
+      !user ||
+      !user.credentials?.passwordHash ||
+      !user.credentials?.passwordSalt
+    ) {
+      return {
+        isError: true,
+        message: t("authTranslations.error.credentials"),
+      };
     }
 
-    redirect("/");
+    const isValid = await comparePasswords({
+      password,
+      hashedPassword: user.credentials.passwordHash,
+      salt: user.credentials.passwordSalt,
+    });
+
+    if (!isValid) {
+      return {
+        isError: true,
+        message: t("authTranslations.error.credentials"),
+      };
+    }
+
+    await createUserSession(user, await cookies());
+  } catch (error) {
+    return authError(error);
+  }
+
+  redirect("/");
 }
 
 export async function signUpAction(
-    rawData: unknown,
+  rawData: unknown,
 ): Promise<TypedResponse<{ user: Pick<User, "id" | "name" | "role"> }>> {
-    const { t } = await getT();
-    const { email, name, password, phone } = await validateInput(
-        signUpSchema,
-        rawData,
-    );
+  const { t } = await getT();
+  const { email, name, password, phone } = await validateInput(
+    signUpSchema,
+    rawData,
+  );
 
-    const normalizedEmail = normalizeEmail(email);
+  const normalizedEmail = normalizeEmail(email);
 
-    const result: TypedResponse<{ user: Pick<User, "id" | "name" | "role"> }> =
-        await db.transaction(async (trx) => {
-            const existing = await trx.query.UsersTable.findFirst({
-                columns: { id: true },
-                where: eq(UsersTable.email, normalizedEmail),
-            });
+  const result: TypedResponse<{ user: Pick<User, "id" | "name" | "role"> }> =
+    await db.transaction(async (trx) => {
+      const existing = await trx.query.UsersTable.findFirst({
+        columns: { id: true },
+        where: eq(UsersTable.email, normalizedEmail),
+      });
 
-            if (existing) {
-                return {
-                    isError: true,
-                    message: t("authTranslations.signUp.error.duplicate"),
-                };
-            }
+      if (existing) {
+        return {
+          isError: true,
+          message: t("authTranslations.signUp.error.duplicate"),
+        };
+      }
 
-            const salt = generateSalt();
-            const passwordHash = await hashPassword(password, salt);
+      const salt = generateSalt();
+      const passwordHash = await hashPassword(password, salt);
 
-            const [user] = await trx
-                .insert(UsersTable)
-                .values({
-                    name,
-                    email: normalizedEmail,
-                    phone,
-                    role: "customer",
-                    createdBy: "self-signup",
-                })
-                .returning({
-                    id: UsersTable.id,
-                    name: UsersTable.name,
-                    role: UsersTable.role,
-                });
-
-            if (!user) {
-                return {
-                    isError: true,
-                    message: t("authTranslations.signUp.error.generic"),
-                };
-            }
-
-            await trx.insert(UserCredentialsTable).values({
-                userId: user.id,
-                passwordHash,
-                passwordSalt: salt,
-            });
-
-            return { isError: false, user };
+      const [user] = await trx
+        .insert(UsersTable)
+        .values({
+          name,
+          email: normalizedEmail,
+          phone,
+          role: "customer",
+          createdBy: "self-signup",
+        })
+        .returning({
+          id: UsersTable.id,
+          name: UsersTable.name,
+          role: UsersTable.role,
         });
 
-    if (result.isError) return { isError: true, message: result.message };
-    await createUserSession(result.user, await cookies());
+      if (!user) {
+        return {
+          isError: true,
+          message: t("authTranslations.signUp.error.generic"),
+        };
+      }
 
-    redirect("/");
+      await trx.insert(UserCredentialsTable).values({
+        userId: user.id,
+        passwordHash,
+        passwordSalt: salt,
+      });
+
+      return { isError: false, user };
+    });
+
+  if (result.isError) return { isError: true, message: result.message };
+  await createUserSession(result.user, await cookies());
+
+  redirect("/");
 }
 
 export async function oAuthSignIn(provider: OAuthProvider) {
-    const oAuthClient = getOAuthClient(provider);
-    redirect(oAuthClient.createAuthUrl(await cookies()));
+  const oAuthClient = getOAuthClient(provider);
+  redirect(oAuthClient.createAuthUrl(await cookies()));
 }
 
 export async function signOutAction(): Promise<TypedResponse<void>> {
-    const cookieStore = await cookies();
-    await removeUserFromSession(cookieStore);
-    redirect("/sign-in");
+  const cookieStore = await cookies();
+  await removeUserFromSession(cookieStore);
+  redirect("/sign-in");
 }
 
 export async function getAuth(): Promise<AuthState> {
-    const user = await getCurrentUser({ withFullUser: true });
-    if (!user) return { isAuthenticated: false, session: null };
+  const user = await getCurrentUser({ withFullUser: true });
+  if (!user) return { isAuthenticated: false, session: null };
 
-    const userCredentials = await db.query.UserCredentialsTable.findFirst({
-        where: eq(UserCredentialsTable.userId, user.id),
-        columns: { expiresAt: true },
-    });
+  const userCredentials = await db.query.UserCredentialsTable.findFirst({
+    where: eq(UserCredentialsTable.userId, user.id),
+    columns: { expiresAt: true },
+  });
 
-    return {
-        isAuthenticated: true,
-        session: {
-            user,
-            hasPassword: !!(
-                userCredentials &&
-                (!userCredentials.expiresAt || userCredentials.expiresAt > new Date())
-            ),
-        },
-    };
+  return {
+    isAuthenticated: true,
+    session: {
+      user,
+      hasPassword: !!(
+        userCredentials &&
+        (!userCredentials.expiresAt || userCredentials.expiresAt > new Date())
+      ),
+    },
+  };
 }

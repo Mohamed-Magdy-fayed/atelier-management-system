@@ -8,7 +8,11 @@ import type {
   CommitProductsImportInput,
   PreviewProductsImportInput,
 } from "./schemas";
-import { assertAdminRole, getRequiredSession, type TRPCContext } from "./shared";
+import {
+  assertAdminRole,
+  getRequiredSession,
+  type TRPCContext,
+} from "./shared";
 import type {
   ProductImportAction,
   ProductImportCommitRow,
@@ -160,7 +164,10 @@ function countImportDuplicates(
   for (const row of preparedRows) {
     if (row.baseReasons.length > 0) continue;
     if (row.values.code) {
-      codeCounts.set(row.values.code, (codeCounts.get(row.values.code) ?? 0) + 1);
+      codeCounts.set(
+        row.values.code,
+        (codeCounts.get(row.values.code) ?? 0) + 1,
+      );
     }
   }
 
@@ -182,7 +189,9 @@ async function loadExistingImportProducts(
     ),
   );
   const codes = Array.from(
-    new Set(rows.map((row) => row.values.code).filter((value) => value.length > 0)),
+    new Set(
+      rows.map((row) => row.values.code).filter((value) => value.length > 0),
+    ),
   );
 
   const conditions: SQL[] = [];
@@ -190,7 +199,8 @@ async function loadExistingImportProducts(
   if (codes.length > 0) conditions.push(inArray(ProductsTable.code, codes));
   if (conditions.length === 0) return [] as ExistingImportProduct[];
 
-  const whereClause = conditions.length === 1 ? conditions[0] : or(...conditions)!;
+  const whereClause =
+    conditions.length === 1 ? conditions[0] : or(...conditions)!;
 
   const rowsResult = await ctx.db
     .select({
@@ -220,7 +230,10 @@ async function prepareProductImportRows(
   });
 
   const { codeCounts } = countImportDuplicates(normalizedRows);
-  const existingProducts = await loadExistingImportProducts(ctx, normalizedRows);
+  const existingProducts = await loadExistingImportProducts(
+    ctx,
+    normalizedRows,
+  );
 
   const existingProductsById = new Map(
     existingProducts.map((product) => [product.id, product]),
@@ -304,7 +317,9 @@ export async function previewProductsImport(
   const ignoredColumns = Array.from(
     new Set(
       normalizeImportHeaders(input.headers)
-        .filter((header) => !PRODUCT_IMPORT_ALLOWED_HEADERS.has(header.normalized))
+        .filter(
+          (header) => !PRODUCT_IMPORT_ALLOWED_HEADERS.has(header.normalized),
+        )
         .map((header) => header.original),
     ),
   );
@@ -387,10 +402,9 @@ export async function commitProductsImport(
         rowNumber: row.rowNumber,
         status: "invalid",
         action: "skip",
-        reasons:
-          freshRow?.preview.reasons.length
-            ? freshRow.preview.reasons
-            : [ctx.t("dataTable.importReasonChangedBeforeCommit")],
+        reasons: freshRow?.preview.reasons.length
+          ? freshRow.preview.reasons
+          : [ctx.t("dataTable.importReasonChangedBeforeCommit")],
         targetProductId: null,
       });
     }

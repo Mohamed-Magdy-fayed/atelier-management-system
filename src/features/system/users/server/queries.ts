@@ -3,11 +3,12 @@ import { and, asc, count, eq, isNull } from "drizzle-orm";
 import { UsersTable } from "@/drizzle/schema";
 
 import { buildWhere, EXPORT_ROW_LIMIT, sortExpr } from "./filters";
-import type {
-  ExportRowsInput,
-  ListCustomersInput,
-} from "./schemas";
-import { assertStaffRole, getRequiredSession, type TRPCContext } from "./shared";
+import type { ExportRowsInput, ListCustomersInput } from "./schemas";
+import {
+  assertStaffRole,
+  getRequiredSession,
+  type TRPCContext,
+} from "./shared";
 import { type UserGridRow, userGridSelect } from "./types";
 
 export async function listEmployees(ctx: TRPCContext) {

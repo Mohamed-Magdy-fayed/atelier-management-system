@@ -5,8 +5,8 @@ import {
   CheckCircle2Icon,
   InfoIcon,
   MoreHorizontalIcon,
-  PencilIcon,
   PauseCircleIcon,
+  PencilIcon,
   Trash2Icon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -85,11 +85,15 @@ export function ProductRowActions({
         }
       />
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem onClick={() => setRowAction({ row, variant: "info" })}>
+        <DropdownMenuItem
+          onClick={() => setRowAction({ row, variant: "info" })}
+        >
           <InfoIcon className="size-3.5" />
           {String(t("common.info"))}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setRowAction({ row, variant: "edit" })}>
+        <DropdownMenuItem
+          onClick={() => setRowAction({ row, variant: "edit" })}
+        >
           <PencilIcon className="size-3.5" />
           {String(t("common.edit"))}
         </DropdownMenuItem>
@@ -111,7 +115,9 @@ export function ProductRowActions({
           )}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => setRowAction({ row, variant: "delete" })}>
+        <DropdownMenuItem
+          onClick={() => setRowAction({ row, variant: "delete" })}
+        >
           <Trash2Icon className="size-3.5 text-destructive" />
           <span className="text-destructive">{String(t("common.delete"))}</span>
         </DropdownMenuItem>

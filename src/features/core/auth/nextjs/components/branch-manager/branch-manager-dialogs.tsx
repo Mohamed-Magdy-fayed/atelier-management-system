@@ -45,7 +45,9 @@ export function BranchManagerDialogs({
   return (
     <>
       <AlertDialog
-        onOpenChange={(open) => setDeletingBranch(open ? deletingBranch : undefined)}
+        onOpenChange={(open) =>
+          setDeletingBranch(open ? deletingBranch : undefined)
+        }
         open={deletingBranch !== undefined}
       >
         <AlertDialogContent>

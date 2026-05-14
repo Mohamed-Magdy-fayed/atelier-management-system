@@ -53,10 +53,14 @@ function applyCustomerColumnFilters(
     } else if (f.id === "age" && isNumberRangeValue(f.value)) {
       const { min, max } = f.value;
       if (min != null) {
-        conditions.push(and(isNotNull(UsersTable.age), gte(UsersTable.age, min))!);
+        conditions.push(
+          and(isNotNull(UsersTable.age), gte(UsersTable.age, min))!,
+        );
       }
       if (max != null) {
-        conditions.push(and(isNotNull(UsersTable.age), lte(UsersTable.age, max))!);
+        conditions.push(
+          and(isNotNull(UsersTable.age), lte(UsersTable.age, max))!,
+        );
       }
     } else if (f.id === "verified") {
       const raw = f.value;
@@ -66,8 +70,10 @@ function applyCustomerColumnFilters(
           ? [String(raw)]
           : [];
       if (arr.length === 1) {
-        if (arr[0] === "true") conditions.push(isNotNull(UsersTable.emailVerifiedAt));
-        else if (arr[0] === "false") conditions.push(isNull(UsersTable.emailVerifiedAt));
+        if (arr[0] === "true")
+          conditions.push(isNotNull(UsersTable.emailVerifiedAt));
+        else if (arr[0] === "false")
+          conditions.push(isNull(UsersTable.emailVerifiedAt));
       }
     } else if (f.id === "createdAt" && isDateRangeValue(f.value)) {
       const dr = f.value;

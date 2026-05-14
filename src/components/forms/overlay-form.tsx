@@ -6,63 +6,58 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export type OverlayFormBodyProps = Omit<
-    ComponentProps<"form">,
-    "id" | "onSubmit"
+  ComponentProps<"form">,
+  "id" | "onSubmit"
 > & {
-    formId: string;
-    onSubmit: FormEventHandler<HTMLFormElement>;
+  formId: string;
+  onSubmit: FormEventHandler<HTMLFormElement>;
 };
 
 export function OverlayFormBody({
-    formId,
-    onSubmit,
-    className,
-    ...props
+  formId,
+  onSubmit,
+  className,
+  ...props
 }: OverlayFormBodyProps) {
-    return (
-        <form
-            id={formId}
-            onSubmit={onSubmit}
-            className={cn(className)}
-            {...props}
-        />
-    );
+  return (
+    <form
+      id={formId}
+      onSubmit={onSubmit}
+      className={cn(className)}
+      {...props}
+    />
+  );
 }
 
 export type OverlayFormSubmitButtonProps = ComponentProps<typeof Button> & {
-    formId: string;
+  formId: string;
 };
 
 export function OverlayFormSubmitButton({
-    formId,
-    className,
-    ...props
+  formId,
+  className,
+  ...props
 }: OverlayFormSubmitButtonProps) {
-    return (
-        <Button
-            type="submit"
-            form={formId}
-            className={cn(className)}
-            {...props}
-        />
-    );
+  return (
+    <Button type="submit" form={formId} className={cn(className)} {...props} />
+  );
 }
 
 export function OverlayFormFooterActions({
-    children,
-    className,
+  children,
+  className,
 }: {
-    children: ReactNode;
-    className?: string;
+  children: ReactNode;
+  className?: string;
 }) {
-    return (
-        <div
-            className={cn(
-                "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-                className,
-            )}
-        >
-            {children}
-        </div>
-    );
+  return (
+    <div
+      className={cn(
+        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
 }

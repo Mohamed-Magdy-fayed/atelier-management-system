@@ -55,7 +55,9 @@ export function AuthManagerDialogs({
         )}
       />
       <SystemDialog
-        titleRender={() => <H4>{t("authTranslations.oauth.connections.title")}</H4>}
+        titleRender={() => (
+          <H4>{t("authTranslations.oauth.connections.title")}</H4>
+        )}
         descriptionRender={() => (
           <Muted>{t("authTranslations.oauth.connections.description")}</Muted>
         )}

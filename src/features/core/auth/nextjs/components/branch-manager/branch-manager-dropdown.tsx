@@ -1,6 +1,13 @@
 "use client";
 
-import { CheckIcon, EditIcon, Layers3Icon, ListStartIcon, Plus, Trash2 } from "lucide-react";
+import {
+  CheckIcon,
+  EditIcon,
+  Layers3Icon,
+  ListStartIcon,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import type { ReactElement } from "react";
 
 import {

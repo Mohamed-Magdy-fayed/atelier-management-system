@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area"
+import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 type ScrollAreaProps = ScrollAreaPrimitive.Root.Props & {
-  scrollX?: boolean
-  scrollY?: boolean
-}
+  scrollX?: boolean;
+  scrollY?: boolean;
+};
 
 function ScrollArea({
   className,
@@ -36,7 +36,7 @@ function ScrollArea({
       {scrollX ? <ScrollBar orientation="horizontal" /> : null}
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>
-  )
+  );
 }
 
 function ScrollBar({
@@ -60,7 +60,7 @@ function ScrollBar({
         className="relative flex-1 rounded-full bg-border"
       />
     </ScrollAreaPrimitive.Scrollbar>
-  )
+  );
 }
 
-export { ScrollArea, ScrollBar }
+export { ScrollArea, ScrollBar };

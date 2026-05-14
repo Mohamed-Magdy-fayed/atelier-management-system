@@ -8,7 +8,11 @@ import type {
   UserMutationInput,
   UserUpdateInput,
 } from "./schemas";
-import { assertStaffRole, getRequiredSession, type TRPCContext } from "./shared";
+import {
+  assertStaffRole,
+  getRequiredSession,
+  type TRPCContext,
+} from "./shared";
 
 export async function createUser(ctx: TRPCContext, input: UserMutationInput) {
   const session = getRequiredSession(ctx);

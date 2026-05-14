@@ -11,8 +11,7 @@ import {
 import { H2, Lead, Muted } from "@/components/ui/typography";
 import { db } from "@/drizzle";
 import { BranchesTable, UsersTable } from "@/drizzle/schema";
-import { getT } from "@/features/core/i18n/server";
-import { getLocaleCookie } from "@/features/core/i18n/server";
+import { getLocaleCookie, getT } from "@/features/core/i18n/server";
 
 export default async function DashboardPage() {
   const { t } = await getT();
@@ -31,11 +30,15 @@ export default async function DashboardPage() {
     db
       .select({ value: count() })
       .from(UsersTable)
-      .where(and(eq(UsersTable.role, "employee"), isNull(UsersTable.deletedAt))),
+      .where(
+        and(eq(UsersTable.role, "employee"), isNull(UsersTable.deletedAt)),
+      ),
     db
       .select({ value: count() })
       .from(UsersTable)
-      .where(and(eq(UsersTable.role, "customer"), isNull(UsersTable.deletedAt))),
+      .where(
+        and(eq(UsersTable.role, "customer"), isNull(UsersTable.deletedAt)),
+      ),
     db
       .select({ value: count() })
       .from(UsersTable)
@@ -49,7 +52,12 @@ export default async function DashboardPage() {
     db
       .select({ value: count() })
       .from(UsersTable)
-      .where(and(isNull(UsersTable.deletedAt), gte(UsersTable.lastSignInAt, last30Days))),
+      .where(
+        and(
+          isNull(UsersTable.deletedAt),
+          gte(UsersTable.lastSignInAt, last30Days),
+        ),
+      ),
   ]);
 
   const branchCount = Number(branchCountRaw);
@@ -125,19 +133,25 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border bg-muted/40 p-4">
-              <div className="font-medium">{t("systemPages.dashboardBranchesTitle")}</div>
+              <div className="font-medium">
+                {t("systemPages.dashboardBranchesTitle")}
+              </div>
               <Muted className="mt-2 leading-6">
                 {t("systemPages.dashboardBranchesDescription")}
               </Muted>
             </div>
             <div className="rounded-xl border bg-muted/40 p-4">
-              <div className="font-medium">{t("systemPages.dashboardEmployeesTitle")}</div>
+              <div className="font-medium">
+                {t("systemPages.dashboardEmployeesTitle")}
+              </div>
               <Muted className="mt-2 leading-6">
                 {t("systemPages.dashboardEmployeesDescription")}
               </Muted>
             </div>
             <div className="rounded-xl border bg-muted/40 p-4">
-              <div className="font-medium">{t("systemPages.dashboardCustomersTitle")}</div>
+              <div className="font-medium">
+                {t("systemPages.dashboardCustomersTitle")}
+              </div>
               <Muted className="mt-2 leading-6">
                 {t("systemPages.dashboardCustomersDescription")}
               </Muted>

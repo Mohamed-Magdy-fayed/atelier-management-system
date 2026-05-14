@@ -1035,8 +1035,9 @@ function FileUploadItem(props: FileUploadItemProps) {
         id={id}
         aria-setsize={fileCount}
         aria-posinset={fileIndex}
-        aria-describedby={`${nameId} ${sizeId} ${statusId} ${fileState.error ? messageId : ""
-          }`}
+        aria-describedby={`${nameId} ${sizeId} ${statusId} ${
+          fileState.error ? messageId : ""
+        }`}
         aria-labelledby={nameId}
         data-slot="file-upload-item"
         dir={context.dir}

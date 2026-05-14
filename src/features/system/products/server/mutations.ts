@@ -1,5 +1,5 @@
-import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 
 import { ProductsTable } from "@/drizzle/schema";
 
@@ -11,7 +11,11 @@ import type {
   ProductSetActiveInput,
   ProductUpdateInput,
 } from "./schemas";
-import { assertAdminRole, getRequiredSession, type TRPCContext } from "./shared";
+import {
+  assertAdminRole,
+  getRequiredSession,
+  type TRPCContext,
+} from "./shared";
 
 function normalizeCode(code: string) {
   return code.trim().toUpperCase();

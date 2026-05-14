@@ -80,23 +80,26 @@ export function UserFormDialog({
         phone: value.phone ? value.phone : null,
         role: resolvedRole,
       };
-      const action = isEdit && user
-        ? updateMut.mutateAsync({ id: user.id, ...payload })
-        : createMut.mutateAsync(payload);
+      const action =
+        isEdit && user
+          ? updateMut.mutateAsync({ id: user.id, ...payload })
+          : createMut.mutateAsync(payload);
 
       try {
-        await toast.promise(action, {
-          loading: String(
-            t(isEdit ? "common.saving" : "systemPages.userCreating"),
-          ),
-          success: String(
-            t(isEdit ? "systemPages.userUpdated" : "systemPages.userCreated"),
-          ),
-          error: (err) =>
-            err instanceof Error
-              ? err.message
-              : String(t("systemPages.userSaveFailed")),
-        }).unwrap();
+        await toast
+          .promise(action, {
+            loading: String(
+              t(isEdit ? "common.saving" : "systemPages.userCreating"),
+            ),
+            success: String(
+              t(isEdit ? "systemPages.userUpdated" : "systemPages.userCreated"),
+            ),
+            error: (err) =>
+              err instanceof Error
+                ? err.message
+                : String(t("systemPages.userSaveFailed")),
+          })
+          .unwrap();
         await queryClient.invalidateQueries({
           queryKey: trpc.users.pathKey(),
         });

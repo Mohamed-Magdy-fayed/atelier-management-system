@@ -29,7 +29,8 @@ const commands = {
     },
   },
   performance: {
-    description: "Reset and seed a large dataset for table and query stress tests.",
+    description:
+      "Reset and seed a large dataset for table and query stress tests.",
     action: async () => {
       const { runSeedProfile } = await import("@/drizzle/seed");
       await runSeedProfile("performance");
@@ -70,7 +71,8 @@ function printHelp() {
 
 async function run() {
   const rawArg = process.argv[2]?.toLowerCase() as CommandName | undefined;
-  const commandName: CommandName = rawArg && rawArg in commands ? rawArg : "demo";
+  const commandName: CommandName =
+    rawArg && rawArg in commands ? rawArg : "demo";
 
   if (commandName === "help") {
     printHelp();
@@ -101,4 +103,3 @@ run().catch((error) => {
   console.error("❌ Unexpected error while running seed command:", error);
   process.exit(1);
 });
-

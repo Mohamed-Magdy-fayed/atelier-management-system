@@ -49,11 +49,15 @@ export function UserRowActions({ row, setRowAction }: UserRowActionsProps) {
     <DropdownMenu>
       <DropdownMenuTrigger render={trigger} />
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem onClick={() => setRowAction({ row, variant: "info" })}>
+        <DropdownMenuItem
+          onClick={() => setRowAction({ row, variant: "info" })}
+        >
           <InfoIcon className="size-3.5" />
           {String(t("common.info"))}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setRowAction({ row, variant: "edit" })}>
+        <DropdownMenuItem
+          onClick={() => setRowAction({ row, variant: "edit" })}
+        >
           <PencilIcon className="size-3.5" />
           {String(t("common.edit"))}
         </DropdownMenuItem>

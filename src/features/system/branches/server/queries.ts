@@ -7,7 +7,11 @@ import {
 } from "@/drizzle/schema";
 
 import type { ListBranchesInput } from "./schemas";
-import { assertAdminRole, getRequiredSession, type TRPCContext } from "./shared";
+import {
+  assertAdminRole,
+  getRequiredSession,
+  type TRPCContext,
+} from "./shared";
 import type { BranchGridRow } from "./types";
 
 function buildWhereClause(input: ListBranchesInput) {
@@ -34,7 +38,9 @@ function sortExpr(input: ListBranchesInput) {
 
   switch (firstSort.id) {
     case "nameAr":
-      return [firstSort.desc ? desc(BranchesTable.nameAr) : asc(BranchesTable.nameAr)];
+      return [
+        firstSort.desc ? desc(BranchesTable.nameAr) : asc(BranchesTable.nameAr),
+      ];
     case "ownerName":
       return [
         firstSort.desc ? desc(UsersTable.name) : asc(UsersTable.name),
@@ -46,12 +52,22 @@ function sortExpr(input: ListBranchesInput) {
         asc(BranchesTable.nameEn),
       ];
     case "createdAt":
-      return [firstSort.desc ? desc(BranchesTable.createdAt) : asc(BranchesTable.createdAt)];
+      return [
+        firstSort.desc
+          ? desc(BranchesTable.createdAt)
+          : asc(BranchesTable.createdAt),
+      ];
     case "updatedAt":
-      return [firstSort.desc ? desc(BranchesTable.updatedAt) : asc(BranchesTable.updatedAt)];
+      return [
+        firstSort.desc
+          ? desc(BranchesTable.updatedAt)
+          : asc(BranchesTable.updatedAt),
+      ];
     case "nameEn":
     default:
-      return [firstSort.desc ? desc(BranchesTable.nameEn) : asc(BranchesTable.nameEn)];
+      return [
+        firstSort.desc ? desc(BranchesTable.nameEn) : asc(BranchesTable.nameEn),
+      ];
   }
 }
 

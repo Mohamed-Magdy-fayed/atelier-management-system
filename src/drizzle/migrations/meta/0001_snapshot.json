@@ -105,12 +105,8 @@
           "name": "biometric_credentials_user_id_users_id_fk",
           "tableFrom": "biometric_credentials",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -163,12 +159,8 @@
           "name": "branch_memberships_branchId_branches_id_fk",
           "tableFrom": "branch_memberships",
           "tableTo": "branches",
-          "columnsFrom": [
-            "branchId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["branchId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -176,12 +168,8 @@
           "name": "branch_memberships_userId_users_id_fk",
           "tableFrom": "branch_memberships",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -189,10 +177,7 @@
       "compositePrimaryKeys": {
         "branch_memberships_branchId_userId_pk": {
           "name": "branch_memberships_branchId_userId_pk",
-          "columns": [
-            "branchId",
-            "userId"
-          ]
+          "columns": ["branchId", "userId"]
         }
       },
       "uniqueConstraints": {},
@@ -249,12 +234,8 @@
           "name": "branches_ownerId_users_id_fk",
           "tableFrom": "branches",
           "tableTo": "users",
-          "columnsFrom": [
-            "ownerId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["ownerId"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -343,12 +324,8 @@
           "name": "user_credentials_userId_users_id_fk",
           "tableFrom": "user_credentials",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -460,12 +437,8 @@
           "name": "user_oauth_accounts_userId_users_id_fk",
           "tableFrom": "user_oauth_accounts",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -473,10 +446,7 @@
       "compositePrimaryKeys": {
         "user_oauth_accounts_providerAccountId_provider_pk": {
           "name": "user_oauth_accounts_providerAccountId_provider_pk",
-          "columns": [
-            "providerAccountId",
-            "provider"
-          ]
+          "columns": ["providerAccountId", "provider"]
         }
       },
       "uniqueConstraints": {},
@@ -547,12 +517,8 @@
           "name": "user_tokens_userId_users_id_fk",
           "tableFrom": "user_tokens",
           "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["userId"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -562,9 +528,7 @@
         "user_tokens_tokenHash_unique": {
           "name": "user_tokens_tokenHash_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "tokenHash"
-          ]
+          "columns": ["tokenHash"]
         }
       },
       "policies": {},
@@ -714,28 +678,17 @@
     "public.oauth_provider": {
       "name": "oauth_provider",
       "schema": "public",
-      "values": [
-        "google"
-      ]
+      "values": ["google"]
     },
     "public.user_token_type": {
       "name": "user_token_type",
       "schema": "public",
-      "values": [
-        "email_verification",
-        "password_reset",
-        "device_trust",
-        "otp"
-      ]
+      "values": ["email_verification", "password_reset", "device_trust", "otp"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": [
-        "admin",
-        "employee",
-        "customer"
-      ]
+      "values": ["admin", "employee", "customer"]
     }
   },
   "schemas": {},

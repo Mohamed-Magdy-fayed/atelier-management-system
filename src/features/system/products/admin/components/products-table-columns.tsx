@@ -3,11 +3,17 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
-import { createSelectColumn, DataTableColumnHeader } from "@/features/core/data-table";
+import {
+  createSelectColumn,
+  DataTableColumnHeader,
+} from "@/features/core/data-table";
 import type { useTranslation } from "@/features/core/i18n/client";
 import type { ProductGridRow } from "@/integrations/trpc/routers/products";
 
-import { ProductRowActions, type SetProductRowAction } from "./product-row-actions";
+import {
+  ProductRowActions,
+  type SetProductRowAction,
+} from "./product-row-actions";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
@@ -106,7 +112,9 @@ export function buildProductColumns(opts: {
       size: 48,
       meta: { label: String(t("common.actions")) },
       header: () => (
-        <span className="text-xs font-medium">{String(t("common.actions"))}</span>
+        <span className="text-xs font-medium">
+          {String(t("common.actions"))}
+        </span>
       ),
       cell: ({ row }) => (
         <ProductRowActions row={row.original} setRowAction={setRowAction} />

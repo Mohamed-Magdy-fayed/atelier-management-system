@@ -13,49 +13,52 @@ import { passwordResetRequestSchema } from "@/features/core/auth/schemas";
 import { useTranslation } from "@/features/core/i18n/client";
 
 export function ForgotPasswordForm() {
-    const { t } = useTranslation();
-    const router = useRouter();
-    const [isPending, startTransition] = useTransition();
+  const { t } = useTranslation();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-    const form = useAppForm({
-        defaultValues: { email: "" },
-        validators: { onSubmit: passwordResetRequestSchema },
-        onSubmit: async ({ value }) => {
-            startTransition(async () => {
-                const res = await requestPasswordResetAction(value);
-                if (res.isError) {
-                    toast.error(res.message || "");
-                    return;
-                }
+  const form = useAppForm({
+    defaultValues: { email: "" },
+    validators: { onSubmit: passwordResetRequestSchema },
+    onSubmit: async ({ value }) => {
+      startTransition(async () => {
+        const res = await requestPasswordResetAction(value);
+        if (res.isError) {
+          toast.error(res.message || "");
+          return;
+        }
 
-                router.push(`/reset-password?email=${encodeURIComponent(value.email)}`);
-            });
-        },
-    });
+        router.push(`/reset-password?email=${encodeURIComponent(value.email)}`);
+      });
+    },
+  });
 
-    return (
-        <form className="space-y-6" onSubmit={(e) => {
-            e.preventDefault();
-            form.handleSubmit();
-        }}>
-            <FieldGroup>
-                <form.AppField name="email">
-                    {(field) => (
-                        <field.EmailField
-                            autoFocus
-                            label={t("authTranslations.signIn.emailLabel")}
-                            placeholder="example@example.com"
-                        />
-                    )}
-                </form.AppField>
-            </FieldGroup>
-            <ButtonGroup className="w-full justify-end">
-                <Button className="w-full" disabled={isPending} type="submit">
-                    {isPending
-                        ? t("authTranslations.passwordReset.submitting")
-                        : t("authTranslations.passwordReset.submit")}
-                </Button>
-            </ButtonGroup>
-        </form>
-    );
+  return (
+    <form
+      className="space-y-6"
+      onSubmit={(e) => {
+        e.preventDefault();
+        form.handleSubmit();
+      }}
+    >
+      <FieldGroup>
+        <form.AppField name="email">
+          {(field) => (
+            <field.EmailField
+              autoFocus
+              label={t("authTranslations.signIn.emailLabel")}
+              placeholder="example@example.com"
+            />
+          )}
+        </form.AppField>
+      </FieldGroup>
+      <ButtonGroup className="w-full justify-end">
+        <Button className="w-full" disabled={isPending} type="submit">
+          {isPending
+            ? t("authTranslations.passwordReset.submitting")
+            : t("authTranslations.passwordReset.submit")}
+        </Button>
+      </ButtonGroup>
+    </form>
+  );
 }

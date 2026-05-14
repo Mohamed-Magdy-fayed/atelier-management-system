@@ -33,8 +33,8 @@ import {
   BranchDeleteDialog,
   BranchFormDialog,
   BranchInfoModal,
-  buildBranchColumns,
   type BranchRowActionVariant,
+  buildBranchColumns,
 } from "./components";
 
 type RowAction = { row: BranchGridRow; variant: BranchRowActionVariant } | null;
@@ -133,7 +133,9 @@ export function BranchesTablePage() {
 
   return (
     <div
-      className={isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"}
+      className={
+        isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"
+      }
     >
       <div className="space-y-1">
         <H2>{t("systemPages.branchesTitle")}</H2>

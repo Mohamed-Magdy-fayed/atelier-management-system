@@ -156,8 +156,7 @@ export default {
     badge: "Products, Services, And Bookings",
     title:
       "Sell products, accept bookings, and run every branch from one modern business system.",
-    lead:
-      "Funtastic gives the company a polished front door for customers and a powerful bilingual workspace for the team behind daily operations.",
+    lead: "Funtastic gives the company a polished front door for customers and a powerful bilingual workspace for the team behind daily operations.",
     primaryGuest: "Explore offerings",
     primaryAuthenticated: "Open workspace",
     secondaryGuest: "Staff sign in",
@@ -171,7 +170,8 @@ export default {
     statScaleTitle: "Keep operations behind the sale aligned",
     statScaleBody:
       "Coordinate branches, staff, customers, and the active catalog from one controlled system.",
-    authPanelTitle: "Customer-ready on the outside. Operator-ready on the inside.",
+    authPanelTitle:
+      "Customer-ready on the outside. Operator-ready on the inside.",
     authPanelLead:
       "Use one platform to market what the company sells while the internal team manages branches, products, users, and day-to-day execution.",
   },
@@ -236,7 +236,8 @@ export default {
     branchesMemberCount: "Members",
     addBranch: "Add branch",
     editBranch: "Edit branch",
-    addBranchDescription: "Create a new branch record for operational coverage.",
+    addBranchDescription:
+      "Create a new branch record for operational coverage.",
     editBranchDescription: "Update this branch's bilingual details.",
     branchCreated: "Branch created.",
     branchUpdated: "Branch updated.",
@@ -247,7 +248,8 @@ export default {
     branchDeleted: "Branch deleted.",
     branchDeleteFailed: "Could not delete branch.",
     branchInfoTitle: "Branch information",
-    branchInfoDescription: "Review branch ownership, membership count, and timestamps.",
+    branchInfoDescription:
+      "Review branch ownership, membership count, and timestamps.",
     productsTitle: "Products",
     productsLead:
       "Manage the sellable catalog with clean pricing, bilingual labels, and active product visibility across the business.",
@@ -261,11 +263,14 @@ export default {
     productsPricePlaceholder: "1200",
     productsStatus: "Status",
     productsActiveLabel: "Available for operations",
-    productsActiveDescription: "Turn this off to hide the product from active catalog usage.",
+    productsActiveDescription:
+      "Turn this off to hide the product from active catalog usage.",
     addProduct: "Add product",
     editProduct: "Edit product",
-    addProductDescription: "Create a new product record for catalog and order readiness.",
-    editProductDescription: "Update this product's bilingual details and pricing.",
+    addProductDescription:
+      "Create a new product record for catalog and order readiness.",
+    editProductDescription:
+      "Update this product's bilingual details and pricing.",
     productCreated: "Product created.",
     productUpdated: "Product updated.",
     productSaveFailed: "Could not save product.",
@@ -284,19 +289,26 @@ export default {
     bulkArchiveProductsTitle: "Archive selected products?",
     bulkArchiveProductsDescription:
       "Archive {count:number} selected products. They will disappear from active management lists but remain in audit history.",
-    bulkProductsActivatedSuccess: dt("Activated {count:number} selected products.", {}),
+    bulkProductsActivatedSuccess: dt(
+      "Activated {count:number} selected products.",
+      {},
+    ),
     bulkProductsDeactivatedSuccess: dt(
       "Deactivated {count:number} selected products.",
       {},
     ),
-    bulkProductsArchivedSuccess: dt("Archived {count:number} selected products.", {}),
+    bulkProductsArchivedSuccess: dt(
+      "Archived {count:number} selected products.",
+      {},
+    ),
     bulkProductStatusFailed: "Could not update the selected products.",
     bulkProductArchiveFailed: "Could not archive the selected products.",
     deleteProductsTitle: "Archive product?",
     deleteProductsDescription:
       "Archive {name}. The product will disappear from active management lists but remain in audit history.",
     productInfoTitle: "Product information",
-    productInfoDescription: "Review product identity, pricing, status, and audit metadata.",
+    productInfoDescription:
+      "Review product identity, pricing, status, and audit metadata.",
     productNotFound: "Product not found.",
     productCodeDuplicate: "Another active product already uses this code.",
     productCopyCode: "Copy code",
@@ -382,7 +394,8 @@ export default {
     pinRight: "Pin right",
     unpin: "Unpin",
     importCsv: "Import CSV",
-    importHint: "Choose a UTF-8 CSV file. The first row must be column headers.",
+    importHint:
+      "Choose a UTF-8 CSV file. The first row must be column headers.",
     importApply: "Load rows",
     importInvalid: "Could not read that CSV.",
     importParsed: dt("Parsed {count:number} row(s).", {}),
@@ -440,13 +453,18 @@ export default {
     importReasonPriceRequired: "Price is required.",
     importReasonPriceWholeNumber: "Price must be a whole number.",
     importReasonPriceRange: "Price must be between 0 and 10,000,000.",
-    importReasonStatusInvalid: "Status must be true/false, active/inactive, or 1/0.",
-    importReasonDuplicateEmailInFile: "This email appears more than once in the file.",
-    importReasonDuplicatePhoneInFile: "This phone appears more than once in the file.",
-    importReasonDuplicateCodeInFile: "This code appears more than once in the file.",
+    importReasonStatusInvalid:
+      "Status must be true/false, active/inactive, or 1/0.",
+    importReasonDuplicateEmailInFile:
+      "This email appears more than once in the file.",
+    importReasonDuplicatePhoneInFile:
+      "This phone appears more than once in the file.",
+    importReasonDuplicateCodeInFile:
+      "This code appears more than once in the file.",
     importReasonMultipleMatches: "This row matches multiple existing records.",
     importReasonAlreadyExists: "A matching active user already exists.",
-    importReasonRoleMismatch: "The matching deleted user belongs to another role.",
+    importReasonRoleMismatch:
+      "The matching deleted user belongs to another role.",
     importReasonChangedBeforeCommit:
       "This row changed before the import was applied. Review it again.",
     department: "Department",

@@ -66,21 +66,28 @@ export function BranchFormDialog({
     defaultValues,
     validators: { onSubmit: branchFormSchema },
     onSubmit: async ({ value }) => {
-      const action: Promise<unknown> = isEdit && branch
-        ? updateMut.mutateAsync({ id: branch.id, ...value })
-        : createMut.mutateAsync(value);
+      const action: Promise<unknown> =
+        isEdit && branch
+          ? updateMut.mutateAsync({ id: branch.id, ...value })
+          : createMut.mutateAsync(value);
 
       try {
-        await toast.promise(action, {
-          loading: String(t("common.saving")),
-          success: String(
-            t(isEdit ? "systemPages.branchUpdated" : "systemPages.branchCreated"),
-          ),
-          error: (err) =>
-            err instanceof Error
-              ? err.message
-              : String(t("systemPages.branchSaveFailed")),
-        }).unwrap();
+        await toast
+          .promise(action, {
+            loading: String(t("common.saving")),
+            success: String(
+              t(
+                isEdit
+                  ? "systemPages.branchUpdated"
+                  : "systemPages.branchCreated",
+              ),
+            ),
+            error: (err) =>
+              err instanceof Error
+                ? err.message
+                : String(t("systemPages.branchSaveFailed")),
+          })
+          .unwrap();
         await queryClient.invalidateQueries({
           queryKey: trpc.branches.pathKey(),
         });
@@ -115,7 +122,9 @@ export function BranchFormDialog({
       <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md">
         <DialogHeader className="shrink-0 px-4 pt-4">
           <DialogTitle>
-            {String(t(isEdit ? "systemPages.editBranch" : "systemPages.addBranch"))}
+            {String(
+              t(isEdit ? "systemPages.editBranch" : "systemPages.addBranch"),
+            )}
           </DialogTitle>
           <DialogDescription>
             {String(
@@ -139,7 +148,9 @@ export function BranchFormDialog({
                   {(field) => (
                     <field.StringField
                       label={String(t("systemPages.branchesNameEn"))}
-                      placeholder={String(t("authTranslations.branch.create.namePlaceholder"))}
+                      placeholder={String(
+                        t("authTranslations.branch.create.namePlaceholder"),
+                      )}
                       autoFocus
                     />
                   )}
@@ -148,7 +159,9 @@ export function BranchFormDialog({
                   {(field) => (
                     <field.StringField
                       label={String(t("systemPages.branchesNameAr"))}
-                      placeholder={String(t("authTranslations.branch.create.namePlaceholder"))}
+                      placeholder={String(
+                        t("authTranslations.branch.create.namePlaceholder"),
+                      )}
                     />
                   )}
                 </form.AppField>
