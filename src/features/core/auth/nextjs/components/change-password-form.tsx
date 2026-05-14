@@ -54,16 +54,26 @@ function CreatePasswordFormDialog({
     },
     onSubmit: async ({ value }) => {
       startTransition(async () => {
-        const result = await createPasswordAction(value);
-        if (result.isError) {
-          toast.error(result.message ?? t("error", { error: "" }));
-          return;
-        }
+        try {
+          const result = await createPasswordAction(value);
+          if (result.isError) {
+            toast.error(
+              result.message ?? t("authTranslations.error.badRequest"),
+            );
+            return;
+          }
 
-        toast.success(t("authTranslations.profile.password.submit"));
-        form.reset();
-        onOpenChange(false);
-        callback?.();
+          toast.success(result.message);
+          form.reset();
+          onOpenChange(false);
+          callback?.();
+        } catch (error) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : t("authTranslations.error.badRequest"),
+          );
+        }
       });
     },
   });
@@ -158,16 +168,26 @@ function UpdatePasswordFormDialog({
     },
     onSubmit: async ({ value }) => {
       startTransition(async () => {
-        const result = await changePasswordAction(value);
-        if (result.isError) {
-          toast.error(result.message ?? t("error", { error: "" }));
-          return;
-        }
+        try {
+          const result = await changePasswordAction(value);
+          if (result.isError) {
+            toast.error(
+              result.message ?? t("authTranslations.error.badRequest"),
+            );
+            return;
+          }
 
-        toast.success(t("authTranslations.profile.password.submit"));
-        form.reset();
-        onOpenChange(false);
-        callback?.();
+          toast.success(result.message);
+          form.reset();
+          onOpenChange(false);
+          callback?.();
+        } catch (error) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : t("authTranslations.error.badRequest"),
+          );
+        }
       });
     },
   });

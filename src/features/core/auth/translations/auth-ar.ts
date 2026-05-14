@@ -353,6 +353,8 @@ export default {
         confirmLabel: "تأكيد كلمة المرور الجديدة",
         updating: "جارٍ التحديث...",
         submit: "تحديث كلمة المرور",
+        successChanged: "تم تحديث كلمة المرور بنجاح.",
+        successCreated: "تم إنشاء كلمة المرور بنجاح.",
       },
       form: {
         saving: "جارٍ الحفظ...",

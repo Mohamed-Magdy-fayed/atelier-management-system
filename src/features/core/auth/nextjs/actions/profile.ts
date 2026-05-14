@@ -44,7 +44,7 @@ export async function updateProfileNameAction(
 
 export async function changePasswordAction(
   rawInput: z.infer<typeof changePasswordSchema>,
-): Promise<TypedResponse<unknown>> {
+): Promise<TypedResponse<{ message: string }>> {
   const { t } = await getT();
   const { id: userId } = await getCurrentUser({ redirectIfNotFound: true });
 
@@ -95,12 +95,13 @@ export async function changePasswordAction(
 
   return {
     isError: false,
+    message: t("authTranslations.profile.password.successChanged"),
   };
 }
 
 export async function createPasswordAction(
   rawInput: z.infer<typeof createPasswordSchema>,
-): Promise<TypedResponse<unknown>> {
+): Promise<TypedResponse<{ message: string }>> {
   const { t } = await getT();
   const { id: userId } = await getCurrentUser({ redirectIfNotFound: true });
 
@@ -142,5 +143,6 @@ export async function createPasswordAction(
 
   return {
     isError: false,
+    message: t("authTranslations.profile.password.successCreated"),
   };
 }

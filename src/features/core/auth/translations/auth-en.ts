@@ -365,6 +365,8 @@ export default {
         confirmLabel: "Confirm new password",
         updating: "Updating...",
         submit: "Update password",
+        successChanged: "Password updated successfully.",
+        successCreated: "Password created successfully.",
       },
       form: {
         saving: "Saving...",

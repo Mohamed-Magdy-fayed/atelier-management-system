@@ -8,12 +8,19 @@ import { redisClient } from "@/integrations/redis";
 // Seven days in seconds
 const SESSION_EXPIRATION_SECONDS = 60 * 60 * 24 * 7;
 const COOKIE_SESSION_KEY = "session-id";
+function getSessionExpirationSeconds() {
+  return Math.floor(Date.now() / 1000) + SESSION_EXPIRATION_SECONDS;
+}
 
-export function getUserSession(cookies: Pick<Cookies, "get">) {
+export async function getUserSession(cookies: Pick<Cookies, "get">) {
   const sessionId = cookies.get(COOKIE_SESSION_KEY)?.value;
   if (sessionId == null) return null;
 
-  return getUserSessionById(sessionId);
+  const session = await getUserSessionById(sessionId);
+  if (session == null) return null;
+  if (session.exp * 1000 <= Date.now()) return null;
+
+  return session;
 }
 
 export async function updateUserSessionData(
@@ -27,7 +34,7 @@ export async function updateUserSessionData(
     `session:${sessionId}`,
     sessionSchema.parse({
       sessionId,
-      exp: Math.floor(Date.now() / 1000) + SESSION_EXPIRATION_SECONDS,
+      exp: getSessionExpirationSeconds(),
       user,
     }),
     {
@@ -45,7 +52,7 @@ export async function createUserSession(
     `session:${sessionId}`,
     sessionSchema.parse({
       sessionId,
-      exp: Math.floor(Date.now() / 1000) + SESSION_EXPIRATION_SECONDS,
+      exp: getSessionExpirationSeconds(),
       user,
     }),
     {
@@ -64,10 +71,17 @@ export async function updateUserSessionExpiration(
 
   const session = await getUserSessionById(sessionId);
   if (session == null) return;
+  if (session.exp * 1000 <= Date.now()) return;
 
-  await redisClient.set(`session:${sessionId}`, session, {
-    ex: SESSION_EXPIRATION_SECONDS,
-  });
+  const nextExp = getSessionExpirationSeconds();
+
+  await redisClient.set(
+    `session:${sessionId}`,
+    sessionSchema.parse({ ...session, exp: nextExp }),
+    {
+      ex: SESSION_EXPIRATION_SECONDS,
+    },
+  );
   setCookie(sessionId, cookies);
 }
 
@@ -87,6 +101,7 @@ function setCookie(sessionId: string, cookies: Pick<Cookies, "set">) {
     httpOnly: true,
     sameSite: "lax",
     expires: new Date(Date.now() + SESSION_EXPIRATION_SECONDS * 1000),
+    path: "/",
   });
 }
 

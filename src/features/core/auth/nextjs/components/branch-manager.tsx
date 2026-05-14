@@ -1,9 +1,15 @@
 "use client";
 
+import { BuildingIcon, ChevronsUpDownIcon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { WrapWithTooltip } from "@/components/general/wrap-with-tooltip";
-import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
+import {
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
 import {
   clearActiveBranchForUserAction,
   deleteBranchAction,
@@ -12,13 +18,13 @@ import {
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { BranchManagerDialogs } from "@/features/core/auth/nextjs/components/branch-manager/branch-manager-dialogs";
 import { BranchManagerDropdown } from "@/features/core/auth/nextjs/components/branch-manager/branch-manager-dropdown";
-import { BranchManagerTrigger } from "@/features/core/auth/nextjs/components/branch-manager/branch-manager-trigger";
 import type {
   BranchManagerVariant,
   EditableBranch,
 } from "@/features/core/auth/nextjs/components/branch-manager/types";
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
+import { cn } from "@/lib/utils";
 
 export function BranchManager({
   variant = "default",
@@ -104,14 +110,41 @@ export function BranchManager({
         ? activeBranch.nameAr
         : activeBranch.nameEn;
 
-  const triggerButton = (
-    <BranchManagerTrigger
-      branchLabel={branchLabel}
-      hasActiveBranch={hasActiveOrg && !!activeBranch}
-      isDisabled={isSwitcherDisabled}
-      variant={variant}
-    />
-  );
+  const triggerButton =
+    variant === "sidebar" ? (
+      <SidebarMenuButton
+        size="lg"
+        disabled={isSwitcherDisabled}
+        tooltip={branchLabel}
+        className={cn(
+          "data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground",
+          isSwitcherDisabled && "opacity-40",
+        )}
+      >
+        <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+          <BuildingIcon className="size-4" aria-hidden />
+        </div>
+        <div className="grid flex-1 text-start text-sm leading-tight">
+          <span className="truncate font-semibold">{branchLabel}</span>
+          {hasActiveOrg && activeBranch ? (
+            <span className="truncate text-xs text-sidebar-foreground/70">
+              {t("authTranslations.branch.switcher.activeBadge")}
+            </span>
+          ) : null}
+        </div>
+        <ChevronsUpDownIcon className="ms-auto size-4" aria-hidden />
+      </SidebarMenuButton>
+    ) : (
+      <Button
+        variant="outline"
+        disabled={isSwitcherDisabled}
+        className={cn(isSwitcherDisabled && "opacity-40")}
+      >
+        <BuildingIcon className="text-primary" />
+        <span className="truncate font-medium">{branchLabel}</span>
+        <ChevronsUpDownIcon className="size-4 text-muted-foreground" aria-hidden />
+      </Button>
+    );
 
   if (!isAuthenticated || !hasBranchState || isCustomer) {
     return null;
