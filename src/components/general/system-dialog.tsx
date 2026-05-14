@@ -55,7 +55,7 @@ export function SystemDialog({
                     />
                 </DialogHeader>
 
-                <ScrollArea className="max-h-96 px-4 -mx-4 py-4">
+                <ScrollArea className="max-h-96 px-4 -mx-4 py-4" scrollX={false}>
                     {children}
                 </ScrollArea>
 
