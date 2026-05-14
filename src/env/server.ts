@@ -3,11 +3,12 @@ import { z } from "zod";
 
 export const env = createEnv({
   server: {
-    DB_PASSWORD: z.string().min(1),
-    DB_USER: z.string().min(1),
-    DB_NAME: z.string().min(1),
-    DB_HOST: z.string().min(1),
-    DB_PORT: z.string().min(1),
+    DATABASE_URL: z.string().min(1).optional(),
+    DB_PASSWORD: z.string().min(1).optional(),
+    DB_USER: z.string().min(1).optional(),
+    DB_NAME: z.string().min(1).optional(),
+    DB_HOST: z.string().min(1).optional(),
+    DB_PORT: z.string().min(1).optional(),
 
     BASE_URL: z.url(),
     REDIS_URL: z.string().min(1),
@@ -36,12 +37,40 @@ export const env = createEnv({
       .default("development"),
   },
   createFinalSchema: (env) => {
-    return z.object(env).transform((val) => {
-      const { DB_HOST, DB_NAME, DB_PASSWORD, DB_PORT, DB_USER, ...rest } = val;
+    return z.object(env).superRefine((val, ctx) => {
+      const hasDatabaseUrl = Boolean(val.DATABASE_URL);
+      const hasSplitDatabaseConfig = Boolean(
+        val.DB_HOST &&
+          val.DB_NAME &&
+          val.DB_PASSWORD &&
+          val.DB_PORT &&
+          val.DB_USER,
+      );
+
+      if (!hasDatabaseUrl && !hasSplitDatabaseConfig) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "Provide either DATABASE_URL or the full DB_HOST/DB_NAME/DB_PASSWORD/DB_PORT/DB_USER configuration.",
+          path: ["DATABASE_URL"],
+        });
+      }
+    }).transform((val) => {
+      const {
+        DATABASE_URL,
+        DB_HOST,
+        DB_NAME,
+        DB_PASSWORD,
+        DB_PORT,
+        DB_USER,
+        ...rest
+      } = val;
 
       return {
         ...rest,
-        DATABASE_URL: `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}${DB_PORT}/${DB_NAME}`,
+        DATABASE_URL:
+          DATABASE_URL ??
+          `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}${DB_PORT}/${DB_NAME}`,
       };
     });
   },
