@@ -1,7 +1,7 @@
 import "./globals.css";
 
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Geist, Geist_Mono, Open_Sans } from "next/font/google";
 import { Suspense } from "react";
 
 import { Providers } from "@/app/_providers";
@@ -9,7 +9,10 @@ import { getThemeCookie } from "@/features/core/color-theme/server";
 import { getLocaleCookie } from "@/features/core/i18n/server";
 import { cn } from "@/lib/utils";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const openSans = Open_Sans({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-sans",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,7 +55,7 @@ async function Suspended({ children }: { children: React.ReactNode }) {
         "antialiased font-sans",
         geistSans.variable,
         geistMono.variable,
-        inter.variable,
+        openSans.variable,
         theme,
       )}
       suppressHydrationWarning

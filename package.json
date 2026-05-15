@@ -20,6 +20,8 @@
     "seed": "tsx src/drizzle/seed/cli.ts",
     "seed:all": "tsx src/drizzle/seed/cli.ts all",
     "seed:clear": "tsx src/drizzle/seed/cli.ts clear",
+    "migrate:legacy": "tsx scripts/migrations/migrate-legacy.ts",
+    "migrate:legacy:dry": "tsx scripts/migrations/migrate-legacy.ts -- --dry-run",
     "preview": "next build && next start",
     "start": "next start",
     "typecheck": "tsc --noEmit"
@@ -74,6 +76,7 @@
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",
     "tailwindcss": "^4",
+    "tsx": "^4.19.4",
     "typescript": "^5"
   }
 }

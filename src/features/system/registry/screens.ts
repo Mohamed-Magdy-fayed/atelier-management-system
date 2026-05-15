@@ -1,8 +1,11 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Box,
   Building2,
+  CalendarDays,
+  CreditCard,
   LayoutDashboard,
+  Settings,
+  Shirt,
   UserCircle,
   Users,
 } from "lucide-react";
@@ -12,13 +15,19 @@ type NavTranslationKey =
   | "navEmployees"
   | "navCustomers"
   | "navBranches"
-  | "navProducts";
+  | "navDresses"
+  | "navReservations"
+  | "navPayments"
+  | "navSettings";
 type BreadcrumbTranslationKey =
   | "breadcrumbDashboard"
   | "breadcrumbEmployees"
   | "breadcrumbCustomers"
   | "breadcrumbBranches"
-  | "breadcrumbProducts";
+  | "breadcrumbDresses"
+  | "breadcrumbReservations"
+  | "breadcrumbPayments"
+  | "breadcrumbSettings";
 
 type SystemScreenRecord = {
   key: string;
@@ -54,8 +63,8 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
   },
   {
     key: "customers",
-    href: "/customers",
-    pathPrefixes: ["/customers"],
+    href: "/rental-customers",
+    pathPrefixes: ["/rental-customers", "/customers"],
     Icon: UserCircle,
     showInNav: true,
     protected: true,
@@ -73,14 +82,44 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     breadcrumbTranslationKey: "breadcrumbBranches",
   },
   {
-    key: "products",
-    href: "/products",
-    pathPrefixes: ["/products"],
-    Icon: Box,
+    key: "dresses",
+    href: "/dresses",
+    pathPrefixes: ["/dresses"],
+    Icon: Shirt,
     showInNav: true,
     protected: true,
-    navTranslationKey: "navProducts",
-    breadcrumbTranslationKey: "breadcrumbProducts",
+    navTranslationKey: "navDresses",
+    breadcrumbTranslationKey: "breadcrumbDresses",
+  },
+  {
+    key: "reservations",
+    href: "/reservations",
+    pathPrefixes: ["/reservations"],
+    Icon: CalendarDays,
+    showInNav: true,
+    protected: true,
+    navTranslationKey: "navReservations",
+    breadcrumbTranslationKey: "breadcrumbReservations",
+  },
+  {
+    key: "payments",
+    href: "/payments",
+    pathPrefixes: ["/payments"],
+    Icon: CreditCard,
+    showInNav: true,
+    protected: true,
+    navTranslationKey: "navPayments",
+    breadcrumbTranslationKey: "breadcrumbPayments",
+  },
+  {
+    key: "settings",
+    href: "/settings",
+    pathPrefixes: ["/settings"],
+    Icon: Settings,
+    showInNav: true,
+    protected: true,
+    navTranslationKey: "navSettings",
+    breadcrumbTranslationKey: "breadcrumbSettings",
   },
   {
     key: "my-account",

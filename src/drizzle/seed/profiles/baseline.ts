@@ -6,6 +6,6 @@ export async function seedBaselineProfile() {
     employeeCount: 6,
     customerCount: 24,
     customerInsertBatch: 24,
-    productCount: 8,
+    dressCount: 8,
   });
 }

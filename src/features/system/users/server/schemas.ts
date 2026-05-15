@@ -2,6 +2,10 @@ import { z } from "zod";
 
 import { userRoleValues } from "@/drizzle/schema";
 
+export const listEmployeesInput = z.object({
+  branchId: z.string().uuid().optional(),
+});
+
 export const listCustomersInput = z.object({
   page: z.number().int().min(1).default(1),
   perPage: z.number().int().min(1).max(100).default(20),
@@ -52,6 +56,7 @@ export const userMutationSchema = z.object({
   phone: z.string().trim().max(16).nullable().optional(),
   age: z.number().int().min(0).max(150).nullable().optional(),
   role: z.enum(userRoleValues).default("customer"),
+  branchId: z.string().uuid().optional(),
 });
 
 export const userUpdateSchema = userMutationSchema.extend({
@@ -65,6 +70,7 @@ export const bulkSetVerifiedInput = z.object({
   verified: z.boolean(),
 });
 
+export type ListEmployeesInput = z.infer<typeof listEmployeesInput>;
 export type ListCustomersInput = z.infer<typeof listCustomersInput>;
 export type ListFilterInput = z.infer<typeof listFilterInput>;
 export type ExportRowsInput = z.infer<typeof exportRowsInput>;

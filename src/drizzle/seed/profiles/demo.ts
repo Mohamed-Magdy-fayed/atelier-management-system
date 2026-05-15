@@ -6,6 +6,6 @@ export async function seedDemoProfile() {
     employeeCount: 18,
     customerCount: 180,
     customerInsertBatch: 90,
-    productCount: 18,
+    dressCount: 18,
   });
 }

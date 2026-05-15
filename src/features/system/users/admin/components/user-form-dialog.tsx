@@ -43,6 +43,7 @@ export type UserFormDialogProps = {
   onOpenChange: (open: boolean) => void;
   user?: UserGridRow | null;
   defaultRole?: UserFormValues["role"];
+  branchId?: string;
 };
 
 export function UserFormDialog({
@@ -50,6 +51,7 @@ export function UserFormDialog({
   onOpenChange,
   user,
   defaultRole = "customer",
+  branchId,
 }: UserFormDialogProps) {
   const { t } = useTranslation();
   const trpc = useTRPC();
@@ -75,10 +77,18 @@ export function UserFormDialog({
     defaultValues,
     validators: { onSubmit: userFormSchema },
     onSubmit: async ({ value }) => {
+      if (!isEdit && resolvedRole === "employee" && !branchId) {
+        toast.error(String(t("systemPages.reservationBranchRequired")));
+        return;
+      }
+
       const payload = {
         ...value,
         phone: value.phone ? value.phone : null,
         role: resolvedRole,
+        ...(!isEdit && resolvedRole === "employee" && branchId
+          ? { branchId }
+          : {}),
       };
       const action =
         isEdit && user

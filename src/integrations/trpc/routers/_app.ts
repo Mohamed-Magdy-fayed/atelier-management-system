@@ -6,8 +6,13 @@ import { z } from "zod";
 
 import { LOCALE_COOKIE_NAME } from "@/features/core/i18n/lib";
 import { baseProcedure, createTRPCRouter } from "../init";
+import { dashboardRouter } from "@/features/system/dashboard/server";
 import { branchesRouter } from "./branches";
-import { productsRouter } from "./products";
+import { dressesRouter } from "./dresses";
+import { paymentsRouter } from "./payments";
+import { rentalCustomersRouter } from "./rental-customers";
+import { reservationsRouter } from "./reservations";
+import { settingsRouter } from "./settings";
 import { usersRouter } from "./users";
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
@@ -117,7 +122,12 @@ export const appRouter = createTRPCRouter({
       };
     }),
   branches: branchesRouter,
-  products: productsRouter,
+  dashboard: dashboardRouter,
+  dresses: dressesRouter,
+  payments: paymentsRouter,
+  rentalCustomers: rentalCustomersRouter,
+  reservations: reservationsRouter,
+  settings: settingsRouter,
   users: usersRouter,
 });
 

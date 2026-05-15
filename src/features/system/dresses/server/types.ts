@@ -1,0 +1,19 @@
+export type DressGridRow = {
+  id: string;
+  branchId: string;
+  code: string;
+  title: string;
+  size: string | null;
+  color: string | null;
+  pricePerDay: number;
+  depositAmount: number;
+  insurance: number;
+  timesRented: number;
+  isActive: boolean;
+  createdAt: Date;
+  createdBy: string;
+  updatedAt: Date | null;
+  updatedBy: string | null;
+  deletedAt: Date | null;
+  deletedBy: string | null;
+};

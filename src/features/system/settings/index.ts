@@ -1,0 +1,1 @@
+export { SettingsTablePage } from "./admin";

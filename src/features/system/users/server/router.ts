@@ -12,6 +12,7 @@ import {
   commitImportInput,
   exportRowsInput,
   listCustomersInput,
+  listEmployeesInput,
   previewImportInput,
   softDeleteInput,
   userMutationSchema,
@@ -19,9 +20,9 @@ import {
 } from "./schemas";
 
 export const usersRouter = createTRPCRouter({
-  listEmployees: protectedProcedure.query(async ({ ctx }) =>
-    listEmployees(ctx),
-  ),
+  listEmployees: protectedProcedure
+    .input(listEmployeesInput)
+    .query(async ({ ctx, input }) => listEmployees(ctx, input)),
   listCustomers: protectedProcedure
     .input(listCustomersInput)
     .query(async ({ ctx, input }) => listCustomers(ctx, input)),

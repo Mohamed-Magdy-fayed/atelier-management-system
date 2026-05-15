@@ -1,9 +1,13 @@
 import { and, asc, count, eq, isNull } from "drizzle-orm";
 
-import { UsersTable } from "@/drizzle/schema";
+import { BranchMembershipsTable, UsersTable } from "@/drizzle/schema";
 
 import { buildWhere, EXPORT_ROW_LIMIT, sortExpr } from "./filters";
-import type { ExportRowsInput, ListCustomersInput } from "./schemas";
+import type {
+  ExportRowsInput,
+  ListCustomersInput,
+  ListEmployeesInput,
+} from "./schemas";
 import {
   assertStaffRole,
   getRequiredSession,
@@ -11,13 +15,39 @@ import {
 } from "./shared";
 import { type UserGridRow, userGridSelect } from "./types";
 
-export async function listEmployees(ctx: TRPCContext) {
+export async function listEmployees(
+  ctx: TRPCContext,
+  input: ListEmployeesInput,
+) {
   const session = getRequiredSession(ctx);
   assertStaffRole(session.user.role);
+
+  const employeeWhere = and(
+    eq(UsersTable.role, "employee"),
+    isNull(UsersTable.deletedAt),
+  );
+
+  if (input.branchId) {
+    const rows = await ctx.db
+      .select(userGridSelect)
+      .from(UsersTable)
+      .innerJoin(
+        BranchMembershipsTable,
+        and(
+          eq(BranchMembershipsTable.userId, UsersTable.id),
+          eq(BranchMembershipsTable.branchId, input.branchId),
+        ),
+      )
+      .where(employeeWhere)
+      .orderBy(asc(UsersTable.name));
+
+    return { rows: rows as UserGridRow[] };
+  }
+
   const rows = await ctx.db
     .select(userGridSelect)
     .from(UsersTable)
-    .where(and(eq(UsersTable.role, "employee"), isNull(UsersTable.deletedAt)))
+    .where(employeeWhere)
     .orderBy(asc(UsersTable.name));
 
   return { rows: rows as UserGridRow[] };

@@ -2,9 +2,9 @@
 
 import { CalendarIcon, XCircle } from "lucide-react";
 import { type ComponentProps, useCallback, useMemo, useState } from "react";
-import type { DateRange } from "react-day-picker";
+import { isDateRange, type DateRange } from "react-day-picker";
+import { ar, enUS } from "react-day-picker/locale";
 
-import { DateRangePresets } from "@/components/general/date-range-presets";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -19,6 +19,11 @@ import { cn } from "@/lib/utils";
 
 export type DateSelection = Date | Date[] | DateRange | undefined;
 
+type InlineRangePreset = {
+  label: string;
+  range: DateRange;
+};
+
 interface SelectDateFieldProps {
   value?: DateSelection;
   setValue: (value: DateSelection) => void;
@@ -28,7 +33,28 @@ interface SelectDateFieldProps {
   disabledDays?: ComponentProps<typeof Calendar>["disabled"];
   className?: string;
   title?: string;
+  /** Legacy inline presets (label + range). */
+  presets?: InlineRangePreset[];
+  /** Factory presets used by filters and dashboard. */
   rangePresets?: DateRangePreset[];
+  numberOfMonths?: number;
+}
+
+function isSameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+function areRangesEqual(a?: DateRange, b?: DateRange) {
+  const fromEqual =
+    (!a?.from && !b?.from) ||
+    (a?.from && b?.from && isSameDay(a.from, b.from));
+  const toEqual =
+    (!a?.to && !b?.to) || (a?.to && b?.to && isSameDay(a.to, b.to));
+  return fromEqual && toEqual;
 }
 
 function formatDate(date: Date, locale: string = "en-US"): string {
@@ -68,10 +94,21 @@ export function SelectDateField({
   disabledDays,
   className,
   title,
+  presets: presetsProp,
   rangePresets = [],
+  numberOfMonths = 1,
 }: SelectDateFieldProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { locale, t } = useTranslation();
+  const { locale, dir, t } = useTranslation();
+  const rdpLocale = locale === "ar" ? ar : enUS;
+
+  const presets = useMemo((): InlineRangePreset[] => {
+    if (presetsProp?.length) return presetsProp;
+    return rangePresets.map((preset) => ({
+      label: preset.label,
+      range: preset.getRange(),
+    }));
+  }, [presetsProp, rangePresets]);
 
   const onSelect = useCallback(
     (date: Date | Date[] | DateRange | undefined) => {
@@ -83,16 +120,24 @@ export function SelectDateField({
     [setValue, mode],
   );
 
+  const onReset = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      setValue(undefined);
+    },
+    [setValue],
+  );
+
   const hasValue = useMemo(() => {
     if (mode === "range") {
       const range = value as DateRange;
-      return range?.from || range?.to;
+      return Boolean(range?.from || range?.to);
     }
     if (mode === "multiple") {
       const dates = value as Date[];
-      return dates && dates.length > 0;
+      return dates.length > 0;
     }
-    return !!value;
+    return Boolean(value);
   }, [mode, value]);
 
   const displayText = useMemo(() => {
@@ -110,17 +155,14 @@ export function SelectDateField({
     }
 
     if (mode === "range") {
-      const range = value as DateRange;
-      return formatDateRange(range, locale);
+      return formatDateRange(value as DateRange, locale);
     }
 
     if (mode === "multiple") {
-      const dates = value as Date[];
-      return formatMultipleDates(dates, locale);
+      return formatMultipleDates(value as Date[], locale);
     }
 
-    const singleDate = value as Date;
-    return formatDate(singleDate, locale);
+    return formatDate(value as Date, locale);
   }, [hasValue, value, mode, placeholder, locale, t]);
 
   const clearLabel = t("common.clearDate");
@@ -131,7 +173,7 @@ export function SelectDateField({
     return (
       <span className="flex items-center gap-2">
         <span>{title}</span>
-        {hasValue && (
+        {hasValue ? (
           <>
             <Separator
               className="mx-0.5 data-[orientation=vertical]:h-4"
@@ -139,10 +181,21 @@ export function SelectDateField({
             />
             <span className="text-muted-foreground">{displayText}</span>
           </>
-        )}
+        ) : null}
       </span>
     );
   }, [title, hasValue, displayText]);
+
+  const rangeValue = mode === "range" ? (value as DateRange | undefined) : undefined;
+  const defaultMonth = rangeValue?.from ?? rangeValue?.to;
+
+  const singleMonthClassNames =
+    numberOfMonths === 1
+      ? {
+          months: "relative flex w-fit flex-col",
+          month: "flex w-fit flex-col gap-4",
+        }
+      : undefined;
 
   return (
     <Popover onOpenChange={setIsOpen} open={isOpen}>
@@ -162,14 +215,11 @@ export function SelectDateField({
                 <div
                   aria-label={clearLabel}
                   className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setValue(undefined);
-                  }}
+                  onClick={onReset}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      setValue(undefined);
+                      onReset(e as unknown as React.MouseEvent);
                     }
                   }}
                   role="button"
@@ -185,39 +235,62 @@ export function SelectDateField({
           </Button>
         }
       />
-      <PopoverContent align="start" className="w-auto p-0">
+      <PopoverContent
+        align="start"
+        className="w-min max-w-none gap-0 p-0 shadow-md"
+      >
         {mode === "range" ? (
-          <>
-            <Calendar
-              disabled={disabledDays}
-              mode="range"
-              numberOfMonths={2}
-              onSelect={onSelect}
-              selected={value as DateRange}
-            />
-            <DateRangePresets
-              onSelect={(range) => {
-                setValue({ from: range.from, to: range.to });
-                setIsOpen(false);
-              }}
-              presets={rangePresets}
-            />
-          </>
+          <Calendar
+            classNames={singleMonthClassNames}
+            defaultMonth={defaultMonth}
+            dir={dir}
+            disabled={disabledDays || disabled}
+            locale={rdpLocale}
+            mode="range"
+            numberOfMonths={numberOfMonths}
+            onSelect={onSelect}
+            selected={value as DateRange}
+          />
         ) : mode === "multiple" ? (
           <Calendar
-            disabled={disabledDays}
+            dir={dir}
+            disabled={disabledDays || disabled}
+            locale={rdpLocale}
             mode="multiple"
             onSelect={onSelect}
             selected={value as Date[]}
           />
         ) : (
           <Calendar
-            disabled={disabledDays}
+            dir={dir}
+            disabled={disabledDays || disabled}
+            locale={rdpLocale}
             mode="single"
             onSelect={onSelect}
             selected={value as Date}
           />
         )}
+
+        {mode === "range" && presets.length > 0 ? (
+          <div className="flex flex-wrap gap-2 border-t px-4 py-3">
+            {presets.map((preset) => (
+              <Button
+                key={preset.label}
+                className="flex-1"
+                onClick={() => onSelect(preset.range)}
+                size="sm"
+                type="button"
+                variant={
+                  isDateRange(value) && areRangesEqual(preset.range, value)
+                    ? "secondary"
+                    : "ghost"
+                }
+              >
+                {preset.label}
+              </Button>
+            ))}
+          </div>
+        ) : null}
       </PopoverContent>
     </Popover>
   );

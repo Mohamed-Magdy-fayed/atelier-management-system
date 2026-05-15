@@ -11,7 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { H2, Lead } from "@/components/ui/typography";
+import { H2 } from "@/components/ui/typography";
 import {
   DataTable,
   DataTableActionBar,
@@ -21,6 +21,7 @@ import {
   DataTableViewOptions,
   useDataTable,
 } from "@/features/core/data-table";
+import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
 import { UsersImportButton } from "@/features/core/import-review";
 import { useTRPC } from "@/integrations/trpc/client";
@@ -48,9 +49,13 @@ const userGlobalFilter: FilterFn<UserGridRow> = (row, _columnId, value) => {
 export function EmployeesTablePage() {
   const trpc = useTRPC();
   const { t, locale } = useTranslation();
+  const branchState = useBranch();
+  const branchId = branchState?.hasActiveOrg
+    ? branchState.activeBranch.id
+    : undefined;
   const addEmployeeLabel = `${t("common.add")} ${t("systemPages.roleEmployee")}`;
   const { data, isFetching } = useQuery(
-    trpc.users.listEmployees.queryOptions(),
+    trpc.users.listEmployees.queryOptions({ branchId }),
   );
 
   const [rowAction, setRowAction] = useState<RowAction>(null);
@@ -81,7 +86,6 @@ export function EmployeesTablePage() {
     >
       <div className="space-y-1">
         <H2>{t("systemPages.employeesTitle")}</H2>
-        <Lead>{t("systemPages.employeesLead")}</Lead>
       </div>
       <DataTable
         table={table}
@@ -139,6 +143,7 @@ export function EmployeesTablePage() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         defaultRole="employee"
+        branchId={branchId}
       />
       <UserFormDialog
         open={rowAction?.variant === "edit"}

@@ -54,7 +54,7 @@ export const rolesPermissions = {
   employee: {
     screens: {
       view: (_, data: { screenKey: ScreenKey }) =>
-        data.screenKey !== "branches" && data.screenKey !== "products",
+        data.screenKey !== "branches" && data.screenKey !== "employee",
     },
     users: {
       view: (user: PartialUser, data: PartialUser) => user.id === data.id,

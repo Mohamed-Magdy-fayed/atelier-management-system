@@ -15,7 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { H2, Lead } from "@/components/ui/typography";
+import { H2 } from "@/components/ui/typography";
 import {
   DataTable,
   type DataTableControlledState,
@@ -139,7 +139,6 @@ export function BranchesTablePage() {
     >
       <div className="space-y-1">
         <H2>{t("systemPages.branchesTitle")}</H2>
-        <Lead>{t("systemPages.branchesLead")}</Lead>
       </div>
 
       <DataTable

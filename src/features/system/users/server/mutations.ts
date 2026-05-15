@@ -1,6 +1,6 @@
 import { eq, inArray } from "drizzle-orm";
 
-import { UsersTable } from "@/drizzle/schema";
+import { BranchMembershipsTable, UsersTable } from "@/drizzle/schema";
 
 import type {
   BulkSetVerifiedInput,
@@ -28,6 +28,17 @@ export async function createUser(ctx: TRPCContext, input: UserMutationInput) {
       role: input.role,
     })
     .returning({ id: UsersTable.id });
+
+  if (input.role === "employee" && input.branchId) {
+    await ctx.db
+      .insert(BranchMembershipsTable)
+      .values({
+        branchId: input.branchId,
+        userId: row.id,
+      })
+      .onConflictDoNothing();
+  }
+
   return { id: row.id };
 }
 

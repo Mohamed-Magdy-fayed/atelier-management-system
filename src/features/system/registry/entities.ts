@@ -1,5 +1,13 @@
 import type { LucideIcon } from "lucide-react";
-import { Box, Building2, UserCircle, Users } from "lucide-react";
+import {
+  Building2,
+  CalendarDays,
+  CreditCard,
+  Settings,
+  Shirt,
+  UserCircle,
+  Users,
+} from "lucide-react";
 
 import type { ScreenKey } from "./screens";
 
@@ -7,22 +15,34 @@ type EntityNavTranslationKey =
   | "navCustomers"
   | "navEmployees"
   | "navBranches"
-  | "navProducts";
+  | "navDresses"
+  | "navReservations"
+  | "navPayments"
+  | "navSettings";
 type EntityBreadcrumbTranslationKey =
   | "breadcrumbCustomers"
   | "breadcrumbEmployees"
   | "breadcrumbBranches"
-  | "breadcrumbProducts";
+  | "breadcrumbDresses"
+  | "breadcrumbReservations"
+  | "breadcrumbPayments"
+  | "breadcrumbSettings";
 type EntityTitleKey =
   | "customersTitle"
   | "employeesTitle"
   | "branchesTitle"
-  | "productsTitle";
+  | "dressesTitle"
+  | "reservationsTitle"
+  | "paymentsTitle"
+  | "settingsTitle";
 type EntityLeadKey =
   | "customersLead"
   | "employeesLead"
   | "branchesLead"
-  | "productsLead";
+  | "dressesLead"
+  | "reservationsLead"
+  | "paymentsLead"
+  | "settingsLead";
 
 export type SystemEntityRegistryItem = {
   slug: string;
@@ -49,22 +69,22 @@ export type SystemEntityRegistryItem = {
 export const SYSTEM_ENTITY_REGISTRY = [
   {
     slug: "customers",
-    route: "/customers",
+    route: "/rental-customers",
     screenKey: "customers",
     icon: UserCircle,
     navLabelKey: "navCustomers",
     breadcrumbLabelKey: "breadcrumbCustomers",
     titleKey: "customersTitle",
     leadKey: "customersLead",
-    branchScope: "future-branch-aware",
+    branchScope: "branch-aware",
     infoView: "audit-only",
-    supportsImport: true,
+    supportsImport: false,
     supportsExport: true,
-    supportsRowSelection: true,
-    supportsBulkActions: true,
-    filters: ["age", "verified", "createdAt", "lastSignInAt"],
-    rowActions: ["info", "edit", "delete"],
-    bulkActions: ["verify", "unverify", "delete"],
+    supportsRowSelection: false,
+    supportsBulkActions: false,
+    filters: ["createdAt"],
+    rowActions: [],
+    bulkActions: [],
     showInDashboard: true,
     seedProfiles: ["baseline", "demo", "performance"],
   },
@@ -77,7 +97,7 @@ export const SYSTEM_ENTITY_REGISTRY = [
     breadcrumbLabelKey: "breadcrumbEmployees",
     titleKey: "employeesTitle",
     leadKey: "employeesLead",
-    branchScope: "future-branch-aware",
+    branchScope: "branch-aware",
     infoView: "audit-only",
     supportsImport: false,
     supportsExport: false,
@@ -111,25 +131,102 @@ export const SYSTEM_ENTITY_REGISTRY = [
     seedProfiles: ["baseline", "demo", "performance"],
   },
   {
-    slug: "products",
-    route: "/products",
-    screenKey: "products",
-    icon: Box,
-    navLabelKey: "navProducts",
-    breadcrumbLabelKey: "breadcrumbProducts",
-    titleKey: "productsTitle",
-    leadKey: "productsLead",
-    branchScope: "global",
+    slug: "dresses",
+    route: "/dresses",
+    screenKey: "dresses",
+    icon: Shirt,
+    navLabelKey: "navDresses",
+    breadcrumbLabelKey: "breadcrumbDresses",
+    titleKey: "dressesTitle",
+    leadKey: "dressesLead",
+    branchScope: "branch-aware",
     infoView: "audit-only",
-    supportsImport: true,
+    supportsImport: false,
     supportsExport: true,
     supportsRowSelection: true,
     supportsBulkActions: true,
-    filters: ["isActive", "price", "createdAt"],
-    rowActions: ["info", "edit", "activate", "deactivate", "archive"],
+    filters: ["isActive", "pricePerDay", "createdAt"],
+    rowActions: ["info", "edit", "activate", "deactivate", "delete"],
     bulkActions: ["activate", "deactivate", "archive"],
     showInDashboard: true,
     seedProfiles: ["baseline", "demo", "performance"],
+  },
+  {
+    slug: "reservations",
+    route: "/reservations",
+    screenKey: "reservations",
+    icon: CalendarDays,
+    navLabelKey: "navReservations",
+    breadcrumbLabelKey: "breadcrumbReservations",
+    titleKey: "reservationsTitle",
+    leadKey: "reservationsLead",
+    branchScope: "branch-aware",
+    infoView: "audit-only",
+    supportsImport: false,
+    supportsExport: true,
+    supportsRowSelection: false,
+    supportsBulkActions: false,
+    filters: [
+      "status",
+      "dressId",
+      "receivingDateTime",
+      "occasionDate",
+      "returnDateTime",
+      "createdAt",
+    ],
+    rowActions: [
+      "info",
+      "receipt",
+      "edit",
+      "updateStatus",
+      "collectPayment",
+      "delete",
+    ],
+    bulkActions: [],
+    showInDashboard: true,
+    seedProfiles: ["baseline", "demo"],
+  },
+  {
+    slug: "payments",
+    route: "/payments",
+    screenKey: "payments",
+    icon: CreditCard,
+    navLabelKey: "navPayments",
+    breadcrumbLabelKey: "breadcrumbPayments",
+    titleKey: "paymentsTitle",
+    leadKey: "paymentsLead",
+    branchScope: "branch-aware",
+    infoView: "audit-only",
+    supportsImport: false,
+    supportsExport: true,
+    supportsRowSelection: false,
+    supportsBulkActions: false,
+    filters: ["type", "method", "createdAt"],
+    rowActions: ["info"],
+    bulkActions: [],
+    showInDashboard: false,
+    seedProfiles: ["demo"],
+  },
+  {
+    slug: "settings",
+    route: "/settings",
+    screenKey: "settings",
+    icon: Settings,
+    navLabelKey: "navSettings",
+    breadcrumbLabelKey: "breadcrumbSettings",
+    titleKey: "settingsTitle",
+    leadKey: "settingsLead",
+    branchScope: "global",
+    infoView: "audit-only",
+    supportsImport: false,
+    supportsExport: false,
+    supportsRowSelection: false,
+    supportsBulkActions: false,
+    filters: [],
+    rowActions: ["info", "edit"],
+    bulkActions: [],
+    showInDashboard: false,
+    seedProfiles: ["baseline"],
   },
 ] as const satisfies readonly SystemEntityRegistryItem[];
 
