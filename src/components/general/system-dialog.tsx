@@ -52,7 +52,7 @@ export function SystemDialog({
           <DialogDescription render={descriptionRender} className="px-4 py-2" />
         </DialogHeader>
 
-        <ScrollArea className="min-h-0 flex-1 px-4 py-4" scrollX={false}>
+        <ScrollArea className="min-h-0 flex-1 px-4 py-4">
           {children}
         </ScrollArea>
 

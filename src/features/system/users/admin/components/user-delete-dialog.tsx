@@ -80,7 +80,7 @@ export function UserDeleteDialog({
             data-testid="user-delete-dialog-cancel"
           >
             <XIcon className="size-3.5" />
-            {String(t("common.cancel"))}
+            {t("common.cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"

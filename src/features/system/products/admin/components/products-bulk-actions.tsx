@@ -199,7 +199,7 @@ export function ProductsBulkActions({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={archiveMut.isPending}>
               <XIcon className="size-3.5" />
-              {String(t("common.cancel"))}
+              {t("common.cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"

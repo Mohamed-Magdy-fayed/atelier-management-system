@@ -1,16 +1,17 @@
 import type * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "./scroll-area";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
-    <div className="w-full overflow-x-auto rounded-md border border-border">
+    <ScrollArea className="w-full rounded-md border border-border">
       <table
         data-slot="table"
         className={cn("w-max min-w-full caption-bottom text-xs", className)}
         {...props}
       />
-    </div>
+    </ScrollArea>
   );
 }
 

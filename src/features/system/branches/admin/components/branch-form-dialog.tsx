@@ -136,7 +136,7 @@ export function BranchFormDialog({
             )}
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="min-h-0 flex-1 px-4 py-4" scrollX={false}>
+        <ScrollArea className="min-h-0 flex-1 px-4 py-4">
           <OverlayFormBody
             formId={formId}
             className="space-y-4"
@@ -179,7 +179,7 @@ export function BranchFormDialog({
               disabled={pending}
             >
               <XIcon className="size-3.5" />
-              {String(t("common.cancel"))}
+              {t("common.cancel")}
             </Button>
             <OverlayFormSubmitButton
               formId={formId}

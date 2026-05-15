@@ -97,7 +97,7 @@ export function AppShellLayout({
             <LanguageToggle />
           </div>
         </header>
-        <ScrollArea className="min-h-0 flex-1 overflow-hidden" scrollX={false}>
+        <ScrollArea className="flex-1">
           <div className="p-4 md:p-6">{children}</div>
         </ScrollArea>
       </SidebarInset>

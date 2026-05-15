@@ -85,7 +85,7 @@ export function BranchDeleteDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>
             <XIcon className="size-3.5" />
-            {String(t("common.cancel"))}
+            {t("common.cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
