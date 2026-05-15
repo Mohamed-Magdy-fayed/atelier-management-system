@@ -12,10 +12,11 @@ function ScrollArea({
 }: ScrollAreaProps) {
   return (
     <div
-      className={cn("relative overflow-auto scrollbar-thin scrollbar-thumb-primary scrollbar-gutter-auto", className)}
+      data-slot="scroll-area"
+      className={cn("relative min-h-0 overflow-auto", className)}
       {...props}
     >
-        {children}
+      {children}
     </div>
   );
 }

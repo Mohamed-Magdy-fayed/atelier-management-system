@@ -137,3 +137,37 @@
     scroll-behavior: auto;
   }
 }
+
+/* ScrollArea: use explicit pseudo-elements so Chrome matches in dev and production.
+   Tailwind scrollbar-* utilities only set scrollbar-color, which Chrome on Windows
+   does not consistently apply to overflow elements. */
+@layer components {
+  [data-slot="scroll-area"] {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+  }
+
+  [data-slot="scroll-area"]::-webkit-scrollbar {
+    width: 0.625rem;
+    height: 0.625rem;
+  }
+
+  [data-slot="scroll-area"]::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  [data-slot="scroll-area"]::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background-clip: content-box;
+  }
+
+  [data-slot="scroll-area"]::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary);
+  }
+
+  [data-slot="scroll-area"]::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
