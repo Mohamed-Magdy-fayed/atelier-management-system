@@ -43,7 +43,11 @@ function paymentMethodTranslationId(method: string) {
   }
 }
 
-export function PaymentsGridFilters({ table }: { table: Table<PaymentGridRow> }) {
+export function PaymentsGridFilters({
+  table,
+}: {
+  table: Table<PaymentGridRow>;
+}) {
   const { t } = useTranslation();
   const typeColumn = table.getColumn("type");
   const methodColumn = table.getColumn("method");

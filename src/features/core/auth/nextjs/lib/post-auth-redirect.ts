@@ -4,7 +4,7 @@ import { SYSTEM_NAV_ITEMS } from "@/features/system/registry";
 
 export function getPostAuthRedirect(user: PartialUser) {
   if (user.role === "customer") {
-    return "/";
+    return "/my-account";
   }
 
   return (

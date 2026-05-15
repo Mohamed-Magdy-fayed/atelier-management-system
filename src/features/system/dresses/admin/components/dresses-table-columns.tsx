@@ -9,9 +9,8 @@ import {
 } from "@/features/core/data-table";
 import type { useTranslation } from "@/features/core/i18n/client";
 import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
-
-import { DressViewDialog } from "./dress-view-dialog";
 import { DressRowActions, type SetDressRowAction } from "./dress-row-actions";
+import { DressViewDialog } from "./dress-view-dialog";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
@@ -32,6 +31,12 @@ export function buildDressColumns(opts: {
           title={String(t("systemPages.dressesCode"))}
         />
       ),
+      cell: ({ row }) => (
+        <DressViewDialog
+          dressId={row.original.id}
+          dressLabel={row.original.code}
+        />
+      ),
       meta: { label: String(t("systemPages.dressesCode")) },
     },
     {
@@ -43,7 +48,7 @@ export function buildDressColumns(opts: {
         />
       ),
       cell: ({ row }) => (
-        <DressViewDialog dressId={row.original.id} dressLabel={row.original.title} />
+        <span className="font-medium">{row.original.title}</span>
       ),
       meta: { label: String(t("systemPages.dressesTitleCol")) },
     },
@@ -87,9 +92,12 @@ export function buildDressColumns(opts: {
         />
       ),
       cell: ({ row }) => {
-        const fmt = new Intl.DateTimeFormat(opts.locale === "ar" ? "ar" : "en", {
-          dateStyle: "medium",
-        });
+        const fmt = new Intl.DateTimeFormat(
+          opts.locale === "ar" ? "ar" : "en",
+          {
+            dateStyle: "medium",
+          },
+        );
         return fmt.format(new Date(row.original.createdAt));
       },
       meta: { label: String(t("common.createdAt")) },

@@ -25,9 +25,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Funtastic",
+  title: "Ateliér Alaa Elkasry",
   description:
-    "Sell products, services, and bookings with a polished front door backed by a branch-aware business workspace.",
+    "Browse curated evening wear, explore boutiques, check availability by date—reserve in person.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 

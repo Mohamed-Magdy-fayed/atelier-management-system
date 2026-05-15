@@ -14,17 +14,10 @@
  */
 import "dotenv/config";
 
-import {
-  loadMigrationEnv,
-  parseCliOptions,
-} from "./lib/config";
+import { loadMigrationEnv, parseCliOptions } from "./lib/config";
 import { createLegacySql, createTargetSql } from "./lib/connections";
 import { truncateDomainTables } from "./lib/fresh";
-import {
-  clearState,
-  ensureStateTable,
-  isStepCompleted,
-} from "./lib/state";
+import { clearState, ensureStateTable, isStepCompleted } from "./lib/state";
 import { migrationSteps } from "./lib/steps";
 import { logStep } from "./lib/utils";
 import { verifyMigrationCounts } from "./lib/verify";
@@ -54,7 +47,10 @@ async function main() {
 
     for (const step of steps) {
       if (!options.fresh && (await isStepCompleted(target, step.id))) {
-        logStep(step.id, "skip (already completed — use --fresh to re-run all)");
+        logStep(
+          step.id,
+          "skip (already completed — use --fresh to re-run all)",
+        );
         continue;
       }
 

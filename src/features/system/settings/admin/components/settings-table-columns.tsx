@@ -8,8 +8,8 @@ import type { useTranslation } from "@/features/core/i18n/client";
 import type { SettingGridRow } from "@/integrations/trpc/routers/settings";
 
 import {
-  SettingRowActions,
   type SetSettingRowAction,
+  SettingRowActions,
 } from "./setting-row-actions";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
@@ -78,7 +78,9 @@ export function buildSettingColumns(opts: {
           <Badge variant={v ? "default" : "secondary"}>
             {String(
               t(
-                v ? "systemPages.settingsStateEnabled" : "systemPages.settingsStateDisabled",
+                v
+                  ? "systemPages.settingsStateEnabled"
+                  : "systemPages.settingsStateDisabled",
               ),
             )}
           </Badge>

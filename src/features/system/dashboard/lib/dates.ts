@@ -63,7 +63,9 @@ function endOfWeek(d: Date) {
   return endOfDay(x);
 }
 
-export function buildDashboardDateContext(now = new Date()): DashboardDateContext {
+export function buildDashboardDateContext(
+  now = new Date(),
+): DashboardDateContext {
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
   const currentWeekStart = startOfWeek(now);

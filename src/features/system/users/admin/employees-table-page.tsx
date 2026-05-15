@@ -12,6 +12,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { H2 } from "@/components/ui/typography";
+import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import {
   DataTable,
   DataTableActionBar,
@@ -21,7 +22,6 @@ import {
   DataTableViewOptions,
   useDataTable,
 } from "@/features/core/data-table";
-import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
 import { UsersImportButton } from "@/features/core/import-review";
 import { useTRPC } from "@/integrations/trpc/client";

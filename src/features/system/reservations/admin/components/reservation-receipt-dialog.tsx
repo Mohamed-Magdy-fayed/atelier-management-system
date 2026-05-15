@@ -33,7 +33,9 @@ function ReceiptLine({
   return (
     <div className="flex items-center justify-between gap-4 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className={destructive ? "font-medium text-destructive" : "font-medium"}>
+      <span
+        className={destructive ? "font-medium text-destructive" : "font-medium"}
+      >
         {value}
       </span>
     </div>
@@ -73,7 +75,10 @@ export function ReservationReceiptDialog({
             {String(t("systemPages.reservationsReservationReceipt"))}
           </DialogTitle>
         </DialogHeader>
-        <div className="receipt-section space-y-3 border-b border-dashed py-2" id="reservation-receipt">
+        <div
+          className="receipt-section space-y-3 border-b border-dashed py-2"
+          id="reservation-receipt"
+        >
           <p className="text-center font-semibold text-lg">
             {reservation.reservationCode}
           </p>
@@ -132,7 +137,11 @@ export function ReservationReceiptDialog({
           />
         </div>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             {t("common.close")}
           </Button>
           <Button type="button" onClick={handlePrint}>

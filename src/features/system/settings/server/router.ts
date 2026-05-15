@@ -1,10 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from "@/integrations/trpc/init";
 
-import {
-  createSetting,
-  deleteSetting,
-  updateSetting,
-} from "./mutations";
+import { createSetting, deleteSetting, updateSetting } from "./mutations";
 import { listSettings } from "./queries";
 import {
   listSettingsInput,

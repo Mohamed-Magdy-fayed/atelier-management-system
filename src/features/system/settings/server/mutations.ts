@@ -15,7 +15,10 @@ import {
   type TRPCContext,
 } from "./shared";
 
-export async function createSetting(ctx: TRPCContext, input: SettingMutationInput) {
+export async function createSetting(
+  ctx: TRPCContext,
+  input: SettingMutationInput,
+) {
   const session = getRequiredSession(ctx);
   assertAdminRole(session.user.role);
 
@@ -43,7 +46,10 @@ export async function createSetting(ctx: TRPCContext, input: SettingMutationInpu
   }
 }
 
-export async function updateSetting(ctx: TRPCContext, input: SettingUpdateInput) {
+export async function updateSetting(
+  ctx: TRPCContext,
+  input: SettingUpdateInput,
+) {
   const session = getRequiredSession(ctx);
   assertAdminRole(session.user.role);
 
@@ -78,7 +84,10 @@ export async function updateSetting(ctx: TRPCContext, input: SettingUpdateInput)
   }
 }
 
-export async function deleteSetting(ctx: TRPCContext, input: SettingDeleteInput) {
+export async function deleteSetting(
+  ctx: TRPCContext,
+  input: SettingDeleteInput,
+) {
   const session = getRequiredSession(ctx);
   assertAdminRole(session.user.role);
 

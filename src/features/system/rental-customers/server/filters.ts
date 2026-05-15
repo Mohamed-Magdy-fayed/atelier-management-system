@@ -1,14 +1,4 @@
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  gte,
-  ilike,
-  lte,
-  or,
-  type SQL,
-} from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, lte, or, type SQL } from "drizzle-orm";
 
 import { RentalCustomersTable } from "@/drizzle/schema";
 import {

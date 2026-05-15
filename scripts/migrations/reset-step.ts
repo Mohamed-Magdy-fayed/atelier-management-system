@@ -15,7 +15,9 @@ async function main() {
     await sql.unsafe(
       `DELETE FROM "_legacy_migration_state" WHERE step = '${step.replace(/'/g, "''")}'`,
     );
-    await sql.unsafe(`TRUNCATE TABLE "${table.replace(/"/g, "")}" RESTART IDENTITY CASCADE`);
+    await sql.unsafe(
+      `TRUNCATE TABLE "${table.replace(/"/g, "")}" RESTART IDENTITY CASCADE`,
+    );
     console.log(`Reset step "${step}" and truncated "${table}".`);
   } finally {
     await sql.end({ timeout: 5 });

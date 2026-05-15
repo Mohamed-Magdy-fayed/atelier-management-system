@@ -46,6 +46,17 @@ export function buildBranchColumns(opts: {
       meta: { label: String(t("systemPages.branchesNameAr")) },
     },
     {
+      accessorKey: "phone",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={String(t("systemPages.branchesPhone"))}
+        />
+      ),
+      meta: { label: String(t("systemPages.branchesPhone")) },
+      cell: ({ row }) => row.original.phone ?? "—",
+    },
+    {
       accessorKey: "ownerName",
       header: ({ column }) => (
         <DataTableColumnHeader

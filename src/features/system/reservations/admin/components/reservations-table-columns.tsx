@@ -116,7 +116,9 @@ export function buildReservationColumns(opts: {
       ),
       cell: ({ row }) =>
         row.original.discount > 0 ? (
-          <span className="text-destructive">-{fmt(row.original.discount)}</span>
+          <span className="text-destructive">
+            -{fmt(row.original.discount)}
+          </span>
         ) : (
           "—"
         ),

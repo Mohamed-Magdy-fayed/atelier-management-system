@@ -29,7 +29,10 @@ type SettingRowActionsProps = {
   setRowAction: SetSettingRowAction;
 };
 
-export function SettingRowActions({ row, setRowAction }: SettingRowActionsProps) {
+export function SettingRowActions({
+  row,
+  setRowAction,
+}: SettingRowActionsProps) {
   const { t } = useTranslation();
 
   return (

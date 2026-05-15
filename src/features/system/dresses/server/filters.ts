@@ -70,10 +70,7 @@ function applyDressColumnFilters(
       const range = filter.value;
       if (range.from?.trim()) {
         conditions.push(
-          gte(
-            DressesTable.createdAt,
-            parseRangeBoundary(range.from, "start"),
-          ),
+          gte(DressesTable.createdAt, parseRangeBoundary(range.from, "start")),
         );
       }
       if (range.to?.trim()) {

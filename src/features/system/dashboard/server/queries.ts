@@ -25,10 +25,7 @@ import {
 } from "@/drizzle/schema";
 import type { createTRPCContext } from "@/integrations/trpc/init";
 
-import {
-  buildDashboardDateContext,
-  parseDashboardRange,
-} from "../lib/dates";
+import { buildDashboardDateContext, parseDashboardRange } from "../lib/dates";
 import type { DashboardData } from "./types";
 
 type Ctx = Awaited<ReturnType<typeof createTRPCContext>>;
@@ -190,11 +187,7 @@ export async function getDashboardData(
           .select({ paymentsCount: count() })
           .from(PaymentsTable)
           .where(
-            between(
-              PaymentsTable.createdAt,
-              dates.todayStart,
-              dates.todayEnd,
-            ),
+            between(PaymentsTable.createdAt, dates.todayStart, dates.todayEnd),
           ),
 
     branchId
@@ -345,9 +338,7 @@ export async function getDashboardData(
     }),
 
     ctx.db.query.RentalCustomersTable.findMany({
-      where: branchId
-        ? eq(RentalCustomersTable.branchId, branchId)
-        : undefined,
+      where: branchId ? eq(RentalCustomersTable.branchId, branchId) : undefined,
       orderBy: [desc(RentalCustomersTable.reservationsCount)],
       limit: 6,
     }),
@@ -358,13 +349,20 @@ export async function getDashboardData(
 
   const totalRevenue = Number(paymentStats.totalRevenue ?? 0);
   const monthlyRevenue = Number(paymentStats.monthlyRevenue ?? 0);
-  const previousMonthlyRevenue = Number(paymentStats.previousMonthlyRevenue ?? 0);
-  const reservationsThisWeek = Number(reservationStats.reservationsThisWeek ?? 0);
-  const reservationsLastWeek = Number(reservationStats.reservationsLastWeek ?? 0);
+  const previousMonthlyRevenue = Number(
+    paymentStats.previousMonthlyRevenue ?? 0,
+  );
+  const reservationsThisWeek = Number(
+    reservationStats.reservationsThisWeek ?? 0,
+  );
+  const reservationsLastWeek = Number(
+    reservationStats.reservationsLastWeek ?? 0,
+  );
 
   const monthlyRevenueChange =
     previousMonthlyRevenue > 0
-      ? ((monthlyRevenue - previousMonthlyRevenue) / previousMonthlyRevenue) * 100
+      ? ((monthlyRevenue - previousMonthlyRevenue) / previousMonthlyRevenue) *
+        100
       : monthlyRevenue > 0
         ? 100
         : null;
@@ -390,8 +388,7 @@ export async function getDashboardData(
   const outstandingReservations = outstandingReservationsRaw.map(
     (reservation) => {
       const totalDue =
-        Number(reservation.totalPrice ?? 0) -
-        Number(reservation.discount ?? 0);
+        Number(reservation.totalPrice ?? 0) - Number(reservation.discount ?? 0);
       const remaining = Math.max(
         totalDue - Number(reservation.totalPaid ?? 0),
         0,
@@ -454,9 +451,7 @@ export async function getDashboardData(
       dressId: String(reservation.dressId),
       dressTitle: reservation.dress?.title ?? "—",
       customerName: reservation.customerName,
-      receivingDateTime: new Date(
-        reservation.receivingDateTime,
-      ).toISOString(),
+      receivingDateTime: new Date(reservation.receivingDateTime).toISOString(),
       employee: reservation.createdBy,
     })),
     outstandingReservations,

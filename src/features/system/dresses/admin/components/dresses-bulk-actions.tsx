@@ -28,7 +28,9 @@ export function DressesBulkActions({ table }: { table: Table<DressGridRow> }) {
   const { t } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const setActiveMut = useMutation(trpc.dresses.bulkSetActive.mutationOptions());
+  const setActiveMut = useMutation(
+    trpc.dresses.bulkSetActive.mutationOptions(),
+  );
   const archiveMut = useMutation(trpc.dresses.bulkArchive.mutationOptions());
 
   async function bulkSetActive(isActive: boolean) {
@@ -132,7 +134,9 @@ export function DressesBulkActions({ table }: { table: Table<DressGridRow> }) {
             </Button>
           }
         />
-        <TooltipContent>{String(t("systemPages.bulkArchiveDresses"))}</TooltipContent>
+        <TooltipContent>
+          {String(t("systemPages.bulkArchiveDresses"))}
+        </TooltipContent>
       </Tooltip>
     </>
   );

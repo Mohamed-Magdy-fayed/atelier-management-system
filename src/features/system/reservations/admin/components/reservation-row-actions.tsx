@@ -27,8 +27,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { reservationStatuses } from "@/drizzle/schemas/system/reservations-table";
 import type { ReservationStatus } from "@/drizzle/schemas/system/reservations-table";
+import { reservationStatuses } from "@/drizzle/schemas/system/reservations-table";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ReservationGridRow } from "@/integrations/trpc/routers/reservations";

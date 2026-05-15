@@ -314,7 +314,15 @@ export function ReservationFormDialog({
     } else {
       createForm.reset(createDefaults);
     }
-  }, [open, reservation?.id, isEdit, createDefaults, editDefaults, createForm, editForm]);
+  }, [
+    open,
+    reservation?.id,
+    isEdit,
+    createDefaults,
+    editDefaults,
+    createForm,
+    editForm,
+  ]);
 
   const handleBodySubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {

@@ -50,9 +50,7 @@ function applyDateRangeColumn(
 
   const range = value;
   if (range.from?.trim()) {
-    conditions.push(
-      gte(column, parseRangeBoundary(range.from, "start")),
-    );
+    conditions.push(gte(column, parseRangeBoundary(range.from, "start")));
   }
   if (range.to?.trim()) {
     conditions.push(lte(column, parseRangeBoundary(range.to, "end")));

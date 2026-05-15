@@ -13,10 +13,10 @@ import {
 
 import { PaymentsTable } from "@/drizzle/schema";
 import {
-  paymentMethods,
-  paymentTypes,
   type PaymentMethod,
   type PaymentType,
+  paymentMethods,
+  paymentTypes,
 } from "@/drizzle/schemas/system/payments-table";
 import {
   isDateRangeValue,
@@ -89,10 +89,7 @@ function applyPaymentColumnFilters(
       const range = filter.value;
       if (range.from?.trim()) {
         conditions.push(
-          gte(
-            PaymentsTable.createdAt,
-            parseRangeBoundary(range.from, "start"),
-          ),
+          gte(PaymentsTable.createdAt, parseRangeBoundary(range.from, "start")),
         );
       }
       if (range.to?.trim()) {

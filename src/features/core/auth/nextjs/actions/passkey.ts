@@ -32,9 +32,9 @@ import {
   getUserIdTag,
   revalidateAuthCache,
 } from "@/features/core/auth/db-cache";
-import { getPostAuthRedirect } from "@/features/core/auth/nextjs/lib/post-auth-redirect";
 import { validateInput } from "@/features/core/auth/nextjs/actions/helpers";
 import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
+import { getPostAuthRedirect } from "@/features/core/auth/nextjs/lib/post-auth-redirect";
 import type {
   AuthenticationOptionsResult,
   PartialUser,

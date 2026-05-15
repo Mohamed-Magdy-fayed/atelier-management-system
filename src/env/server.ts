@@ -35,42 +35,45 @@ export const env = createEnv({
       .default("development"),
   },
   createFinalSchema: (env) => {
-    return z.object(env).superRefine((val, ctx) => {
-      const hasDatabaseUrl = Boolean(val.DATABASE_URL);
-      const hasSplitDatabaseConfig = Boolean(
-        val.DB_HOST &&
-          val.DB_NAME &&
-          val.DB_PASSWORD &&
-          val.DB_PORT &&
-          val.DB_USER,
-      );
+    return z
+      .object(env)
+      .superRefine((val, ctx) => {
+        const hasDatabaseUrl = Boolean(val.DATABASE_URL);
+        const hasSplitDatabaseConfig = Boolean(
+          val.DB_HOST &&
+            val.DB_NAME &&
+            val.DB_PASSWORD &&
+            val.DB_PORT &&
+            val.DB_USER,
+        );
 
-      if (!hasDatabaseUrl && !hasSplitDatabaseConfig) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message:
-            "Provide either DATABASE_URL or the full DB_HOST/DB_NAME/DB_PASSWORD/DB_PORT/DB_USER configuration.",
-          path: ["DATABASE_URL"],
-        });
-      }
-    }).transform((val) => {
-      const {
-        DATABASE_URL,
-        DB_HOST,
-        DB_NAME,
-        DB_PASSWORD,
-        DB_PORT,
-        DB_USER,
-        ...rest
-      } = val;
+        if (!hasDatabaseUrl && !hasSplitDatabaseConfig) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message:
+              "Provide either DATABASE_URL or the full DB_HOST/DB_NAME/DB_PASSWORD/DB_PORT/DB_USER configuration.",
+            path: ["DATABASE_URL"],
+          });
+        }
+      })
+      .transform((val) => {
+        const {
+          DATABASE_URL,
+          DB_HOST,
+          DB_NAME,
+          DB_PASSWORD,
+          DB_PORT,
+          DB_USER,
+          ...rest
+        } = val;
 
-      return {
-        ...rest,
-        DATABASE_URL:
-          DATABASE_URL ??
-          `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}${DB_PORT}/${DB_NAME}`,
-      };
-    });
+        return {
+          ...rest,
+          DATABASE_URL:
+            DATABASE_URL ??
+            `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}${DB_PORT}/${DB_NAME}`,
+        };
+      });
   },
   experimental__runtimeEnv: process.env,
   emptyStringAsUndefined: true,

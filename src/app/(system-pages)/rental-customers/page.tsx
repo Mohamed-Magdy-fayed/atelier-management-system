@@ -10,7 +10,9 @@ const defaultRentalCustomersInput = {
 };
 
 export default async function RentalCustomersPage() {
-  await prefetch(trpc.rentalCustomers.list.queryOptions(defaultRentalCustomersInput));
+  await prefetch(
+    trpc.rentalCustomers.list.queryOptions(defaultRentalCustomersInput),
+  );
 
   return (
     <HydrateClient>

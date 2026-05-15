@@ -2,7 +2,7 @@
 
 import { CalendarIcon, XCircle } from "lucide-react";
 import { type ComponentProps, useCallback, useMemo, useState } from "react";
-import { isDateRange, type DateRange } from "react-day-picker";
+import { type DateRange, isDateRange } from "react-day-picker";
 import { ar, enUS } from "react-day-picker/locale";
 
 import { Button } from "@/components/ui/button";
@@ -50,8 +50,7 @@ function isSameDay(a: Date, b: Date) {
 
 function areRangesEqual(a?: DateRange, b?: DateRange) {
   const fromEqual =
-    (!a?.from && !b?.from) ||
-    (a?.from && b?.from && isSameDay(a.from, b.from));
+    (!a?.from && !b?.from) || (a?.from && b?.from && isSameDay(a.from, b.from));
   const toEqual =
     (!a?.to && !b?.to) || (a?.to && b?.to && isSameDay(a.to, b.to));
   return fromEqual && toEqual;
@@ -186,7 +185,8 @@ export function SelectDateField({
     );
   }, [title, hasValue, displayText]);
 
-  const rangeValue = mode === "range" ? (value as DateRange | undefined) : undefined;
+  const rangeValue =
+    mode === "range" ? (value as DateRange | undefined) : undefined;
   const defaultMonth = rangeValue?.from ?? rangeValue?.to;
 
   const singleMonthClassNames =

@@ -14,11 +14,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Swap, SwapOff, SwapOn } from "@/components/ui/swap";
 import { mainTranslations } from "@/features/core/i18n/global";
 import { setLocaleCookie } from "@/features/core/i18n/server";
-import {
-  createI18n,
-  type LanguageMessages,
-  LOCALE_COOKIE_NAME,
-} from "./lib";
+import { createI18n, type LanguageMessages, LOCALE_COOKIE_NAME } from "./lib";
 
 const TranslationContext = createContext({
   locale: "en",

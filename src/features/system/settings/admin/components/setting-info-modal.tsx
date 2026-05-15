@@ -63,7 +63,9 @@ export function SettingInfoModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{String(t("systemPages.settingsInfoTitle"))}</DialogTitle>
+          <DialogTitle>
+            {String(t("systemPages.settingsInfoTitle"))}
+          </DialogTitle>
           <DialogDescription>
             {String(t("systemPages.settingsInfoDescription"))}
           </DialogDescription>
@@ -73,7 +75,10 @@ export function SettingInfoModal({
             label={String(t("dataTable.id"))}
             value={<code className="text-[0.7rem]">{setting.id}</code>}
           />
-          <InfoRow label={String(t("systemPages.settingsCode"))} value={setting.code} />
+          <InfoRow
+            label={String(t("systemPages.settingsCode"))}
+            value={setting.code}
+          />
           <InfoRow
             label={String(t("systemPages.settingsCategory"))}
             value={String(t(settingsLabelTranslationId(setting.label)))}
@@ -88,11 +93,7 @@ export function SettingInfoModal({
           />
           <InfoRow
             label={String(t("systemPages.settingsAmount"))}
-            value={
-              setting.amount != null
-                ? String(setting.amount)
-                : dash
-            }
+            value={setting.amount != null ? String(setting.amount) : dash}
           />
           <InfoRow
             label={String(t("common.createdAt"))}

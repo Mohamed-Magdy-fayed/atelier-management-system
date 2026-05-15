@@ -5,9 +5,9 @@ import {
   countLegacy,
   countTarget,
   logStep,
+  type MigrationContext,
   pickLegacy,
   sqlNullable,
-  type MigrationContext,
 } from "./utils";
 
 export type MigrationStep = {
@@ -72,7 +72,12 @@ export const migrationSteps: MigrationStep[] = [
       const targetCount = dryRun
         ? legacyCount
         : await countTarget(target, "branches");
-      await markStepCompleted(target, step, { legacyCount, targetCount }, dryRun);
+      await markStepCompleted(
+        target,
+        step,
+        { legacyCount, targetCount },
+        dryRun,
+      );
       logStep(step, `done → target rows: ${targetCount}`, { dryRun });
     },
   },
@@ -114,9 +119,7 @@ export const migrationSteps: MigrationStep[] = [
       if (!dryRun) {
         for (const row of legacyRows) {
           const role =
-            row.role === "admin"
-              ? ("admin" as const)
-              : ("employee" as const);
+            row.role === "admin" ? ("admin" as const) : ("employee" as const);
           const createdBy =
             row.createdBy?.trim() && row.createdBy.length <= 64
               ? row.createdBy.slice(0, 64)
@@ -161,7 +164,12 @@ export const migrationSteps: MigrationStep[] = [
       const targetCount = dryRun
         ? legacyCount
         : await countTarget(target, "users");
-      await markStepCompleted(target, step, { legacyCount, targetCount }, dryRun);
+      await markStepCompleted(
+        target,
+        step,
+        { legacyCount, targetCount },
+        dryRun,
+      );
       logStep(step, `done → target rows: ${targetCount}`, { dryRun });
     },
   },
@@ -214,7 +222,12 @@ export const migrationSteps: MigrationStep[] = [
       const targetCount = dryRun
         ? legacyCount
         : await countTarget(target, "user_credentials");
-      await markStepCompleted(target, step, { legacyCount, targetCount }, dryRun);
+      await markStepCompleted(
+        target,
+        step,
+        { legacyCount, targetCount },
+        dryRun,
+      );
       logStep(step, `done → target rows: ${targetCount}`, { dryRun });
     },
   },
@@ -234,9 +247,9 @@ export const migrationSteps: MigrationStep[] = [
       `;
 
       const validBranchIds = new Set(
-        (
-          await legacy<{ id: string }[]>`SELECT id FROM branches`
-        ).map((r) => r.id),
+        (await legacy<{ id: string }[]>`SELECT id FROM branches`).map(
+          (r) => r.id,
+        ),
       );
 
       let inserted = 0;
@@ -379,7 +392,12 @@ export const migrationSteps: MigrationStep[] = [
       const targetCount = dryRun
         ? legacyCount
         : await countTarget(target, "dresses");
-      await markStepCompleted(target, step, { legacyCount, targetCount }, dryRun);
+      await markStepCompleted(
+        target,
+        step,
+        { legacyCount, targetCount },
+        dryRun,
+      );
       logStep(step, `done → target rows: ${targetCount}`, { dryRun });
     },
   },
@@ -446,13 +464,19 @@ export const migrationSteps: MigrationStep[] = [
       const targetCount = dryRun
         ? legacyCount
         : await countTarget(target, "rental_customers");
-      await markStepCompleted(target, step, { legacyCount, targetCount }, dryRun);
+      await markStepCompleted(
+        target,
+        step,
+        { legacyCount, targetCount },
+        dryRun,
+      );
       logStep(step, `done → target rows: ${targetCount}`, { dryRun });
     },
   },
   {
     id: "reservations",
-    description: "reservations → reservations (recievingDateTime → receivingDateTime)",
+    description:
+      "reservations → reservations (recievingDateTime → receivingDateTime)",
     run: async ({ legacy, target, dryRun }) => {
       const step = "reservations";
       const legacyCount = await countLegacy(legacy, "reservations");
@@ -548,7 +572,12 @@ export const migrationSteps: MigrationStep[] = [
       const targetCount = dryRun
         ? legacyCount
         : await countTarget(target, "reservations");
-      await markStepCompleted(target, step, { legacyCount, targetCount }, dryRun);
+      await markStepCompleted(
+        target,
+        step,
+        { legacyCount, targetCount },
+        dryRun,
+      );
       logStep(step, `done → target rows: ${targetCount}`, { dryRun });
     },
   },
@@ -620,7 +649,12 @@ export const migrationSteps: MigrationStep[] = [
       const targetCount = dryRun
         ? legacyCount
         : await countTarget(target, "payments");
-      await markStepCompleted(target, step, { legacyCount, targetCount }, dryRun);
+      await markStepCompleted(
+        target,
+        step,
+        { legacyCount, targetCount },
+        dryRun,
+      );
       logStep(step, `done → target rows: ${targetCount}`, { dryRun });
     },
   },
@@ -682,7 +716,12 @@ export const migrationSteps: MigrationStep[] = [
       const targetCount = dryRun
         ? legacyCount
         : await countTarget(target, "settings");
-      await markStepCompleted(target, step, { legacyCount, targetCount }, dryRun);
+      await markStepCompleted(
+        target,
+        step,
+        { legacyCount, targetCount },
+        dryRun,
+      );
       logStep(step, `done → target rows: ${targetCount}`, { dryRun });
     },
   },

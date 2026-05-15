@@ -36,9 +36,10 @@ const reservationGridSelect = {
   notes: ReservationsTable.notes,
   dressTitle: DressesTable.title,
   dressCode: DressesTable.code,
-  remainingBalance: sql<number>`(${ReservationsTable.totalPrice} - ${ReservationsTable.discount} - ${ReservationsTable.totalPaid})`.mapWith(
-    Number,
-  ),
+  remainingBalance:
+    sql<number>`(${ReservationsTable.totalPrice} - ${ReservationsTable.discount} - ${ReservationsTable.totalPaid})`.mapWith(
+      Number,
+    ),
   createdAt: ReservationsTable.createdAt,
   createdBy: ReservationsTable.createdBy,
   updatedAt: ReservationsTable.updatedAt,
@@ -195,10 +196,7 @@ export async function getReservationFormData(
     }),
     ctx.db.query.DressesTable.findMany({
       where: (dresses, { and, eq }) =>
-        and(
-          eq(dresses.branchId, input.branchId),
-          eq(dresses.isActive, true),
-        ),
+        and(eq(dresses.branchId, input.branchId), eq(dresses.isActive, true)),
       orderBy: (dresses, { asc }) => [asc(dresses.title)],
       columns: {
         id: true,

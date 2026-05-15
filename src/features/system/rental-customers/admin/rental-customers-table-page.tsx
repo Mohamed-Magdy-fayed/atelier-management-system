@@ -9,6 +9,7 @@ import type {
 import { useCallback, useMemo, useState } from "react";
 
 import { H2, Lead } from "@/components/ui/typography";
+import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import {
   DataTable,
   type DataTableControlledState,
@@ -19,7 +20,6 @@ import {
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
-import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useTRPC } from "@/integrations/trpc/client";
 

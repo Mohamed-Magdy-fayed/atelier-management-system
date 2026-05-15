@@ -153,6 +153,11 @@ export async function signUpAction(
   if (result.isError) return { isError: true, message: result.message };
   await createUserSession(result.user, await cookies());
 
+  const { linkRentalCustomersToUser } = await import(
+    "@/features/customer-portal/server/link-rental-customers"
+  );
+  await linkRentalCustomersToUser(result.user.id);
+
   redirect(getPostAuthRedirect(result.user));
 }
 

@@ -1,16 +1,10 @@
 import { relations } from "drizzle-orm";
-import {
-  integer,
-  pgEnum,
-  pgTable,
-  text,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { integer, pgEnum, pgTable, text, uuid } from "drizzle-orm/pg-core";
 
 import { BranchesTable } from "@/drizzle/schemas/auth/branches-table";
+import { createdAt, createdBy, id } from "@/drizzle/schemas/helpers";
 import { RentalCustomersTable } from "@/drizzle/schemas/system/rental-customers-table";
 import { ReservationsTable } from "@/drizzle/schemas/system/reservations-table";
-import { createdAt, createdBy, id } from "@/drizzle/schemas/helpers";
 
 export const paymentTypes = [
   "deposit",

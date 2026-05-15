@@ -29,6 +29,27 @@
       "when": 1778800000000,
       "tag": "0003_atelier_domain",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778900000000,
+      "tag": "0004_branch_public_contact",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1779000000000,
+      "tag": "0005_rental_customers_user_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779100000000,
+      "tag": "0006_branch_opening_hours",
+      "breakpoints": true
     }
   ]
 }

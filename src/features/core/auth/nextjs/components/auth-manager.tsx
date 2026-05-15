@@ -1,10 +1,10 @@
 "use client";
 
 import { startTransition, useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { signOutAction } from "@/features/core/auth/nextjs/actions";
 import { AuthManagerDialogs } from "@/features/core/auth/nextjs/components/auth-manager/auth-manager-dialogs";
 import { AuthManagerDropdown } from "@/features/core/auth/nextjs/components/auth-manager/auth-manager-dropdown";
+import { AuthManagerGuestMenu } from "@/features/core/auth/nextjs/components/auth-manager/auth-manager-guest-menu";
 import type { AuthManagerDialog } from "@/features/core/auth/nextjs/components/auth-manager/types";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 
@@ -13,7 +13,9 @@ export function AuthManager({ trigger }: { trigger: React.ReactElement }) {
 
   const [openDialog, setOpenDialog] = useState<AuthManagerDialog | undefined>();
 
-  if (!isAuthenticated) return <Skeleton className="h-12 w-full" />;
+  if (!isAuthenticated) {
+    return <AuthManagerGuestMenu trigger={trigger} />;
+  }
 
   const hasEmail = !!session.user.email;
   const isEmailVerified = !!session.user.emailVerifiedAt;

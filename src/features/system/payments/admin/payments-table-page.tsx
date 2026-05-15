@@ -9,6 +9,7 @@ import type {
 import { useCallback, useMemo, useState } from "react";
 
 import { H2 } from "@/components/ui/typography";
+import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import {
   DataTable,
   type DataTableControlledState,
@@ -19,7 +20,6 @@ import {
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
-import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useTRPC } from "@/integrations/trpc/client";
 
@@ -71,7 +71,9 @@ export function PaymentsTablePage() {
     ],
   );
 
-  const { data, isFetching } = useQuery(trpc.payments.list.queryOptions(listInput));
+  const { data, isFetching } = useQuery(
+    trpc.payments.list.queryOptions(listInput),
+  );
 
   const controlled = useMemo<DataTableControlledState>(
     () => ({
@@ -105,7 +107,10 @@ export function PaymentsTablePage() {
     ],
   );
 
-  const columns = useMemo(() => buildPaymentColumns({ locale, t }), [locale, t]);
+  const columns = useMemo(
+    () => buildPaymentColumns({ locale, t }),
+    [locale, t],
+  );
 
   const {
     table,

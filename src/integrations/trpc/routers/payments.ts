@@ -1,1 +1,4 @@
-export { type PaymentGridRow, paymentsRouter } from "@/features/system/payments/server";
+export {
+  type PaymentGridRow,
+  paymentsRouter,
+} from "@/features/system/payments/server";

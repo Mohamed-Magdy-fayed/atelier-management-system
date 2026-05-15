@@ -77,7 +77,9 @@ export function SettingsTablePage() {
     [globalFilter, pagination.pageIndex, pagination.pageSize, sorting],
   );
 
-  const { data, isFetching } = useQuery(trpc.settings.list.queryOptions(listInput));
+  const { data, isFetching } = useQuery(
+    trpc.settings.list.queryOptions(listInput),
+  );
 
   const controlled = useMemo<DataTableControlledState>(
     () => ({

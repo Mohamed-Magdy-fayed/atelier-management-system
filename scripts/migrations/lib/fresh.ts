@@ -28,9 +28,7 @@ export async function truncateDomainTables(
     `;
     if (!exists[0]?.reg) continue;
 
-    await target.unsafe(
-      `TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE;`,
-    );
+    await target.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE;`);
     logStep("fresh", `truncated ${table}`);
   }
 }

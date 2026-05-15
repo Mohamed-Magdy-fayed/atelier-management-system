@@ -25,6 +25,9 @@ function buildWhereClause(input: ListBranchesInput) {
   return or(
     ilike(BranchesTable.nameEn, likeValue),
     ilike(BranchesTable.nameAr, likeValue),
+    ilike(BranchesTable.phone, likeValue),
+    ilike(BranchesTable.addressEn, likeValue),
+    ilike(BranchesTable.addressAr, likeValue),
   );
 }
 
@@ -91,6 +94,12 @@ export async function listBranches(ctx: TRPCContext, input: ListBranchesInput) {
       id: BranchesTable.id,
       nameEn: BranchesTable.nameEn,
       nameAr: BranchesTable.nameAr,
+      addressEn: BranchesTable.addressEn,
+      addressAr: BranchesTable.addressAr,
+      phone: BranchesTable.phone,
+      opensAt: BranchesTable.opensAt,
+      closesAt: BranchesTable.closesAt,
+      mapUrl: BranchesTable.mapUrl,
       ownerId: BranchesTable.ownerId,
       ownerName: UsersTable.name,
       memberCount: memberCountExpr,

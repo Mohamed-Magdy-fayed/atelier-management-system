@@ -100,7 +100,9 @@ export type ReservationListFilterInput = z.infer<
 export type ListReservationsInput = z.infer<typeof listReservationsInput>;
 export type ExportReservationsInput = z.infer<typeof exportReservationsInput>;
 export type ReservationByIdInput = z.infer<typeof reservationByIdSchema>;
-export type ReservationFormDataInput = z.infer<typeof reservationFormDataSchema>;
+export type ReservationFormDataInput = z.infer<
+  typeof reservationFormDataSchema
+>;
 export type ReservationGenerateCodeInput = z.infer<
   typeof reservationGenerateCodeSchema
 >;

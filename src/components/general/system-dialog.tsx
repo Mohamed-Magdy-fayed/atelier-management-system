@@ -52,9 +52,7 @@ export function SystemDialog({
           <DialogDescription render={descriptionRender} className="px-4 py-2" />
         </DialogHeader>
 
-        <ScrollArea className="min-h-0 flex-1 px-4 py-4">
-          {children}
-        </ScrollArea>
+        <ScrollArea className="min-h-0 flex-1 px-4 py-4">{children}</ScrollArea>
 
         {actions ? (
           <div className="shrink-0 border-t bg-muted px-4 py-4">{actions}</div>

@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, between, desc, eq, isNull, ne } from "drizzle-orm";
+import { and, between, desc, eq, inArray, isNull, ne } from "drizzle-orm";
 
 import {
   DressesTable,
@@ -7,6 +7,7 @@ import {
   RentalCustomersTable,
   ReservationsTable,
 } from "@/drizzle/schema";
+import { rentalWindowsOverlap } from "@/lib/rental-availability";
 
 import { generateReservationCode } from "../utils";
 import type {
@@ -25,6 +26,49 @@ import {
 
 function normalizeReservationCode(code: string) {
   return code.trim().toUpperCase();
+}
+
+async function assertDressHasNoOverlappingReservation(
+  ctx: TRPCContext,
+  opts: {
+    dressId: string;
+    receivingDateTime: Date;
+    returnDateTime: Date;
+    excludeReservationId?: string;
+  },
+) {
+  const overlapConditions = [
+    eq(ReservationsTable.dressId, opts.dressId),
+    isNull(ReservationsTable.deletedAt),
+    inArray(ReservationsTable.status, ["reserved", "pickedUp"]),
+  ];
+  if (opts.excludeReservationId) {
+    overlapConditions.push(ne(ReservationsTable.id, opts.excludeReservationId));
+  }
+
+  const blocking = await ctx.db.query.ReservationsTable.findMany({
+    columns: {
+      receivingDateTime: true,
+      returnDateTime: true,
+    },
+    where: and(...overlapConditions),
+  });
+
+  for (const row of blocking) {
+    if (
+      rentalWindowsOverlap(
+        opts.receivingDateTime,
+        opts.returnDateTime,
+        row.receivingDateTime,
+        row.returnDateTime,
+      )
+    ) {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: ctx.t("systemPages.reservationDressSlotOverlap"),
+      });
+    }
+  }
 }
 
 async function ensureUniqueActiveReservationCode(
@@ -184,6 +228,12 @@ export async function createReservation(
   const snapshotName = input.customerName.trim() || customer.name;
   const snapshotPhone = input.customerPhone.trim() || customer.phone;
 
+  await assertDressHasNoOverlappingReservation(ctx, {
+    dressId: dress.id,
+    receivingDateTime: input.receivingDateTime,
+    returnDateTime: input.returnDateTime,
+  });
+
   const [row] = await ctx.db
     .insert(ReservationsTable)
     .values({
@@ -251,6 +301,13 @@ export async function updateReservation(
 
   const reservationCode = normalizeReservationCode(input.reservationCode);
   await ensureUniqueActiveReservationCode(ctx, reservationCode, input.id);
+
+  await assertDressHasNoOverlappingReservation(ctx, {
+    dressId: input.dressId,
+    receivingDateTime: input.receivingDateTime,
+    returnDateTime: input.returnDateTime,
+    excludeReservationId: input.id,
+  });
 
   const phone = input.customerPhone?.trim();
 

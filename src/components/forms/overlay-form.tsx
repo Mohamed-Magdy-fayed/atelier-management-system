@@ -39,7 +39,12 @@ export function OverlayFormSubmitButton({
   ...props
 }: OverlayFormSubmitButtonProps) {
   return (
-    <Button type="submit" form={formId} className={cn("flex-1", className)} {...props} />
+    <Button
+      type="submit"
+      form={formId}
+      className={cn("flex-1", className)}
+      {...props}
+    />
   );
 }
 
@@ -51,13 +56,6 @@ export function OverlayFormFooterActions({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "flex gap-2 justify-end",
-        className,
-      )}
-    >
-      {children}
-    </div>
+    <div className={cn("flex gap-2 justify-end", className)}>{children}</div>
   );
 }

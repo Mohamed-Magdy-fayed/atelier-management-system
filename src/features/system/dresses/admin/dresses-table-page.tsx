@@ -16,6 +16,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { H2 } from "@/components/ui/typography";
+import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import {
   DataTable,
   DataTableActionBar,
@@ -27,7 +28,6 @@ import {
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
-import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
@@ -35,11 +35,11 @@ import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
 import {
   buildDressColumns,
   DressDeleteDialog,
+  DressesBulkActions,
+  DressesGridFilters,
   DressFormDialog,
   DressInfoModal,
   type DressRowActionVariant,
-  DressesBulkActions,
-  DressesGridFilters,
 } from "./components";
 
 type RowAction = {

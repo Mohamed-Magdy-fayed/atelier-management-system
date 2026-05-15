@@ -116,7 +116,10 @@ function Calendar({
           "rounded-s-(--cell-radius) bg-accent",
           defaultClassNames.range_start,
         ),
-        range_middle: cn("rounded-none bg-accent", defaultClassNames.range_middle),
+        range_middle: cn(
+          "rounded-none bg-accent",
+          defaultClassNames.range_middle,
+        ),
         range_end: cn(
           "rounded-e-(--cell-radius) bg-accent",
           defaultClassNames.range_end,

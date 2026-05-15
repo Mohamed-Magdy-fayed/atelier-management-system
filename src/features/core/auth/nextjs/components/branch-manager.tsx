@@ -3,8 +3,8 @@
 import { BuildingIcon, ChevronsUpDownIcon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { WrapWithTooltip } from "@/components/general/wrap-with-tooltip";
+import { Button } from "@/components/ui/button";
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -142,7 +142,10 @@ export function BranchManager({
       >
         <BuildingIcon className="text-primary" />
         <span className="truncate font-medium">{branchLabel}</span>
-        <ChevronsUpDownIcon className="size-4 text-muted-foreground" aria-hidden />
+        <ChevronsUpDownIcon
+          className="size-4 text-muted-foreground"
+          aria-hidden
+        />
       </Button>
     );
 

@@ -12,7 +12,7 @@ export default async function SystemPagesLayout({
 }>) {
   const auth = await getAuth();
   if (!auth.isAuthenticated) redirect("/sign-in");
-  if (auth.session.user.role === "customer") redirect("/");
+  if (auth.session.user.role === "customer") redirect("/my-account");
 
   // The shadcn Sidebar persists state in this cookie; respect it during SSR so
   // the layout doesn't flicker from open → collapsed (or vice versa) on load.

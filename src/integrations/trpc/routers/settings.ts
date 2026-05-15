@@ -1,1 +1,4 @@
-export { type SettingGridRow, settingsRouter } from "@/features/system/settings/server";
+export {
+  type SettingGridRow,
+  settingsRouter,
+} from "@/features/system/settings/server";

@@ -1,15 +1,11 @@
 ﻿"use client";
 
+import type { ComponentProps, PropsWithChildren } from "react";
 import { cn } from "@/lib/utils";
-import { ComponentProps, PropsWithChildren } from "react";
 
-type ScrollAreaProps = PropsWithChildren<ComponentProps<"div">>
+type ScrollAreaProps = PropsWithChildren<ComponentProps<"div">>;
 
-function ScrollArea({
-  className,
-  children,
-  ...props
-}: ScrollAreaProps) {
+function ScrollArea({ className, children, ...props }: ScrollAreaProps) {
   return (
     <div
       data-slot="scroll-area"

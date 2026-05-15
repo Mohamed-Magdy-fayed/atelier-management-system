@@ -2,17 +2,24 @@ import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 
 import { BranchesTable, BranchMembershipsTable } from "@/drizzle/schema";
-
+import { toDbTime } from "@/lib/branch-hours";
 import type {
   BranchDeleteInput,
   BranchMutationInput,
   BranchUpdateInput,
 } from "./schemas";
+
 import {
   assertAdminRole,
   getRequiredSession,
   type TRPCContext,
 } from "./shared";
+
+function nullableTrim(value: string | undefined): string | null {
+  if (value === undefined) return null;
+  const trimmed = value.trim();
+  return trimmed === "" ? null : trimmed;
+}
 
 export async function createBranch(
   ctx: TRPCContext,
@@ -27,6 +34,12 @@ export async function createBranch(
       .values({
         nameEn: input.nameEn.trim(),
         nameAr: input.nameAr.trim(),
+        addressEn: nullableTrim(input.addressEn),
+        addressAr: nullableTrim(input.addressAr),
+        phone: nullableTrim(input.phone),
+        opensAt: toDbTime(input.opensAt),
+        closesAt: toDbTime(input.closesAt),
+        mapUrl: nullableTrim(input.mapUrl),
         ownerId: session.user.id,
       })
       .returning({ id: BranchesTable.id });
@@ -67,6 +80,12 @@ export async function updateBranch(ctx: TRPCContext, input: BranchUpdateInput) {
     .set({
       nameEn: input.nameEn.trim(),
       nameAr: input.nameAr.trim(),
+      addressEn: nullableTrim(input.addressEn),
+      addressAr: nullableTrim(input.addressAr),
+      phone: nullableTrim(input.phone),
+      opensAt: toDbTime(input.opensAt),
+      closesAt: toDbTime(input.closesAt),
+      mapUrl: nullableTrim(input.mapUrl),
     })
     .where(eq(BranchesTable.id, input.id));
 

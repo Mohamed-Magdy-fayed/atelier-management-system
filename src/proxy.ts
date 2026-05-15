@@ -4,6 +4,7 @@ import {
   hasPermission,
   updateUserSessionExpiration,
 } from "@/features/core/auth/core";
+import { PUBLIC_SITE_PATHS } from "@/features/public-catalog/lib/public-tabs";
 import { getProtectedScreenDefinitionByPathname } from "@/features/system/registry";
 
 const authRoutes = [
@@ -13,7 +14,7 @@ const authRoutes = [
   "/reset-password",
 ];
 
-const publicRoutes = ["/verify-email", "/oauth/"];
+const publicRoutes = ["/verify-email", "/oauth/", "/collection", "/view-dress"];
 
 export async function proxy(request: NextRequest) {
   const response = (await middlewareAuth(request)) ?? NextResponse.next();
@@ -28,16 +29,16 @@ async function middlewareAuth(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
-  const isPublicRoute = publicRoutes.some((route) =>
-    pathname.startsWith(route),
-  );
+  const isPublicRoute =
+    PUBLIC_SITE_PATHS.includes(
+      pathname as (typeof PUBLIC_SITE_PATHS)[number],
+    ) || publicRoutes.some((route) => pathname.startsWith(route));
 
   if (!session?.user) {
-    if (isAuthRoute) {
+    if (isAuthRoute || isPublicRoute) {
       return NextResponse.next();
-    } else {
-      return NextResponse.redirect(new URL("/sign-in", request.url));
     }
+    return NextResponse.redirect(new URL("/sign-in", request.url));
   } else {
     if (isAuthRoute) {
       return NextResponse.redirect(new URL("/", request.url));

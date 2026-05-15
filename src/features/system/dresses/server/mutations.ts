@@ -45,10 +45,7 @@ async function ensureUniqueActiveCode(
   }
 }
 
-export async function createDress(
-  ctx: TRPCContext,
-  input: DressMutationInput,
-) {
+export async function createDress(ctx: TRPCContext, input: DressMutationInput) {
   const session = getRequiredSession(ctx);
   assertAdminRole(session.user.role);
 

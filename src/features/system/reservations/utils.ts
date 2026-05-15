@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 
-import { Badge } from "@/components/ui/badge";
+import type { Badge } from "@/components/ui/badge";
 import type { PaymentMethod } from "@/drizzle/schemas/system/payments-table";
 import type { ReservationStatus } from "@/drizzle/schemas/system/reservations-table";
 import { getInitials } from "@/features/core/auth/core/helpers";

@@ -43,12 +43,12 @@ import {
 import { H2, Muted } from "@/components/ui/typography";
 import { useActiveBranchId } from "@/features/core/auth/nextjs/hooks/use-active-branch-id";
 import { useTranslation } from "@/features/core/i18n/client";
-import { DressViewDialog } from "@/features/system/dresses/admin/components/dress-view-dialog";
 import {
   endOfDay,
   startOfDay,
   subDays,
 } from "@/features/system/dashboard/lib/dates";
+import { DressViewDialog } from "@/features/system/dresses/admin/components/dress-view-dialog";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { DateRangePreset } from "@/lib/date-range";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -84,12 +84,10 @@ export function DashboardRentalPage() {
 
   const dr = (key: string, args?: Record<string, string | number>) =>
     String(
-      (
-        t as (
-          k: string,
-          a?: Record<string, string | number>,
-        ) => string
-      )(`systemPages.dashboardRental.${key}`, args),
+      (t as (k: string, a?: Record<string, string | number>) => string)(
+        `systemPages.dashboardRental.${key}`,
+        args,
+      ),
     );
 
   const from = searchParams.get("from") ?? undefined;
@@ -258,7 +256,9 @@ export function DashboardRentalPage() {
           title: String(t("systemPages.navDresses")),
           href: "/dresses",
           icon: Shirt,
-          badge: dr("quickActionsDressesBadge", { count: summary.activeDresses }),
+          badge: dr("quickActionsDressesBadge", {
+            count: summary.activeDresses,
+          }),
         },
         {
           id: "customers",
@@ -492,9 +492,7 @@ export function DashboardRentalPage() {
                     className="flex items-center justify-between gap-2 rounded-lg border p-3"
                   >
                     <div>
-                      <div className="font-medium text-sm">
-                        {dress.title}
-                      </div>
+                      <div className="font-medium text-sm">{dress.title}</div>
                       <Muted className="text-xs">
                         {dr("topDressesCode")}: {dress.code}
                       </Muted>
@@ -510,7 +508,9 @@ export function DashboardRentalPage() {
               </div>
             ) : (
               <Muted className="rounded-lg border border-dashed p-6 text-sm">
-                {isPending ? String(t("common.loading")) : dr("topDressesEmpty")}
+                {isPending
+                  ? String(t("common.loading"))
+                  : dr("topDressesEmpty")}
               </Muted>
             )}
           </CardContent>
@@ -526,7 +526,8 @@ export function DashboardRentalPage() {
             <CardDescription>{dr("upcomingDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
-            {data?.upcomingReservations && data.upcomingReservations.length > 0 ? (
+            {data?.upcomingReservations &&
+            data.upcomingReservations.length > 0 ? (
               <div className="overflow-hidden rounded-md border">
                 <Table className="text-xs">
                   <TableHeader>
@@ -558,11 +559,15 @@ export function DashboardRentalPage() {
                         </TableCell>
                         <TableCell>{reservation.customerName}</TableCell>
                         <TableCell>
-                          {formatDate(reservation.receivingDateTime, {
-                            month: "short",
-                            day: "numeric",
-                            hour: "numeric",
-                          }, locale)}
+                          {formatDate(
+                            reservation.receivingDateTime,
+                            {
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                            },
+                            locale,
+                          )}
                         </TableCell>
                         <TableCell>{reservation.employee ?? "—"}</TableCell>
                       </TableRow>
@@ -603,7 +608,9 @@ export function DashboardRentalPage() {
                           {String(t("systemPages.reservationsCustomerName"))}
                         </TableHead>
                         <TableHead className="px-2">{dr("dueDate")}</TableHead>
-                        <TableHead className="px-2">{dr("remaining")}</TableHead>
+                        <TableHead className="px-2">
+                          {dr("remaining")}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -614,12 +621,18 @@ export function DashboardRentalPage() {
                           </TableCell>
                           <TableCell>{reservation.customerName}</TableCell>
                           <TableCell>
-                            {formatDate(reservation.dueDate, {
-                              month: "short",
-                              day: "numeric",
-                            }, locale)}
+                            {formatDate(
+                              reservation.dueDate,
+                              {
+                                month: "short",
+                                day: "numeric",
+                              },
+                              locale,
+                            )}
                           </TableCell>
-                          <TableCell>{fmtMoney(reservation.remaining)}</TableCell>
+                          <TableCell>
+                            {fmtMoney(reservation.remaining)}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -651,8 +664,11 @@ export function DashboardRentalPage() {
                 {dr("dressReturnsOutNow")}: {data?.dressesOutCount ?? 0}
               </Badge>
             </div>
-            <div className="font-medium text-sm">{dr("dressReturnsDueToday")}</div>
-            {data?.dueTodayReservations && data.dueTodayReservations.length > 0 ? (
+            <div className="font-medium text-sm">
+              {dr("dressReturnsDueToday")}
+            </div>
+            {data?.dueTodayReservations &&
+            data.dueTodayReservations.length > 0 ? (
               <div className="space-y-2">
                 {data.dueTodayReservations.map((reservation) => (
                   <div
@@ -663,7 +679,9 @@ export function DashboardRentalPage() {
                       <div className="font-medium">
                         {reservation.reservationCode}
                       </div>
-                      <Muted className="text-xs">{reservation.customerName}</Muted>
+                      <Muted className="text-xs">
+                        {reservation.customerName}
+                      </Muted>
                     </div>
                     <DressViewDialog
                       dressId={reservation.dressId}
@@ -687,7 +705,9 @@ export function DashboardRentalPage() {
             <CardTitle className="text-base font-semibold">
               {dr("recentCustomersTitle")}
             </CardTitle>
-            <CardDescription>{dr("recentCustomersDescription")}</CardDescription>
+            <CardDescription>
+              {dr("recentCustomersDescription")}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {data?.recentCustomers && data.recentCustomers.length > 0 ? (
