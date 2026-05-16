@@ -11,7 +11,7 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
   const year = new Date().getFullYear();
 
   return (
-    <div className="flex min-h-svh flex-col bg-background">
+    <div className="flex h-svh flex-col overflow-hidden bg-background md:h-auto md:min-h-screen md:overflow-visible">
       <header className="sticky top-0 z-40 shrink-0 border-b border-border/60 bg-background/90 backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
           <Link
@@ -30,7 +30,7 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="flex-1">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
         <PublicMobileTabBar />
       </div>
 
