@@ -45,6 +45,14 @@ export const unrestricted = {
 
 export { screenKeys, type ScreenKey };
 
+/** System screens employees cannot open (nav, proxy, and direct URLs). */
+const EMPLOYEE_BLOCKED_SCREENS = new Set<ScreenKey>([
+  "branches",
+  "dashboard",
+  "employee",
+  "settings",
+]);
+
 export const rolesPermissions = {
   admin: {
     users: unrestricted,
@@ -54,7 +62,7 @@ export const rolesPermissions = {
   employee: {
     screens: {
       view: (_, data: { screenKey: ScreenKey }) =>
-        data.screenKey !== "branches" && data.screenKey !== "employee",
+        !EMPLOYEE_BLOCKED_SCREENS.has(data.screenKey),
     },
     users: {
       view: (user: PartialUser, data: PartialUser) => user.id === data.id,
