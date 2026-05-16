@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, between, desc, eq, inArray, isNull, ne } from "drizzle-orm";
 
 import {
+  BranchesTable,
   DressesTable,
   PaymentsTable,
   RentalCustomersTable,
@@ -150,6 +151,25 @@ async function resolveCustomer(
   return created;
 }
 
+async function getBranchShortCodeOrThrow(
+  ctx: TRPCContext,
+  branchId: string,
+): Promise<string> {
+  const branch = await ctx.db.query.BranchesTable.findFirst({
+    columns: { shortCode: true },
+    where: eq(BranchesTable.id, branchId),
+  });
+
+  if (!branch) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: ctx.t("authTranslations.branch.actions.updateBranch.notFound"),
+    });
+  }
+
+  return branch.shortCode;
+}
+
 export async function generateReservationCodeForBranch(
   ctx: TRPCContext,
   input: ReservationGenerateCodeInput,
@@ -180,8 +200,10 @@ export async function generateReservationCodeForBranch(
     ? Number.parseInt(latest.reservationCode.split("-")[3] || "0", 10)
     : 0;
 
+  const branchShortCode = await getBranchShortCodeOrThrow(ctx, input.branchId);
+
   return {
-    reservationCode: generateReservationCode(currentCount, input.branchName),
+    reservationCode: generateReservationCode(currentCount, branchShortCode),
   };
 }
 
@@ -223,7 +245,6 @@ export async function createReservation(
   if (!reservationCode) {
     const generated = await generateReservationCodeForBranch(ctx, {
       branchId: input.branchId,
-      branchName: input.branchId,
     });
     reservationCode = generated.reservationCode;
   }

@@ -500,12 +500,11 @@ export function ReservationFormDialog({
   }, [createForm, formData?.customers, t]);
 
   useEffect(() => {
-    if (!open || isEdit || !resolvedBranchId || !previewBranchName) return;
+    if (!open || isEdit || !resolvedBranchId) return;
     let cancelled = false;
     void generateCodeMut
       .mutateAsync({
         branchId: resolvedBranchId,
-        branchName: previewBranchName,
       })
       .then((res) => {
         if (!cancelled) setPreviewReservationCode(res.reservationCode);
@@ -516,7 +515,7 @@ export function ReservationFormDialog({
     return () => {
       cancelled = true;
     };
-  }, [open, isEdit, resolvedBranchId, previewBranchName]);
+  }, [open, isEdit, resolvedBranchId]);
 
   useEffect(() => {
     if (!open || isEdit) return;

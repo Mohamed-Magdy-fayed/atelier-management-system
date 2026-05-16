@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { mobileTabBarShellClassName } from "@/components/general/mobile-tab-bar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -48,7 +49,7 @@ export function PublicMobileTabBar() {
   return (
     <nav
       aria-label={String(t("landing.mobileTabBarLabel"))}
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border/80 bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_24px_-12px_rgba(0,0,0,0.15)] backdrop-blur-md md:hidden"
+      className={mobileTabBarShellClassName}
     >
       <div className="mx-auto grid h-[3.75rem] max-w-lg grid-cols-4">
         {PUBLIC_MOBILE_TABS.map((tab, index) => {

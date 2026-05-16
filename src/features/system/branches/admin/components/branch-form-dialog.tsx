@@ -75,6 +75,8 @@ export function BranchFormDialog({
 
   const defaultValues = useMemo<BranchFormValues>(
     () => ({
+      shortCode: branch?.shortCode ?? "",
+
       nameEn: branch?.nameEn ?? "",
 
       nameAr: branch?.nameAr ?? "",
@@ -192,6 +194,19 @@ export function BranchFormDialog({
           >
             <FieldSet disabled={pending}>
               <FieldGroup>
+                <form.AppField name="shortCode">
+                  {(field) => (
+                    <field.StringField
+                      label={String(t("systemPages.branchesShortCode"))}
+                      placeholder="CAI"
+                      description={String(
+                        t("systemPages.branchesShortCodeHint"),
+                      )}
+                      autoFocus={!isEdit}
+                    />
+                  )}
+                </form.AppField>
+
                 <form.AppField name="nameEn">
                   {(field) => (
                     <field.StringField
@@ -199,7 +214,7 @@ export function BranchFormDialog({
                       placeholder={String(
                         t("authTranslations.branch.create.namePlaceholder"),
                       )}
-                      autoFocus
+                      autoFocus={isEdit}
                     />
                   )}
                 </form.AppField>

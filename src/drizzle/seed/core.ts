@@ -78,13 +78,13 @@ const LAST_NAMES = [
 ] as const;
 
 const branchesData: (typeof BranchesTable.$inferInsert)[] = [
-  { nameAr: "الفرع الرئيسي", nameEn: "Main Branch" },
-  { nameAr: "القاهرة", nameEn: "Cairo" },
-  { nameAr: "الإسكندرية", nameEn: "Alexandria" },
-  { nameAr: "الجيزة", nameEn: "Giza" },
-  { nameAr: "طنطا", nameEn: "Tanta" },
-  { nameAr: "المنصورة", nameEn: "Mansoura" },
-  { nameAr: "أسيوط", nameEn: "Assiut" },
+  { shortCode: "MAIN", nameAr: "الفرع الرئيسي", nameEn: "Main Branch" },
+  { shortCode: "CAI", nameAr: "القاهرة", nameEn: "Cairo" },
+  { shortCode: "ALX", nameAr: "الإسكندرية", nameEn: "Alexandria" },
+  { shortCode: "GIZ", nameAr: "الجيزة", nameEn: "Giza" },
+  { shortCode: "TAN", nameAr: "طنطا", nameEn: "Tanta" },
+  { shortCode: "MNS", nameAr: "المنصورة", nameEn: "Mansoura" },
+  { shortCode: "ASY", nameAr: "أسيوط", nameEn: "Assiut" },
 ] as const;
 
 const dressTemplates = [

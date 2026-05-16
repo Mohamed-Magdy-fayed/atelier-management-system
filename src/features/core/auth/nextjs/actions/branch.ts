@@ -23,6 +23,7 @@ import {
 } from "@/features/core/auth/schemas";
 import type { BranchState, TypedResponse } from "@/features/core/auth/types";
 import { getT } from "@/features/core/i18n/server";
+import { normalizeBranchShortCode } from "@/lib/branch-short-code";
 
 const upsertBranchesInputSchema = z.object({
   userId: z.uuid(),
@@ -45,14 +46,34 @@ export async function createBranchAction(
     };
   }
 
-  const { nameAr, nameEn } = await validateInput(createBranchSchema, rawInput);
+  const { nameAr, nameEn, shortCode } = await validateInput(
+    createBranchSchema,
+    rawInput,
+  );
   const trimmedEn = nameEn.trim();
   const trimmedAr = nameAr.trim();
+  const normalizedShortCode = normalizeBranchShortCode(shortCode);
+
+  const duplicateShortCode = await db.query.BranchesTable.findFirst({
+    columns: { id: true },
+    where: eq(BranchesTable.shortCode, normalizedShortCode),
+  });
+  if (duplicateShortCode) {
+    return {
+      isError: true,
+      message: t("systemPages.branchShortCodeDuplicate"),
+    };
+  }
 
   const branchId = await db.transaction(async (trx) => {
     const branch = await trx
       .insert(BranchesTable)
-      .values({ nameEn: trimmedEn, nameAr: trimmedAr, ownerId: actor.id })
+      .values({
+        shortCode: normalizedShortCode,
+        nameEn: trimmedEn,
+        nameAr: trimmedAr,
+        ownerId: actor.id,
+      })
       .returning({ id: BranchesTable.id })
       .then((res) => res[0]);
 
@@ -213,7 +234,7 @@ export async function upsertUserBranchesAction(
 
 export type FullBranch = Pick<
   Branch,
-  "id" | "nameEn" | "nameAr" | "ownerId"
+  "id" | "shortCode" | "nameEn" | "nameAr" | "ownerId"
 > & { isCurrent: boolean | null };
 
 async function userCanViewAllBranches(userId: string): Promise<boolean> {
@@ -288,6 +309,7 @@ export async function getBranchesByUserId(
     const allBranches = await db
       .select({
         id: BranchesTable.id,
+        shortCode: BranchesTable.shortCode,
         nameEn: BranchesTable.nameEn,
         nameAr: BranchesTable.nameAr,
         ownerId: BranchesTable.ownerId,
@@ -305,6 +327,7 @@ export async function getBranchesByUserId(
 
     return allBranches.map((branch) => ({
       id: branch.id,
+      shortCode: branch.shortCode,
       nameEn: branch.nameEn,
       nameAr: branch.nameAr,
       ownerId: branch.ownerId,
@@ -317,7 +340,13 @@ export async function getBranchesByUserId(
     orderBy: [desc(BranchMembershipsTable.createdAt)],
     with: {
       branch: {
-        columns: { id: true, nameEn: true, nameAr: true, ownerId: true },
+        columns: {
+          id: true,
+          shortCode: true,
+          nameEn: true,
+          nameAr: true,
+          ownerId: true,
+        },
       },
     },
     columns: { isCurrent: true },
@@ -325,6 +354,7 @@ export async function getBranchesByUserId(
 
   return memberships.map((m) => ({
     id: m.branch.id,
+    shortCode: m.branch.shortCode,
     nameEn: m.branch.nameEn,
     nameAr: m.branch.nameAr,
     ownerId: m.branch.ownerId,

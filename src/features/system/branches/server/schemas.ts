@@ -1,5 +1,20 @@
 import { z } from "zod";
 
+import { translationKey } from "@/features/core/i18n/global";
+import {
+  isValidBranchShortCode,
+  normalizeBranchShortCode,
+} from "@/lib/branch-short-code";
+
+export const branchShortCodeSchema = z
+  .string()
+  .trim()
+  .min(1, translationKey("forms.validation.required"))
+  .transform(normalizeBranchShortCode)
+  .refine(isValidBranchShortCode, {
+    message: translationKey("forms.validation.branchShortCode"),
+  });
+
 const optionalTimeHm = z
 
   .string()
@@ -49,6 +64,8 @@ export const listBranchesInput = z.object({
 export const branchMutationSchema = z
 
   .object({
+    shortCode: branchShortCodeSchema,
+
     nameEn: z.string().trim().min(1).max(128),
 
     nameAr: z.string().trim().min(1).max(128),

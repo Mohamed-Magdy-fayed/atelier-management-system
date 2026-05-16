@@ -29,6 +29,19 @@ export function buildBranchColumns(opts: {
 
   return [
     {
+      accessorKey: "shortCode",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={String(t("systemPages.branchesShortCode"))}
+        />
+      ),
+      meta: { label: String(t("systemPages.branchesShortCode")) },
+      cell: ({ row }) => (
+        <span className="font-mono text-xs">{row.original.shortCode}</span>
+      ),
+    },
+    {
       accessorKey: "nameEn",
       header: ({ column }) => (
         <DataTableColumnHeader

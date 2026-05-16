@@ -17,11 +17,15 @@ import {
   updateBranchAction,
 } from "@/features/core/auth/nextjs/actions";
 import type { EditableBranch } from "@/features/core/auth/nextjs/components/branch-manager/types";
-import { createBranchSchema } from "@/features/core/auth/schemas";
+import {
+  createBranchSchema,
+  updateBranchSchema,
+} from "@/features/core/auth/schemas";
 import { useTranslation } from "@/features/core/i18n/client";
 import { cn } from "@/lib/utils";
 
-type FormValues = z.infer<typeof createBranchSchema>;
+type CreateFormValues = z.infer<typeof createBranchSchema>;
+type EditFormValues = z.infer<typeof updateBranchSchema>;
 
 export function BranchCreateFormDialog({
   onOpenChange,
@@ -34,8 +38,9 @@ export function BranchCreateFormDialog({
   const formId = useId();
   const [isPending, startTransition] = useTransition();
 
-  const defaultValues: FormValues = useMemo(
+  const defaultValues: CreateFormValues = useMemo(
     () => ({
+      shortCode: "",
       nameEn: "",
       nameAr: "",
     }),
@@ -109,6 +114,16 @@ export function BranchCreateFormDialog({
         >
           <FieldSet disabled={isPending}>
             <FieldGroup>
+              <form.AppField name="shortCode">
+                {(field) => (
+                  <field.StringField
+                    label={String(t("systemPages.branchesShortCode"))}
+                    placeholder="CAI"
+                    description={String(t("systemPages.branchesShortCodeHint"))}
+                  />
+                )}
+              </form.AppField>
+
               <form.AppField name="nameEn">
                 {(field) => (
                   <field.StringField
@@ -151,8 +166,9 @@ export function BranchEditFormDialog({
   const formId = useId();
   const [isPending, startTransition] = useTransition();
 
-  const defaultValues: FormValues = useMemo(
+  const defaultValues: EditFormValues = useMemo(
     () => ({
+      branchId: branch?.id ?? "",
       nameEn: branch?.nameEn ?? "",
       nameAr: branch?.nameAr ?? "",
     }),
@@ -162,13 +178,14 @@ export function BranchEditFormDialog({
   const form = useAppForm({
     defaultValues,
     validators: {
-      onSubmit: createBranchSchema,
+      onSubmit: updateBranchSchema,
     },
     onSubmit: async ({ value }) => {
       if (!branch) return;
       startTransition(async () => {
         const result = await updateBranchAction({
-          ...value,
+          nameEn: value.nameEn,
+          nameAr: value.nameAr,
           branchId: branch.id,
         });
 
@@ -188,6 +205,7 @@ export function BranchEditFormDialog({
   useEffect(() => {
     if (open && branch) {
       form.reset({
+        branchId: branch.id,
         nameEn: branch.nameEn,
         nameAr: branch.nameAr,
       });

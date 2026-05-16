@@ -1,8 +1,9 @@
 import { TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 
 import { BranchesTable, BranchMembershipsTable } from "@/drizzle/schema";
 import { toDbTime } from "@/lib/branch-hours";
+import { normalizeBranchShortCode } from "@/lib/branch-short-code";
 import type {
   BranchDeleteInput,
   BranchMutationInput,
@@ -21,6 +22,29 @@ function nullableTrim(value: string | undefined): string | null {
   return trimmed === "" ? null : trimmed;
 }
 
+async function assertUniqueBranchShortCode(
+  ctx: TRPCContext,
+  shortCode: string,
+  excludeBranchId?: string,
+) {
+  const existing = await ctx.db.query.BranchesTable.findFirst({
+    columns: { id: true },
+    where: excludeBranchId
+      ? and(
+          eq(BranchesTable.shortCode, shortCode),
+          ne(BranchesTable.id, excludeBranchId),
+        )
+      : eq(BranchesTable.shortCode, shortCode),
+  });
+
+  if (existing) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: ctx.t("systemPages.branchShortCodeDuplicate"),
+    });
+  }
+}
+
 export async function createBranch(
   ctx: TRPCContext,
   input: BranchMutationInput,
@@ -28,10 +52,14 @@ export async function createBranch(
   const session = getRequiredSession(ctx);
   assertAdminRole(session.user.role);
 
+  const shortCode = normalizeBranchShortCode(input.shortCode);
+  await assertUniqueBranchShortCode(ctx, shortCode);
+
   const branchId = await ctx.db.transaction(async (trx) => {
     const [branch] = await trx
       .insert(BranchesTable)
       .values({
+        shortCode,
         nameEn: input.nameEn.trim(),
         nameAr: input.nameAr.trim(),
         addressEn: nullableTrim(input.addressEn),
@@ -75,9 +103,13 @@ export async function updateBranch(ctx: TRPCContext, input: BranchUpdateInput) {
     });
   }
 
+  const shortCode = normalizeBranchShortCode(input.shortCode);
+  await assertUniqueBranchShortCode(ctx, shortCode, input.id);
+
   await ctx.db
     .update(BranchesTable)
     .set({
+      shortCode,
       nameEn: input.nameEn.trim(),
       nameAr: input.nameAr.trim(),
       addressEn: nullableTrim(input.addressEn),

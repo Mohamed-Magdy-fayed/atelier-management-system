@@ -137,6 +137,8 @@ export default {
       numberIntMaxLarge: "يجب ألا يتجاوز 10,000,000.",
       invalidAmount: "أدخل عدداً صحيحاً بين 0 و 10,000,000.",
       max8000: "يجب ألا يتجاوز 8000 حرفاً.",
+      branchShortCode:
+        "استخدم من 2 إلى 8 أحرف أو أرقام (مثل CAI أو MAIN).",
     },
   },
   languageToggle: "تبديل اللغة",
@@ -395,6 +397,10 @@ export default {
     branchesTitle: "الفروع",
     branchesLead:
       "أدر الفروع التشغيلية، وحافظ على وضوح المسؤولية، وراجع تغطية الفروع من شاشة إدارية واحدة.",
+    branchesShortCode: "الرمز المختصر",
+    branchesShortCodeHint:
+      "يُستخدم في أكواد الحجوزات (مثل RES-CAI-20260516-001). أحرف وأرقام فقط.",
+    branchShortCodeDuplicate: "هذا الرمز المختصر مستخدم بالفعل لفرع آخر.",
     branchesNameEn: "اسم الفرع (EN)",
     branchesNameAr: "اسم الفرع (AR)",
     branchesAddressEn: "العنوان (EN)",

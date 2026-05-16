@@ -23,6 +23,7 @@ function buildWhereClause(input: ListBranchesInput) {
 
   const likeValue = `%${query}%`;
   return or(
+    ilike(BranchesTable.shortCode, likeValue),
     ilike(BranchesTable.nameEn, likeValue),
     ilike(BranchesTable.nameAr, likeValue),
     ilike(BranchesTable.phone, likeValue),
@@ -40,6 +41,12 @@ function sortExpr(input: ListBranchesInput) {
   }
 
   switch (firstSort.id) {
+    case "shortCode":
+      return [
+        firstSort.desc
+          ? desc(BranchesTable.shortCode)
+          : asc(BranchesTable.shortCode),
+      ];
     case "nameAr":
       return [
         firstSort.desc ? desc(BranchesTable.nameAr) : asc(BranchesTable.nameAr),
@@ -92,6 +99,7 @@ export async function listBranches(ctx: TRPCContext, input: ListBranchesInput) {
   const rows = await ctx.db
     .select({
       id: BranchesTable.id,
+      shortCode: BranchesTable.shortCode,
       nameEn: BranchesTable.nameEn,
       nameAr: BranchesTable.nameAr,
       addressEn: BranchesTable.addressEn,

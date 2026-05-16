@@ -3,19 +3,20 @@ import type { ComponentProps } from "react";
 import type { Badge } from "@/components/ui/badge";
 import type { PaymentMethod } from "@/drizzle/schemas/system/payments-table";
 import type { ReservationStatus } from "@/drizzle/schemas/system/reservations-table";
-import { getInitials } from "@/features/core/auth/core/helpers";
+import { normalizeBranchShortCode } from "@/lib/branch-short-code";
 
 export function generateReservationCode(
   todayCount: number,
-  branchName: string,
+  branchShortCode: string,
 ): string {
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   const count = String(todayCount + 1).padStart(3, "0");
+  const code = normalizeBranchShortCode(branchShortCode);
 
-  return `RES-${getInitials(branchName)}-${year}${month}${day}-${count}`;
+  return `RES-${code}-${year}${month}${day}-${count}`;
 }
 
 export function getStatusVariant(

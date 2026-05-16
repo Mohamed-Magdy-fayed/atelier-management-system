@@ -139,6 +139,8 @@ export default {
       numberIntMaxLarge: "Must be at most 10,000,000.",
       invalidAmount: "Enter a whole number between 0 and 10,000,000.",
       max8000: "Must be at most 8000 characters.",
+      branchShortCode:
+        "Use 2–8 letters or numbers (e.g. CAI, MAIN).",
     },
   },
   languageToggle: "Switch language",
@@ -410,6 +412,10 @@ export default {
     branchesTitle: "Branches",
     branchesLead:
       "Manage operational branches, keep ownership clear, and review branch coverage from one admin screen.",
+    branchesShortCode: "Short code",
+    branchesShortCodeHint:
+      "Used in reservation codes (e.g. RES-CAI-20260516-001). Letters and numbers only.",
+    branchShortCodeDuplicate: "This short code is already used by another branch.",
     branchesNameEn: "Branch name (EN)",
     branchesNameAr: "Branch name (AR)",
     branchesAddressEn: "Address (EN)",

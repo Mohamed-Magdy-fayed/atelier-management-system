@@ -37,7 +37,6 @@ export const reservationFormDataSchema = z.object({
 
 export const reservationGenerateCodeSchema = z.object({
   branchId: z.string().uuid(),
-  branchName: z.string().trim().min(1),
 });
 
 const reservationFinancialFields = {

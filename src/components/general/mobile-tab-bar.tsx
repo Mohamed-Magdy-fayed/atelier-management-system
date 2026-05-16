@@ -2,25 +2,36 @@
 
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { Children, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-export const MOBILE_TAB_BAR_BOTTOM_PADDING =
-  "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0";
+/** In-flow shell styles for mobile bottom navigation (not fixed). */
+export const mobileTabBarShellClassName =
+  "shrink-0 border-t border-border/80 bg-background pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_24px_-12px_rgba(0,0,0,0.08)] md:hidden";
 
 export function MobileTabBar({
   ariaLabel,
+  columnCount,
   children,
 }: {
   ariaLabel: string;
-  children: React.ReactNode;
+  /** Defaults to the number of direct children (tabs + “More”). */
+  columnCount?: number;
+  children: ReactNode;
 }) {
+  const columns = columnCount ?? Children.count(children);
+
   return (
-    <nav
-      aria-label={ariaLabel}
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border/80 bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_24px_-12px_rgba(0,0,0,0.15)] backdrop-blur-md md:hidden"
-    >
-      <div className="mx-auto grid h-15 max-w-lg grid-cols-5">{children}</div>
+    <nav aria-label={ariaLabel} className={mobileTabBarShellClassName}>
+      <div
+        className="mx-auto grid h-15 max-w-lg"
+        style={{
+          gridTemplateColumns: `repeat(${Math.max(columns, 1)}, minmax(0, 1fr))`,
+        }}
+      >
+        {children}
+      </div>
     </nav>
   );
 }

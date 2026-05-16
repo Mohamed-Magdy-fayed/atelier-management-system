@@ -70,8 +70,13 @@ export function SystemMobileTabBar({ user }: { user: User }) {
 
   if (primaryNav.length === 0) return null;
 
+  const tabColumnCount = primaryNav.length + 1;
+
   return (
-    <MobileTabBar ariaLabel={String(t("systemPages.mobileTabBarLabel"))}>
+    <MobileTabBar
+      ariaLabel={String(t("systemPages.mobileTabBarLabel"))}
+      columnCount={tabColumnCount}
+    >
       {primaryNav.map(({ href, translationKey, Icon }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         return (

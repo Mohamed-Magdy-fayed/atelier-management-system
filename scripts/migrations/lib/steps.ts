@@ -1,5 +1,9 @@
 import { mapLegacySettingRow } from "@/features/system/settings/lib/legacy-setting-map";
 
+import {
+  LEGACY_BRANCH_PLACEHOLDERS,
+  resolveLegacyBranchShortCode,
+} from "./branch-legacy";
 import { MIGRATION_ACTOR } from "./config";
 import type { MigrationSql } from "./connections";
 import { markStepCompleted } from "./state";
@@ -33,7 +37,8 @@ async function resolveDefaultBranchId(target: MigrationSql): Promise<string> {
 export const migrationSteps: MigrationStep[] = [
   {
     id: "branches",
-    description: "branches → branches (name → nameEn/nameAr)",
+    description:
+      "branches → branches (code → shortCode, name → nameEn/nameAr, contact/hours placeholders)",
     run: async ({ legacy, target, dryRun }) => {
       const step = "branches";
       const legacyCount = await countLegacy(legacy, "branches");
@@ -52,20 +57,67 @@ export const migrationSteps: MigrationStep[] = [
       `;
 
       if (!dryRun) {
+        const usedShortCodes = new Set<string>();
+        const {
+          addressEn,
+          addressAr,
+          phone,
+          opensAt,
+          closesAt,
+          mapUrl,
+        } = LEGACY_BRANCH_PLACEHOLDERS;
+
         for (const row of legacyRows) {
+          const nameEn = row.name.slice(0, 128);
+          const nameAr = (row.name.trim() || row.code).slice(0, 128);
+          const shortCode = resolveLegacyBranchShortCode({
+            legacyCode: row.code,
+            legacyName: row.name,
+            branchId: row.id,
+            usedCodes: usedShortCodes,
+          });
+
           await target`
-            INSERT INTO branches (id, "nameEn", "nameAr", "ownerId", "createdAt", "updatedAt")
+            INSERT INTO branches (
+              id,
+              "shortCode",
+              "nameEn",
+              "nameAr",
+              "addressEn",
+              "addressAr",
+              phone,
+              "opensAt",
+              "closesAt",
+              "mapUrl",
+              "ownerId",
+              "createdAt",
+              "updatedAt"
+            )
             VALUES (
               ${row.id}::uuid,
-              ${row.name.slice(0, 128)},
-              ${(row.name.trim() || row.code).slice(0, 128)},
+              ${shortCode},
+              ${nameEn},
+              ${nameAr},
+              ${addressEn},
+              ${addressAr},
+              ${phone},
+              ${opensAt}::time,
+              ${closesAt}::time,
+              ${sqlNullable(mapUrl)},
               NULL,
               ${row.createdAt},
               ${row.updatedAt}
             )
             ON CONFLICT (id) DO UPDATE SET
+              "shortCode" = EXCLUDED."shortCode",
               "nameEn" = EXCLUDED."nameEn",
               "nameAr" = EXCLUDED."nameAr",
+              "addressEn" = EXCLUDED."addressEn",
+              "addressAr" = EXCLUDED."addressAr",
+              phone = EXCLUDED.phone,
+              "opensAt" = EXCLUDED."opensAt",
+              "closesAt" = EXCLUDED."closesAt",
+              "mapUrl" = EXCLUDED."mapUrl",
               "updatedAt" = EXCLUDED."updatedAt"
           `;
         }

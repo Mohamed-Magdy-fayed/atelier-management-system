@@ -1,5 +1,6 @@
 export type BranchGridRow = {
   id: string;
+  shortCode: string;
   nameEn: string;
   nameAr: string;
   addressEn: string | null;

@@ -26,7 +26,7 @@ Details: **`docs/system-upgrade-plan.md` §2.3** and **§14.4** (subsection *Act
 
 ## Order
 
-1. `branches`
+1. `branches` — legacy `code` → `shortCode`; bilingual names; placeholder address, phone, and opening hours (`10:00`–`22:00`) for columns not in legacy
 2. `users` (no password columns on target)
 3. `user_credentials` — copies legacy `users.password` + `users.salt` → `passwordHash` + `passwordSalt` (same scrypt hex; logins keep working)
 4. `branch_memberships` — from `users.branchId`
@@ -60,6 +60,7 @@ npm run migrate:legacy -- --fresh
 - Legacy DB is never modified (read-only).
 - Target never had `password`/`salt` on `users`; credentials live only in `user_credentials`.
 - Invalid legacy `branchId` values (e.g. `"default"`) map to the first migrated branch.
+- Re-run the `branches` step (reset state + migrate) to backfill `shortCode` and contact placeholders on rows migrated before those columns existed.
 - Legacy role `user` → `employee`; `admin` → `admin`.
 - Resolve duplicate emails in legacy before migrate if inserts fail on `users_email_unique`.
 

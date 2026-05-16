@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { userRoleValues } from "@/drizzle/schemas/auth";
 import { translationKey } from "@/features/core/i18n/global";
+import { branchShortCodeSchema } from "@/features/system/branches/server/schemas";
 
 export const otpSchema = z
   .string()
@@ -138,10 +139,13 @@ export const updateProfileSchema = z.object({
 });
 
 export const createBranchSchema = z.object({
+  shortCode: branchShortCodeSchema,
   nameEn: z.string(),
   nameAr: z.string(),
 });
 
-export const updateBranchSchema = createBranchSchema.extend({
+export const updateBranchSchema = z.object({
   branchId: z.uuid(),
+  nameEn: z.string(),
+  nameAr: z.string(),
 });

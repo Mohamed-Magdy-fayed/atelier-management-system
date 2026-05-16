@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode, useMemo } from "react";
-import { MOBILE_TAB_BAR_BOTTOM_PADDING } from "@/components/general/mobile-tab-bar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -69,7 +68,7 @@ export function AppShellLayout({
       className="h-svh overflow-hidden"
     >
       <AppSidebar user={user} />
-      <SidebarInset className="min-h-0 overflow-hidden">
+      <SidebarInset className="flex min-h-0 flex-col overflow-hidden">
         <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-2 md:px-4">
           <SidebarTrigger className="-ms-1" />
           <Separator orientation="vertical" className="mx-1 h-4" />
@@ -97,9 +96,7 @@ export function AppShellLayout({
           </nav>
           <AuthManagerHeaderTrigger className="ms-1 shrink-0 md:hidden" />
         </header>
-        <ScrollArea
-          className={`min-h-0 flex-1 ${MOBILE_TAB_BAR_BOTTOM_PADDING}`}
-        >
+        <ScrollArea className="min-h-0 flex-1">
           <div className="p-3 sm:p-4 md:p-6">{children}</div>
         </ScrollArea>
         <SystemMobileTabBar user={user} />
