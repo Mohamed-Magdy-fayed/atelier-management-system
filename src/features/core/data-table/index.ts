@@ -31,6 +31,8 @@ export {
   serializeColumnFiltersForServer,
   toYmdLocal,
 } from "./lib/filter-values";
-export { getPinningStyles } from "./lib/pinning";
+export { createEntityActionsColumn } from "./lib/entity-actions-column";
+export { getEntityColumnPinning } from "./lib/entity-column-pinning";
+export { getPinningClassName } from "./lib/pinning";
 export { createSelectColumn } from "./lib/select-column";
 export type { DataTableMode } from "./types";

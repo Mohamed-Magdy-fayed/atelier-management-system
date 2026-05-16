@@ -22,6 +22,7 @@ import {
   DataTablePagination,
   DataTableToolbar,
   DataTableViewOptions,
+  getEntityColumnPinning,
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
@@ -57,10 +58,9 @@ export function BranchesTablePage() {
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
-    left: [],
-    right: [],
-  });
+  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>(() =>
+    getEntityColumnPinning(),
+  );
   const [rowAction, setRowAction] = useState<RowAction>(null);
   const [createOpen, setCreateOpen] = useState(false);
 

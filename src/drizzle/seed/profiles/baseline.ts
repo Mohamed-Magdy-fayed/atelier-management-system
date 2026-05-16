@@ -1,11 +1,5 @@
-import { seedScenario } from "../core";
+import { seedSettingsProfile } from "./settings";
 
 export async function seedBaselineProfile() {
-  return seedScenario({
-    profile: "baseline",
-    employeeCount: 6,
-    customerCount: 24,
-    customerInsertBatch: 24,
-    dressCount: 8,
-  });
+  return seedSettingsProfile();
 }

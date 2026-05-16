@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import {
+  LayoutDashboardIcon,
   ListTreeIcon,
   LockKeyhole,
   LogInIcon,
@@ -17,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Separator } from "@/components/ui/separator";
 import { Status, StatusIndicator } from "@/components/ui/status";
+import { canViewAdminDashboard } from "@/features/core/auth/core/permissions";
 import { signOutAction } from "@/features/core/auth/nextjs/actions";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { ThemeToggle } from "@/features/core/color-theme/client";
@@ -87,6 +89,7 @@ export function AuthManagerSheetPanel() {
   const hasEmail = !!session.user.email;
   const isEmailVerified = !!session.user.emailVerifiedAt;
   const display = session.user.name?.trim() || session.user.email;
+  const showDashboardLink = canViewAdminDashboard(session.user);
 
   return (
     <>
@@ -103,6 +106,14 @@ export function AuthManagerSheetPanel() {
         <p className="mb-3 truncate px-3 text-muted-foreground text-xs">
           {session.user.email}
         </p>
+        {showDashboardLink ? (
+          <SheetAction>
+            <Link className="flex w-full items-center gap-3" href="/dashboard">
+              <LayoutDashboardIcon className="size-5 shrink-0 text-muted-foreground" />
+              {String(t("common.dashboard"))}
+            </Link>
+          </SheetAction>
+        ) : null}
         <SheetAction onClick={() => setOpenDialog("profile")}>
           <UserIcon className="size-5 shrink-0 text-muted-foreground" />
           {t("authTranslations.profile.title")}

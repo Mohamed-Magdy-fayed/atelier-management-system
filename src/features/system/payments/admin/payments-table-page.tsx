@@ -12,18 +12,24 @@ import { H2 } from "@/components/ui/typography";
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import {
   DataTable,
+  DataTableActionBar,
   type DataTableControlledState,
   DataTableExportButton,
   DataTablePagination,
   DataTableToolbar,
   DataTableViewOptions,
+  getEntityColumnPinning,
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useTRPC } from "@/integrations/trpc/client";
 
-import { buildPaymentColumns, PaymentsGridFilters } from "./components";
+import {
+  buildPaymentColumns,
+  PaymentsBulkActions,
+  PaymentsGridFilters,
+} from "./components";
 
 export function PaymentsTablePage() {
   const trpc = useTRPC();
@@ -47,10 +53,9 @@ export function PaymentsTablePage() {
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
-    left: [],
-    right: [],
-  });
+  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>(() =>
+    getEntityColumnPinning(),
+  );
 
   const listInput = useMemo(
     () => ({
@@ -177,6 +182,11 @@ export function PaymentsTablePage() {
           </DataTableToolbar>
         }
         footer={<DataTablePagination table={table} />}
+        actionBar={
+          <DataTableActionBar table={table}>
+            <PaymentsBulkActions table={table} />
+          </DataTableActionBar>
+        }
       />
     </div>
   );

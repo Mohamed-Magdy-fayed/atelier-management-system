@@ -47,7 +47,7 @@ export default {
     emailPlaceholder: "name@example.com",
     signIn: {
       title: "تسجيل الدخول",
-      description: "أدخل رقم هاتفك لتسجيل الدخول",
+      description: "أدخل بريدك الإلكتروني لتسجيل الدخول",
       success: "تم تسجيل الدخول بنجاح",
       tooltip: "تسجيل الدخول",
       continueWith: "أو المتابعة عبر",

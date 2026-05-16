@@ -18,12 +18,17 @@ import {
   BranchesTable,
   DressesTable,
   ReservationsTable,
+  SettingsTable,
 } from "@/drizzle/schema";
 import {
   normalizePublicDressSort,
   type PublicDressSort,
 } from "@/features/public-catalog/lib/public-dress-sort";
 import { PUBLIC_BUSINESS_TIMEZONE } from "@/features/public-catalog/server/constants";
+import {
+  DEFAULT_BUSINESS_TIMEZONE,
+  SYSTEM_SETTING_CODE,
+} from "@/features/system/settings/lib/system-settings-registry";
 
 export type PublicDressRow = {
   id: string;
@@ -46,6 +51,32 @@ export type PublicDressRow = {
   branchClosesAt: string | null;
   branchMapUrl: string | null;
 };
+
+/** When true, monetary amounts are shown on public catalog pages. */
+export async function getPublicCatalogShowPrices(): Promise<boolean> {
+  const row = await db.query.SettingsTable.findFirst({
+    columns: { isActive: true },
+    where: eq(SettingsTable.code, SYSTEM_SETTING_CODE.SHOW_CATALOG_PRICES),
+  });
+  if (!row || row.isActive === null) return true;
+  return row.isActive === true;
+}
+
+export async function getPublicCatalogHidePrices(): Promise<boolean> {
+  return !(await getPublicCatalogShowPrices());
+}
+
+export async function getBusinessTimezone(): Promise<string> {
+  const row = await db.query.SettingsTable.findFirst({
+    columns: { value: true, isActive: true },
+    where: eq(SettingsTable.code, SYSTEM_SETTING_CODE.BUSINESS_TIMEZONE),
+  });
+  if (row?.isActive !== true) {
+    return PUBLIC_BUSINESS_TIMEZONE;
+  }
+  const tz = row.value?.trim();
+  return tz || DEFAULT_BUSINESS_TIMEZONE;
+}
 
 export type PublicBranchRow = {
   id: string;
@@ -269,7 +300,7 @@ export async function dressHasBlockingReservationOnCalendarDay(
     throw new Error("Invalid calendar date");
   }
 
-  const tz = PUBLIC_BUSINESS_TIMEZONE;
+  const tz = await getBusinessTimezone();
   const dayStart = sql.raw(`('${dateStr}'::timestamp AT TIME ZONE '${tz}')`);
   const nextDayStart = sql.raw(
     `(('${dateStr}'::timestamp + interval '1 day') AT TIME ZONE '${tz}')`,

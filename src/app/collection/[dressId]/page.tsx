@@ -9,7 +9,10 @@ import { H1, Muted } from "@/components/ui/typography";
 import { getLocaleCookie, getT } from "@/features/core/i18n/server";
 import { DressAvailabilityChecker } from "@/features/public-catalog/components/dress-availability-checker";
 import { PublicShell } from "@/features/public-catalog/components/public-shell";
-import { getPublicDressById } from "@/features/public-catalog/server/queries";
+import {
+  getPublicCatalogHidePrices,
+  getPublicDressById,
+} from "@/features/public-catalog/server/queries";
 import { formatBranchHours } from "@/lib/branch-hours";
 import { formatCurrency } from "@/lib/format";
 import { toWhatsAppUrl } from "@/lib/phone";
@@ -33,7 +36,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicDressDetailPage({ params }: Props) {
   const { dressId } = await params;
-  const dress = await getPublicDressById(dressId);
+  const [dress, hidePrices] = await Promise.all([
+    getPublicDressById(dressId),
+    getPublicCatalogHidePrices(),
+  ]);
   if (!dress) notFound();
 
   const { t } = await getT();
@@ -144,33 +150,37 @@ export default async function PublicDressDetailPage({ params }: Props) {
                   </dt>
                   <dd className="font-medium">{dress.color ?? "—"}</dd>
                 </div>
-                <div>
-                  <dt className="text-muted-foreground text-xs">
-                    {t("systemPages.dressesPricePerDay")}
-                  </dt>
-                  <dd className="font-semibold tabular-nums">
-                    {fmt(dress.pricePerDay)}{" "}
-                    <span className="font-normal text-muted-foreground text-sm">
-                      ({t("publicCatalog.perDay")})
-                    </span>
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground text-xs">
-                    {t("publicCatalog.depositLabel")}
-                  </dt>
-                  <dd className="font-medium tabular-nums">
-                    {fmt(dress.depositAmount)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground text-xs">
-                    {t("publicCatalog.insuranceLabel")}
-                  </dt>
-                  <dd className="font-medium tabular-nums">
-                    {fmt(dress.insurance)}
-                  </dd>
-                </div>
+                {!hidePrices ? (
+                  <>
+                    <div>
+                      <dt className="text-muted-foreground text-xs">
+                        {t("systemPages.dressesPricePerDay")}
+                      </dt>
+                      <dd className="font-semibold tabular-nums">
+                        {fmt(dress.pricePerDay)}{" "}
+                        <span className="font-normal text-muted-foreground text-sm">
+                          ({t("publicCatalog.perDay")})
+                        </span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-xs">
+                        {t("publicCatalog.depositLabel")}
+                      </dt>
+                      <dd className="font-medium tabular-nums">
+                        {fmt(dress.depositAmount)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground text-xs">
+                        {t("publicCatalog.insuranceLabel")}
+                      </dt>
+                      <dd className="font-medium tabular-nums">
+                        {fmt(dress.insurance)}
+                      </dd>
+                    </div>
+                  </>
+                ) : null}
               </dl>
               {dress.description ? (
                 <p className="text-muted-foreground text-sm leading-relaxed">

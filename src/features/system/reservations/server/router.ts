@@ -1,6 +1,8 @@
 import { createTRPCRouter, protectedProcedure } from "@/integrations/trpc/init";
 
 import {
+  bulkDeleteReservations,
+  bulkUpdateReservationStatus,
   collectReservationPayment,
   createReservation,
   deleteReservation,
@@ -10,13 +12,17 @@ import {
 } from "./mutations";
 import {
   exportReservations,
+  getDressOccasionBlockedRanges,
   getReservationById,
   getReservationFormData,
   listReservations,
 } from "./queries";
 import {
+  dressOccasionBlockedRangesSchema,
   exportReservationsInput,
   listReservationsInput,
+  reservationBulkDeleteSchema,
+  reservationBulkUpdateStatusSchema,
   reservationByIdSchema,
   reservationCollectPaymentSchema,
   reservationDeleteSchema,
@@ -40,6 +46,11 @@ export const reservationsRouter = createTRPCRouter({
   formData: protectedProcedure
     .input(reservationFormDataSchema)
     .query(async ({ ctx, input }) => getReservationFormData(ctx, input)),
+  dressOccasionBlockedRanges: protectedProcedure
+    .input(dressOccasionBlockedRangesSchema)
+    .query(async ({ ctx, input }) =>
+      getDressOccasionBlockedRanges(ctx, input),
+    ),
   generateCode: protectedProcedure
     .input(reservationGenerateCodeSchema)
     .mutation(async ({ ctx, input }) =>
@@ -60,4 +71,12 @@ export const reservationsRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(reservationDeleteSchema)
     .mutation(async ({ ctx, input }) => deleteReservation(ctx, input)),
+  bulkUpdateStatus: protectedProcedure
+    .input(reservationBulkUpdateStatusSchema)
+    .mutation(async ({ ctx, input }) =>
+      bulkUpdateReservationStatus(ctx, input),
+    ),
+  bulkDelete: protectedProcedure
+    .input(reservationBulkDeleteSchema)
+    .mutation(async ({ ctx, input }) => bulkDeleteReservations(ctx, input)),
 });

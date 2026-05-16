@@ -10,6 +10,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useTranslation } from "@/features/core/i18n/client";
+import {
+  getSettingDisplayDescription,
+  getSettingDisplayName,
+} from "@/features/system/settings/lib/setting-i18n";
+import { SYSTEM_SETTING_CODE } from "@/features/system/settings/lib/system-settings-registry";
 import type { SettingGridRow } from "@/integrations/trpc/routers/settings";
 
 type SettingInfoModalProps = {
@@ -25,17 +30,6 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
       <span className="break-words text-foreground">{value}</span>
     </div>
   );
-}
-
-function settingsLabelTranslationId(label: string) {
-  switch (label) {
-    case "policy":
-      return "systemPages.settingsLabelPolicy" as const;
-    case "integration":
-      return "systemPages.settingsLabelIntegration" as const;
-    default:
-      return "systemPages.settingsCategory";
-  }
 }
 
 export function SettingInfoModal({
@@ -59,6 +53,25 @@ export function SettingInfoModal({
   const formatDate = (value: Date | null | undefined) =>
     value ? dateTimeFmt.format(new Date(value)) : dash;
 
+  const stateLabel =
+    setting.isActive === null
+      ? dash
+      : setting.code === SYSTEM_SETTING_CODE.SHOW_CATALOG_PRICES
+        ? String(
+            t(
+              setting.isActive
+                ? "systemPages.settingStatePricesShown"
+                : "systemPages.settingStatePricesHidden",
+            ),
+          )
+        : String(
+            t(
+              setting.isActive
+                ? "systemPages.settingsStateEnabled"
+                : "systemPages.settingsStateDisabled",
+            ),
+          );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -72,28 +85,30 @@ export function SettingInfoModal({
         </DialogHeader>
         <div className="divide-y divide-border">
           <InfoRow
-            label={String(t("dataTable.id"))}
-            value={<code className="text-[0.7rem]">{setting.id}</code>}
-          />
-          <InfoRow
             label={String(t("systemPages.settingsCode"))}
-            value={setting.code}
+            value={<code className="text-[0.7rem]">{setting.code}</code>}
           />
           <InfoRow
-            label={String(t("systemPages.settingsCategory"))}
-            value={String(t(settingsLabelTranslationId(setting.label)))}
+            label={String(t("systemPages.settingsName"))}
+            value={getSettingDisplayName(setting.code, t)}
           />
           <InfoRow
             label={String(t("forms.description"))}
-            value={setting.description ?? dash}
+            value={getSettingDisplayDescription(setting.code, t)}
+          />
+          <InfoRow
+            label={String(t("systemPages.settingsIsActive"))}
+            value={stateLabel}
           />
           <InfoRow
             label={String(t("systemPages.settingsValue"))}
-            value={setting.value ?? dash}
-          />
-          <InfoRow
-            label={String(t("systemPages.settingsAmount"))}
-            value={setting.amount != null ? String(setting.amount) : dash}
+            value={
+              setting.value?.trim() ? (
+                <span className="whitespace-pre-wrap">{setting.value}</span>
+              ) : (
+                dash
+              )
+            }
           />
           <InfoRow
             label={String(t("common.createdAt"))}

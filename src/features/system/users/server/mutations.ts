@@ -1,7 +1,11 @@
 import { eq, inArray } from "drizzle-orm";
 
-import { BranchMembershipsTable, UsersTable } from "@/drizzle/schema";
+import { UsersTable } from "@/drizzle/schema";
 
+import {
+  resolveBranchIds,
+  syncUserBranchMemberships,
+} from "./branch-memberships";
 import type {
   BulkSetVerifiedInput,
   SoftDeleteInput,
@@ -29,14 +33,12 @@ export async function createUser(ctx: TRPCContext, input: UserMutationInput) {
     })
     .returning({ id: UsersTable.id });
 
-  if (input.role === "employee" && input.branchId) {
-    await ctx.db
-      .insert(BranchMembershipsTable)
-      .values({
-        branchId: input.branchId,
-        userId: row.id,
-      })
-      .onConflictDoNothing();
+  const branchIds = resolveBranchIds(input);
+  if (
+    (input.role === "employee" || input.role === "admin") &&
+    branchIds.length > 0
+  ) {
+    await syncUserBranchMemberships(ctx, row.id, branchIds);
   }
 
   return { id: row.id };
@@ -56,6 +58,21 @@ export async function updateUser(ctx: TRPCContext, input: UserUpdateInput) {
       updatedBy: session.user.id,
     })
     .where(eq(UsersTable.id, input.id));
+
+  if (input.branchIds !== undefined) {
+    if (input.role === "employee" || input.role === "admin") {
+      await syncUserBranchMemberships(ctx, input.id, input.branchIds);
+    }
+  } else {
+    const branchIds = resolveBranchIds(input);
+    if (
+      branchIds.length > 0 &&
+      (input.role === "employee" || input.role === "admin")
+    ) {
+      await syncUserBranchMemberships(ctx, input.id, branchIds);
+    }
+  }
+
   return { id: input.id };
 }
 

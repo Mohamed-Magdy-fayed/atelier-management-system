@@ -10,6 +10,7 @@ import { getLocaleCookie, getT } from "@/features/core/i18n/server";
 import { PublicDressCard } from "@/features/public-catalog/components/public-dress-card";
 import { PublicPageShell } from "@/features/public-catalog/components/public-page-shell";
 import {
+  getPublicCatalogHidePrices,
   listFeaturedPublicDresses,
   listPublicBranches,
 } from "@/features/public-catalog/server/queries";
@@ -29,9 +30,10 @@ export default async function PublicHomePage() {
       : t("landing.secondaryAuthenticated")
     : t("landing.secondaryGuest");
 
-  const [branches, peek] = await Promise.all([
+  const [branches, peek, hidePrices] = await Promise.all([
     listPublicBranches(),
     listFeaturedPublicDresses(6),
+    getPublicCatalogHidePrices(),
   ]);
 
   const labels = {
@@ -101,6 +103,7 @@ export default async function PublicHomePage() {
               {peek.map((dress) => (
                 <PublicDressCard
                   dress={dress}
+                  hidePrices={hidePrices}
                   key={dress.id}
                   labels={labels}
                   locale={locale}

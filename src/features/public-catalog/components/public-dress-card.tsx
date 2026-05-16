@@ -10,6 +10,7 @@ export function PublicDressCard({
   dress,
   locale,
   labels,
+  hidePrices = false,
 }: {
   dress: PublicDressRow;
   locale: string;
@@ -17,6 +18,7 @@ export function PublicDressCard({
     perDay: string;
     branchSection: string;
   };
+  hidePrices?: boolean;
 }) {
   const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
   const branchLabel = locale === "ar" ? dress.branchNameAr : dress.branchNameEn;
@@ -58,12 +60,14 @@ export function PublicDressCard({
             {labels.branchSection}: {branchLabel}
           </Muted>
         </div>
-        <div className="mt-auto flex flex-wrap items-baseline justify-between gap-2 border-t border-border/60 pt-3">
-          <span className="font-semibold text-base tabular-nums">
-            {formatCurrency(dress.pricePerDay, currencyLocale)}
-          </span>
-          <Muted className="text-xs">{labels.perDay}</Muted>
-        </div>
+        {!hidePrices ? (
+          <div className="mt-auto flex flex-wrap items-baseline justify-between gap-2 border-t border-border/60 pt-3">
+            <span className="font-semibold text-base tabular-nums">
+              {formatCurrency(dress.pricePerDay, currencyLocale)}
+            </span>
+            <Muted className="text-xs">{labels.perDay}</Muted>
+          </div>
+        ) : null}
       </div>
     </Link>
   );

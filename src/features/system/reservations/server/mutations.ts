@@ -11,6 +11,8 @@ import { rentalWindowsOverlap } from "@/lib/rental-availability";
 
 import { generateReservationCode } from "../utils";
 import type {
+  ReservationBulkDeleteInput,
+  ReservationBulkUpdateStatusInput,
   ReservationCollectPaymentInput,
   ReservationDeleteInput,
   ReservationGenerateCodeInput,
@@ -460,4 +462,58 @@ export async function deleteReservation(
     .where(eq(ReservationsTable.id, input.id));
 
   return { deleted: true };
+}
+
+export async function bulkUpdateReservationStatus(
+  ctx: TRPCContext,
+  input: ReservationBulkUpdateStatusInput,
+) {
+  const session = getRequiredSession(ctx);
+  assertAdminRole(session.user.role);
+
+  await ctx.db
+    .update(ReservationsTable)
+    .set({
+      status: input.status,
+      updatedBy: session.user.id,
+    })
+    .where(
+      and(
+        inArray(ReservationsTable.id, input.ids),
+        isNull(ReservationsTable.deletedAt),
+      ),
+    );
+
+  return { updated: input.ids.length };
+}
+
+export async function bulkDeleteReservations(
+  ctx: TRPCContext,
+  input: ReservationBulkDeleteInput,
+) {
+  const session = getRequiredSession(ctx);
+  assertAdminRole(session.user.role);
+
+  if (session.user.role !== "admin") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: ctx.t("systemPages.reservationDeleteAdminOnly"),
+    });
+  }
+
+  await ctx.db
+    .update(ReservationsTable)
+    .set({
+      deletedAt: new Date(),
+      deletedBy: session.user.id,
+      updatedBy: session.user.id,
+    })
+    .where(
+      and(
+        inArray(ReservationsTable.id, input.ids),
+        isNull(ReservationsTable.deletedAt),
+      ),
+    );
+
+  return { deleted: input.ids.length };
 }

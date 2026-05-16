@@ -3,6 +3,8 @@ export type DressGridRow = {
   branchId: string;
   code: string;
   title: string;
+  description: string | null;
+  images: string[] | null;
   size: string | null;
   color: string | null;
   pricePerDay: number;

@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useState } from "react";
+import { canViewAdminDashboard } from "@/features/core/auth/core/permissions";
 import { signOutAction } from "@/features/core/auth/nextjs/actions";
 import { AuthManagerDialogs } from "@/features/core/auth/nextjs/components/auth-manager/auth-manager-dialogs";
 import { AuthManagerDropdown } from "@/features/core/auth/nextjs/components/auth-manager/auth-manager-dropdown";
@@ -19,6 +20,7 @@ export function AuthManager({ trigger }: { trigger: React.ReactElement }) {
 
   const hasEmail = !!session.user.email;
   const isEmailVerified = !!session.user.emailVerifiedAt;
+  const showDashboardLink = canViewAdminDashboard(session.user);
 
   return (
     <>
@@ -35,6 +37,7 @@ export function AuthManager({ trigger }: { trigger: React.ReactElement }) {
         hasEmail={hasEmail}
         hasPassword={!!session.hasPassword}
         isEmailVerified={isEmailVerified}
+        showDashboardLink={showDashboardLink}
         onOpenDialog={setOpenDialog}
         onSignOut={() =>
           startTransition(async () => {

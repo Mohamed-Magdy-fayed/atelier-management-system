@@ -50,13 +50,21 @@ export const commitImportInput = z.object({
     .max(5_000),
 });
 
+export const userBranchIdsSchema = z.array(z.string().uuid());
+
 export const userMutationSchema = z.object({
   name: z.string().trim().min(1).max(256).nullable().optional(),
   email: z.string().trim().email().max(256),
   phone: z.string().trim().max(16).nullable().optional(),
   age: z.number().int().min(0).max(150).nullable().optional(),
   role: z.enum(userRoleValues).default("customer"),
+  /** @deprecated Prefer `branchIds`. Kept for single-branch create shortcuts. */
   branchId: z.string().uuid().optional(),
+  branchIds: userBranchIdsSchema.optional(),
+});
+
+export const userIdInput = z.object({
+  id: z.string().uuid(),
 });
 
 export const userUpdateSchema = userMutationSchema.extend({
@@ -78,6 +86,7 @@ export type PreviewImportInput = z.infer<typeof previewImportInput>;
 export type CommitImportInput = z.infer<typeof commitImportInput>;
 export type UserMutationInput = z.infer<typeof userMutationSchema>;
 export type UserUpdateInput = z.infer<typeof userUpdateSchema>;
+export type UserIdInput = z.infer<typeof userIdInput>;
 export type SoftDeleteInput = z.infer<typeof softDeleteInput>;
 export type BulkSetVerifiedInput = z.infer<typeof bulkSetVerifiedInput>;
 export type UserImportRole = z.infer<typeof importRoleSchema>;

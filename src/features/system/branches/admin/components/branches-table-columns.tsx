@@ -2,7 +2,10 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { DataTableColumnHeader } from "@/features/core/data-table";
+import {
+  createEntityActionsColumn,
+  DataTableColumnHeader,
+} from "@/features/core/data-table";
 import type { useTranslation } from "@/features/core/i18n/client";
 import type { BranchGridRow } from "@/integrations/trpc/routers/branches";
 
@@ -105,20 +108,12 @@ export function buildBranchColumns(opts: {
           ? dateFmt.format(new Date(row.original.updatedAt))
           : "—",
     },
-    {
-      id: "actions",
-      enableHiding: false,
-      enableSorting: false,
+    createEntityActionsColumn({
+      t,
       size: 48,
-      meta: { label: String(t("common.actions")) },
-      header: () => (
-        <span className="text-xs font-medium">
-          {String(t("common.actions"))}
-        </span>
-      ),
       cell: ({ row }) => (
         <BranchRowActions row={row.original} setRowAction={setRowAction} />
       ),
-    },
+    }),
   ];
 }

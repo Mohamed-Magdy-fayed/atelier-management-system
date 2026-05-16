@@ -19,6 +19,7 @@ import {
 } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 
+import { getEntityColumnPinning } from "../lib/entity-column-pinning";
 import type { DataTableMode } from "../types";
 
 export type DataTableControlledState = {
@@ -61,7 +62,7 @@ export function useDataTable<T>({
   pageCount = -1,
   rowCount,
   getRowId,
-  initialColumnPinning = { left: [], right: [] },
+  initialColumnPinning = getEntityColumnPinning(),
   controlled,
   globalFilterFn,
 }: UseDataTableArgs<T>) {

@@ -6,22 +6,17 @@ import type {
   RowSelectionState,
   VisibilityState,
 } from "@tanstack/react-table";
-import { PlusIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { H2 } from "@/components/ui/typography";
+import { H2, Muted } from "@/components/ui/typography";
 import {
   DataTable,
+  DataTableActionBar,
   type DataTableControlledState,
   DataTablePagination,
   DataTableToolbar,
   DataTableViewOptions,
+  getEntityColumnPinning,
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
@@ -31,9 +26,9 @@ import type { SettingGridRow } from "@/integrations/trpc/routers/settings";
 
 import {
   buildSettingColumns,
-  SettingDeleteDialog,
   SettingFormDialog,
   SettingInfoModal,
+  SettingsBulkActions,
   type SettingRowActionVariant,
 } from "./components";
 
@@ -45,7 +40,6 @@ type RowAction = {
 export function SettingsTablePage() {
   const trpc = useTRPC();
   const { t, locale } = useTranslation();
-  const addLabel = `${t("common.add")} ${t("systemPages.settingsTitle")}`;
 
   const {
     pagination,
@@ -60,12 +54,10 @@ export function SettingsTablePage() {
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
-    left: [],
-    right: [],
-  });
+  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>(() =>
+    getEntityColumnPinning(),
+  );
   const [rowAction, setRowAction] = useState<RowAction>(null);
-  const [createOpen, setCreateOpen] = useState(false);
 
   const listInput = useMemo(
     () => ({
@@ -142,6 +134,7 @@ export function SettingsTablePage() {
     >
       <div className="space-y-1">
         <H2>{t("systemPages.settingsTitle")}</H2>
+        <Muted className="text-sm">{String(t("systemPages.settingsLead"))}</Muted>
       </div>
 
       <DataTable
@@ -153,29 +146,17 @@ export function SettingsTablePage() {
             onGlobalFilterChange={(value) => setResolvedGlobalFilter(value)}
             searchPlaceholder={t("dataTable.searchSettingsHint")}
           >
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    type="button"
-                    size="icon"
-                    className="size-8"
-                    onClick={() => setCreateOpen(true)}
-                    aria-label={addLabel}
-                  >
-                    <PlusIcon className="size-3.5" />
-                  </Button>
-                }
-              />
-              <TooltipContent>{addLabel}</TooltipContent>
-            </Tooltip>
             <DataTableViewOptions table={table} />
           </DataTableToolbar>
         }
         footer={<DataTablePagination table={table} />}
+        actionBar={
+          <DataTableActionBar table={table}>
+            <SettingsBulkActions table={table} />
+          </DataTableActionBar>
+        }
       />
 
-      <SettingFormDialog open={createOpen} onOpenChange={setCreateOpen} />
       <SettingFormDialog
         open={rowAction?.variant === "edit"}
         onOpenChange={(open) => {
@@ -189,14 +170,6 @@ export function SettingsTablePage() {
           if (!open) closeRowAction();
         }}
         setting={rowAction?.variant === "info" ? rowAction.row : null}
-      />
-      <SettingDeleteDialog
-        open={rowAction?.variant === "delete"}
-        onOpenChange={(open) => {
-          if (!open) closeRowAction();
-        }}
-        setting={rowAction?.variant === "delete" ? rowAction.row : null}
-        onDeleted={closeRowAction}
       />
     </div>
   );

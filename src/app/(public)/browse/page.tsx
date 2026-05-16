@@ -5,6 +5,7 @@ import { PublicCatalogFilters } from "@/features/public-catalog/components/publi
 import { normalizePublicDressSort } from "@/features/public-catalog/lib/public-dress-sort";
 import { PublicDressCard } from "@/features/public-catalog/components/public-dress-card";
 import {
+  getPublicCatalogHidePrices,
   listPublicBranches,
   listPublicDresses,
 } from "@/features/public-catalog/server/queries";
@@ -28,9 +29,10 @@ export default async function PublicBrowsePage({ searchParams }: Props) {
   const search = sp.search?.trim() || undefined;
   const sort = normalizePublicDressSort(sp.sort);
 
-  const [branches, catalog] = await Promise.all([
+  const [branches, catalog, hidePrices] = await Promise.all([
     listPublicBranches(),
     listPublicDresses({ branchId, search, page, perPage: 24, sort }),
+    getPublicCatalogHidePrices(),
   ]);
 
   const branchOptions = branches.map((b) => ({
@@ -109,6 +111,7 @@ export default async function PublicBrowsePage({ searchParams }: Props) {
               {catalog.rows.map((dress) => (
                 <PublicDressCard
                   dress={dress}
+                  hidePrices={hidePrices}
                   key={dress.id}
                   labels={labels}
                   locale={locale}

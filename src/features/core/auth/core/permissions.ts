@@ -99,3 +99,8 @@ export function hasPermission<Resource extends keyof Permissions>(
   if (typeof permission === "boolean") return permission;
   return data != null && permission(user, data);
 }
+
+/** Admin workspace dashboard (`/dashboard`), not the customer portal. */
+export function canViewAdminDashboard(user: PartialUser): boolean {
+  return hasPermission(user, "screens", "view", { screenKey: "dashboard" });
+}

@@ -31,7 +31,8 @@ export const reservationByIdSchema = z.object({
 });
 
 export const reservationFormDataSchema = z.object({
-  branchId: z.string().uuid(),
+  /** Omit when the admin views all branches; dresses from every branch are returned. */
+  branchId: z.string().uuid().optional(),
 });
 
 export const reservationGenerateCodeSchema = z.object({
@@ -94,6 +95,21 @@ export const reservationDeleteSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const dressOccasionBlockedRangesSchema = z.object({
+  dressId: z.string().uuid(),
+  branchId: z.string().uuid().optional(),
+  excludeReservationId: z.string().uuid().optional(),
+});
+
+export const reservationBulkUpdateStatusSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1),
+  status: reservationStatusSchema,
+});
+
+export const reservationBulkDeleteSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1),
+});
+
 export type ReservationListFilterInput = z.infer<
   typeof reservationListFilterInput
 >;
@@ -117,3 +133,12 @@ export type ReservationCollectPaymentInput = z.infer<
   typeof reservationCollectPaymentSchema
 >;
 export type ReservationDeleteInput = z.infer<typeof reservationDeleteSchema>;
+export type DressOccasionBlockedRangesInput = z.infer<
+  typeof dressOccasionBlockedRangesSchema
+>;
+export type ReservationBulkUpdateStatusInput = z.infer<
+  typeof reservationBulkUpdateStatusSchema
+>;
+export type ReservationBulkDeleteInput = z.infer<
+  typeof reservationBulkDeleteSchema
+>;

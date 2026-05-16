@@ -9,8 +9,9 @@ import { useFieldContext } from "./hooks";
 export function FormMobileField({
   placeholder,
   autoFocus,
+  disabled,
   ...props
-}: FormFieldProps & { placeholder?: string }) {
+}: FormFieldProps & { placeholder?: string; disabled?: boolean }) {
   const field = useFieldContext<string>();
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 
@@ -26,9 +27,10 @@ export function FormMobileField({
       onBlur: field.handleBlur,
       "aria-invalid": isInvalid,
       autoFocus,
+      disabled,
       className: "",
     }),
-    [field.name, field.handleBlur, isInvalid, autoFocus],
+    [field.name, field.handleBlur, isInvalid, autoFocus, disabled],
   );
 
   return (

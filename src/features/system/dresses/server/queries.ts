@@ -20,6 +20,8 @@ const dressGridSelect = {
   branchId: DressesTable.branchId,
   code: DressesTable.code,
   title: DressesTable.title,
+  description: DressesTable.description,
+  images: DressesTable.images,
   size: DressesTable.size,
   color: DressesTable.color,
   pricePerDay: DressesTable.pricePerDay,

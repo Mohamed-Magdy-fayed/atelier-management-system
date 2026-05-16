@@ -2,7 +2,10 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { DataTableColumnHeader } from "@/features/core/data-table";
+import {
+  createSelectColumn,
+  DataTableColumnHeader,
+} from "@/features/core/data-table";
 import type { useTranslation } from "@/features/core/i18n/client";
 import type { PaymentGridRow } from "@/integrations/trpc/routers/payments";
 
@@ -52,6 +55,7 @@ export function buildPaymentColumns(opts: {
   });
 
   return [
+    createSelectColumn<PaymentGridRow>(),
     {
       accessorKey: "amount",
       header: ({ column }) => (

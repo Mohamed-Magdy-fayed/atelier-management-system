@@ -3,8 +3,18 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
-import { DataTableColumnHeader } from "@/features/core/data-table";
+import { Muted } from "@/components/ui/typography";
+import {
+  createEntityActionsColumn,
+  createSelectColumn,
+  DataTableColumnHeader,
+} from "@/features/core/data-table";
 import type { useTranslation } from "@/features/core/i18n/client";
+import {
+  getSettingDisplayDescription,
+  getSettingDisplayName,
+} from "@/features/system/settings/lib/setting-i18n";
+import { SYSTEM_SETTING_CODE } from "@/features/system/settings/lib/system-settings-registry";
 import type { SettingGridRow } from "@/integrations/trpc/routers/settings";
 
 import {
@@ -14,15 +24,30 @@ import {
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
-function settingsLabelTranslationId(label: string) {
-  switch (label) {
-    case "policy":
-      return "systemPages.settingsLabelPolicy" as const;
-    case "integration":
-      return "systemPages.settingsLabelIntegration" as const;
-    default:
-      return "systemPages.settingsCategory";
+function stateLabel(
+  code: string,
+  isActive: boolean | null,
+  t: Translate,
+): string {
+  if (isActive === null) {
+    return String(t("systemPages.settingsIsActiveUnset"));
   }
+  if (code === SYSTEM_SETTING_CODE.SHOW_CATALOG_PRICES) {
+    return String(
+      t(
+        isActive
+          ? "systemPages.settingStatePricesShown"
+          : "systemPages.settingStatePricesHidden",
+      ),
+    );
+  }
+  return String(
+    t(
+      isActive
+        ? "systemPages.settingsStateEnabled"
+        : "systemPages.settingsStateDisabled",
+    ),
+  );
 }
 
 export function buildSettingColumns(opts: {
@@ -35,11 +60,9 @@ export function buildSettingColumns(opts: {
     dateStyle: "medium",
     timeStyle: "short",
   });
-  const moneyFmt = new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-EG", {
-    maximumFractionDigits: 0,
-  });
 
   return [
+    createSelectColumn<SettingGridRow>(),
     {
       accessorKey: "code",
       header: ({ column }) => (
@@ -49,18 +72,35 @@ export function buildSettingColumns(opts: {
         />
       ),
       meta: { label: String(t("systemPages.settingsCode")) },
+      cell: ({ row }) => (
+        <span className="font-mono text-xs">{row.original.code}</span>
+      ),
     },
     {
-      accessorKey: "label",
+      id: "name",
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={String(t("systemPages.settingsCategory"))}
+          title={String(t("systemPages.settingsName"))}
         />
       ),
-      meta: { label: String(t("systemPages.settingsCategory")) },
-      cell: ({ row }) =>
-        String(t(settingsLabelTranslationId(row.original.label))),
+      meta: { label: String(t("systemPages.settingsName")) },
+      cell: ({ row }) => getSettingDisplayName(row.original.code, t),
+    },
+    {
+      id: "description",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={String(t("forms.description"))}
+        />
+      ),
+      meta: { label: String(t("forms.description")) },
+      cell: ({ row }) => (
+        <Muted className="line-clamp-2 max-w-md text-xs leading-relaxed">
+          {getSettingDisplayDescription(row.original.code, t)}
+        </Muted>
+      ),
     },
     {
       accessorKey: "isActive",
@@ -75,31 +115,28 @@ export function buildSettingColumns(opts: {
         const v = row.original.isActive;
         if (v === null) return "—";
         return (
-          <Badge variant={v ? "default" : "secondary"}>
-            {String(
-              t(
-                v
-                  ? "systemPages.settingsStateEnabled"
-                  : "systemPages.settingsStateDisabled",
-              ),
-            )}
+          <Badge variant={v ? "secondary" : "destructive"}>
+            {stateLabel(row.original.code, v, t)}
           </Badge>
         );
       },
     },
     {
-      accessorKey: "amount",
+      accessorKey: "value",
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
-          title={String(t("systemPages.settingsAmount"))}
+          title={String(t("systemPages.settingsValue"))}
         />
       ),
-      meta: { label: String(t("systemPages.settingsAmount")) },
-      cell: ({ row }) =>
-        row.original.amount != null
-          ? moneyFmt.format(row.original.amount)
-          : "—",
+      meta: { label: String(t("systemPages.settingsValue")) },
+      cell: ({ row }) => {
+        const value = row.original.value?.trim();
+        if (!value) return "—";
+        return (
+          <span className="line-clamp-2 max-w-[14rem] text-xs">{value}</span>
+        );
+      },
     },
     {
       accessorKey: "createdAt",
@@ -115,20 +152,12 @@ export function buildSettingColumns(opts: {
           ? dateFmt.format(new Date(row.original.createdAt))
           : "—",
     },
-    {
-      id: "actions",
-      enableHiding: false,
-      enableSorting: false,
+    createEntityActionsColumn({
+      t,
       size: 48,
-      meta: { label: String(t("common.actions")) },
-      header: () => (
-        <span className="text-xs font-medium">
-          {String(t("common.actions"))}
-        </span>
-      ),
       cell: ({ row }) => (
         <SettingRowActions row={row.original} setRowAction={setRowAction} />
       ),
-    },
+    }),
   ];
 }

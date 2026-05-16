@@ -7,11 +7,18 @@ loadEnv({
 });
 
 const commands = {
-  all: {
-    description: 'Legacy alias for the "demo" seed profile.',
+  settings: {
+    description: "Upsert default settings rows only (does not clear the database).",
     action: async () => {
       const { runSeedProfile } = await import("@/drizzle/seed");
-      await runSeedProfile("demo");
+      await runSeedProfile("settings");
+    },
+  },
+  all: {
+    description: 'Legacy alias for the "settings" seed profile.',
+    action: async () => {
+      const { runSeedProfile } = await import("@/drizzle/seed");
+      await runSeedProfile("settings");
     },
   },
   baseline: {
@@ -62,6 +69,7 @@ function printHelp() {
   }
   console.log("\nExamples:");
   console.log("  npm run seed");
+  console.log("  npm run seed -- settings");
   console.log("  npm run seed -- demo");
   console.log("  npm run seed -- baseline");
   console.log("  npm run seed -- performance");
@@ -72,7 +80,7 @@ function printHelp() {
 async function run() {
   const rawArg = process.argv[2]?.toLowerCase() as CommandName | undefined;
   const commandName: CommandName =
-    rawArg && rawArg in commands ? rawArg : "demo";
+    rawArg && rawArg in commands ? rawArg : "settings";
 
   if (commandName === "help") {
     printHelp();

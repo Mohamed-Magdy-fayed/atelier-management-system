@@ -3,8 +3,11 @@ import { toast } from "sonner";
 
 import { FormImageField } from "@/components/forms/image-field";
 import { useTranslation } from "@/features/core/i18n/client";
+import { translateFormErrorMessage } from "@/components/forms/validation-messages";
 import { FormBooleanField } from "./boolean-field";
+import { FormComboboxOneField } from "./combobox-one-field";
 import { FormDateField } from "./date-field";
+import { FormDateTimeField } from "./date-time-field";
 import { FormEmailField } from "./email-field";
 import { FormMobileField } from "./mobile-field";
 import { FormNumberField } from "./number-field";
@@ -12,6 +15,7 @@ import { FormPasswordField } from "./password-field";
 // import { FormSearchLookupField } from "./search-lookup-field";
 import { FormSelectField } from "./select-field";
 import { FormStringField } from "./string-field";
+import { FormTextareaField } from "./textarea-field";
 
 const { fieldContext, formContext, useFieldContext, useFormContext } =
   createFormHookContexts();
@@ -23,9 +27,12 @@ const { useAppForm: useAppFormBase } = createFormHook({
     EmailField: FormEmailField,
     PasswordField: FormPasswordField,
     MobileField: FormMobileField,
+    ComboboxOneField: FormComboboxOneField,
     SelectField: FormSelectField,
     DateField: FormDateField,
+    DateTimeField: FormDateTimeField,
     BooleanField: FormBooleanField,
+    TextareaField: FormTextareaField,
     ImageField: FormImageField,
     // SearchLookupField: FormSearchLookupField,
   },
@@ -52,7 +59,9 @@ const useAppForm: typeof useAppFormBase = (opts) => {
           .map((e) => {
             const raw =
               typeof e === "string" ? e : (e as { message?: string })?.message;
-            return raw ? t(raw as any) : undefined;
+            return raw
+              ? translateFormErrorMessage((key) => String(t(key as never)), raw)
+              : undefined;
           })
           .filter(Boolean)
           .join("\n");

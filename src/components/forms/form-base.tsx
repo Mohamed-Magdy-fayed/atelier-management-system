@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/field";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useFieldContext } from "./hooks";
+import { translateFormErrorMessage } from "./validation-messages";
 
 export type FormFieldProps = {
   label: string;
@@ -33,25 +34,8 @@ export function FormBase({
   const { t } = useTranslation();
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
 
-  const translateErrorMessage = (message?: string) => {
-    if (!message) {
-      return message;
-    }
-
-    const isTranslationKey = /^[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)+$/u.test(
-      message,
-    );
-
-    if (!isTranslationKey) {
-      return message;
-    }
-
-    try {
-      return t(message as never);
-    } catch {
-      return message;
-    }
-  };
+  const translateErrorMessage = (message?: string) =>
+    translateFormErrorMessage((key) => String(t(key as never)), message);
 
   const errors = field.state.meta.errors.map((e) => {
     if (typeof e === "string") {

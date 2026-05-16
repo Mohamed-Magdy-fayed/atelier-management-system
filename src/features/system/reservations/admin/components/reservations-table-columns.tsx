@@ -5,6 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import type { ReservationStatus } from "@/drizzle/schemas/system/reservations-table";
 import {
+  createEntityActionsColumn,
   createSelectColumn,
   DataTableColumnHeader,
 } from "@/features/core/data-table";
@@ -243,9 +244,10 @@ export function buildReservationColumns(opts: {
       cell: ({ row }) => formatDt(row.original.createdAt),
       meta: { label: String(t("common.createdAt")) },
     },
-    {
-      id: "actions",
+    createEntityActionsColumn({
+      t,
+      size: 56,
       cell: ({ row }) => <ReservationRowActions row={row.original} />,
-    },
+    }),
   ];
 }

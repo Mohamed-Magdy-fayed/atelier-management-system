@@ -33,6 +33,7 @@ export const dressMutationSchema = z.object({
   description: z.string().trim().max(4000).optional(),
   size: z.string().trim().max(64).optional(),
   color: z.string().trim().max(64).optional(),
+  images: z.array(z.string().max(2048)).max(20).optional(),
   pricePerDay: z.number().int().min(0).max(10_000_000),
   depositAmount: z.number().int().min(0).max(10_000_000),
   insurance: z.number().int().min(0).max(10_000_000),

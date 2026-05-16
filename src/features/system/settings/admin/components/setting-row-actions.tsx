@@ -1,24 +1,28 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  CheckCircle2Icon,
   InfoIcon,
   MoreHorizontalIcon,
+  PauseCircleIcon,
   PencilIcon,
-  Trash2Icon,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/features/core/i18n/client";
+import { getSystemSettingDefinition } from "@/features/system/settings/lib/system-settings-registry";
+import { useTRPC } from "@/integrations/trpc/client";
 import type { SettingGridRow } from "@/integrations/trpc/routers/settings";
 
-export type SettingRowActionVariant = "info" | "edit" | "delete";
+export type SettingRowActionVariant = "info" | "edit";
 
 export type SetSettingRowAction = (
   next: { row: SettingGridRow; variant: SettingRowActionVariant } | null,
@@ -34,6 +38,36 @@ export function SettingRowActions({
   setRowAction,
 }: SettingRowActionsProps) {
   const { t } = useTranslation();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const setActiveMut = useMutation(trpc.settings.setActive.mutationOptions());
+  const definition = getSystemSettingDefinition(row.code);
+  const canToggleStatus = definition?.editable.isActive === true;
+  const isEnabled = row.isActive === true;
+
+  async function toggleActive(isActive: boolean) {
+    try {
+      await toast
+        .promise(setActiveMut.mutateAsync({ id: row.id, isActive }), {
+          loading: String(t("common.saving")),
+          success: String(
+            t(
+              isActive
+                ? "systemPages.settingEnabled"
+                : "systemPages.settingDisabled",
+            ),
+          ),
+          error: String(t("systemPages.settingsBulkActiveFailed")),
+        })
+        .unwrap();
+
+      await queryClient.invalidateQueries({
+        queryKey: trpc.settings.pathKey(),
+      });
+    } catch {
+      // toast.promise already surfaced the failure.
+    }
+  }
 
   return (
     <DropdownMenu>
@@ -62,13 +96,25 @@ export function SettingRowActions({
           <PencilIcon className="size-3.5" />
           {String(t("common.edit"))}
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => setRowAction({ row, variant: "delete" })}
-        >
-          <Trash2Icon className="size-3.5 text-destructive" />
-          <span className="text-destructive">{String(t("common.delete"))}</span>
-        </DropdownMenuItem>
+        {canToggleStatus ? (
+          <DropdownMenuItem
+            disabled={setActiveMut.isPending}
+            onClick={() => void toggleActive(!isEnabled)}
+          >
+            {isEnabled ? (
+              <PauseCircleIcon className="size-3.5" />
+            ) : (
+              <CheckCircle2Icon className="size-3.5" />
+            )}
+            {String(
+              t(
+                isEnabled
+                  ? "systemPages.settingDisable"
+                  : "systemPages.settingEnable",
+              ),
+            )}
+          </DropdownMenuItem>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

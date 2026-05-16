@@ -20,10 +20,12 @@ import { useBranch } from "@/features/core/auth/nextjs/components/branch-provide
 import {
   DataTable,
   type DataTableControlledState,
+  DataTableActionBar,
   DataTableExportButton,
   DataTablePagination,
   DataTableToolbar,
   DataTableViewOptions,
+  getEntityColumnPinning,
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
@@ -34,6 +36,7 @@ import type { ReservationGridRow } from "@/integrations/trpc/routers/reservation
 import {
   buildReservationColumns,
   ReservationFormDialog,
+  ReservationsBulkActions,
   ReservationsGridFilters,
 } from "./components";
 
@@ -62,10 +65,9 @@ export function ReservationsTablePage() {
     dressId: false,
     createdAt: false,
   });
-  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
-    left: [],
-    right: [],
-  });
+  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>(() =>
+    getEntityColumnPinning(),
+  );
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -209,6 +211,11 @@ export function ReservationsTablePage() {
           </DataTableToolbar>
         }
         footer={<DataTablePagination table={table} />}
+        actionBar={
+          <DataTableActionBar table={table}>
+            <ReservationsBulkActions table={table} />
+          </DataTableActionBar>
+        }
       />
 
       <ReservationFormDialog open={createOpen} onOpenChange={setCreateOpen} />

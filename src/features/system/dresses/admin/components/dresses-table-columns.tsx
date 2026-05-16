@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
 import {
+  createEntityActionsColumn,
   createSelectColumn,
   DataTableColumnHeader,
 } from "@/features/core/data-table";
@@ -102,11 +103,11 @@ export function buildDressColumns(opts: {
       },
       meta: { label: String(t("common.createdAt")) },
     },
-    {
-      id: "actions",
+    createEntityActionsColumn({
+      t,
       cell: ({ row }) => (
         <DressRowActions row={row.original} setRowAction={setRowAction} />
       ),
-    },
+    }),
   ];
 }

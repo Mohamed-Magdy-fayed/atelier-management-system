@@ -50,7 +50,7 @@ export function SelectManyField({
       onValueChange={setValue}
       value={value}
     >
-      <ComboboxChips className="w-full max-w-sm" ref={anchor}>
+      <ComboboxChips className="w-full" ref={anchor}>
         <ComboboxValue>
           {(selectedValues) => (
             <>
@@ -103,7 +103,9 @@ export function SelectOneField({
   return (
     <Combobox
       autoHighlight
+      isItemEqualToValue={(a, b) => a.value === b.value}
       items={options}
+      itemToStringLabel={(option) => option.label}
       itemToStringValue={(option) => option.label}
       onValueChange={setValue}
       value={value}
@@ -113,7 +115,7 @@ export function SelectOneField({
         <ComboboxEmpty>{t("common.noOptionsFound")}</ComboboxEmpty>
         <ComboboxList>
           {(item: SelectOption) => (
-            <ComboboxItem key={item.value} value={item.value}>
+            <ComboboxItem key={item.value} value={item}>
               {item.label}
             </ComboboxItem>
           )}

@@ -52,6 +52,9 @@ export async function createDress(ctx: TRPCContext, input: DressMutationInput) {
   const code = normalizeCode(input.code);
   await ensureUniqueActiveCode(ctx, code);
 
+  const imageUrls =
+    input.images?.map((u) => u.trim()).filter(Boolean) ?? [];
+
   const [dress] = await ctx.db
     .insert(DressesTable)
     .values({
@@ -59,6 +62,7 @@ export async function createDress(ctx: TRPCContext, input: DressMutationInput) {
       code,
       title: input.title.trim(),
       description: input.description?.trim() || null,
+      images: imageUrls.length > 0 ? imageUrls : null,
       size: input.size?.trim() || null,
       color: input.color?.trim() || null,
       pricePerDay: input.pricePerDay,
@@ -91,6 +95,9 @@ export async function updateDress(ctx: TRPCContext, input: DressUpdateInput) {
   const code = normalizeCode(input.code);
   await ensureUniqueActiveCode(ctx, code, input.id);
 
+  const imageUrls =
+    input.images?.map((u) => u.trim()).filter(Boolean) ?? [];
+
   await ctx.db
     .update(DressesTable)
     .set({
@@ -98,6 +105,7 @@ export async function updateDress(ctx: TRPCContext, input: DressUpdateInput) {
       code,
       title: input.title.trim(),
       description: input.description?.trim() || null,
+      images: imageUrls.length > 0 ? imageUrls : null,
       size: input.size?.trim() || null,
       color: input.color?.trim() || null,
       pricePerDay: input.pricePerDay,

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  LayoutDashboardIcon,
   ListTreeIcon,
   LockKeyhole,
   LogOut,
@@ -8,6 +9,7 @@ import {
   ShieldBanIcon,
   UserIcon,
 } from "lucide-react";
+import Link from "next/link";
 import type { ReactElement } from "react";
 
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -30,6 +32,7 @@ type AuthManagerDropdownProps = {
   hasEmail: boolean;
   hasPassword: boolean;
   isEmailVerified: boolean;
+  showDashboardLink: boolean;
   onOpenDialog: (dialog: AuthManagerDialog) => void;
   onSignOut: () => void;
   trigger: ReactElement;
@@ -39,6 +42,7 @@ export function AuthManagerDropdown({
   hasEmail,
   hasPassword,
   isEmailVerified,
+  showDashboardLink,
   onOpenDialog,
   onSignOut,
   trigger,
@@ -56,6 +60,12 @@ export function AuthManagerDropdown({
         sideOffset={4}
       >
         <DropdownMenuGroup>
+          {showDashboardLink ? (
+            <DropdownMenuItem render={<Link href="/dashboard" />}>
+              <LayoutDashboardIcon />
+              {String(t("common.dashboard"))}
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem onClick={() => onOpenDialog("profile")}>
             <UserIcon />
             {t("authTranslations.profile.title")}

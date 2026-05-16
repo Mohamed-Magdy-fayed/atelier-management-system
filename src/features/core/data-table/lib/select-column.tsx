@@ -21,7 +21,7 @@ export function createSelectColumn<T>(): ColumnDef<T> {
   return {
     id: "select",
     size: 40,
-    enablePinning: false,
+    enablePinning: true,
     enableHiding: false,
     enableSorting: false,
     header: ({ table }) => <SelectAllHeader table={table} />,

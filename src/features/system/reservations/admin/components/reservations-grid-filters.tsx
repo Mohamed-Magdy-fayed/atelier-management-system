@@ -33,18 +33,17 @@ export function ReservationsGridFilters({
 }: {
   table: Table<ReservationGridRow>;
 }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const trpc = useTRPC();
   const branchState = useBranch();
   const branchId = branchState?.hasActiveOrg
     ? branchState.activeBranch.id
     : undefined;
+  const formDataInput = branchId ? { branchId } : {};
 
   const { data: formData } = useQuery({
-    ...trpc.reservations.formData.queryOptions({
-      branchId: branchId ?? "",
-    }),
-    enabled: Boolean(branchId),
+    ...trpc.reservations.formData.queryOptions(formDataInput),
+    enabled: Boolean(branchId) || branchState != null,
   });
 
   const statusColumn = table.getColumn("status");
@@ -62,7 +61,9 @@ export function ReservationsGridFilters({
   const dressOptions =
     formData?.dresses.map((dress) => ({
       value: dress.id,
-      label: `${dress.title} (${dress.code})`,
+      label: branchId
+        ? `${dress.title} (${dress.code})`
+        : `${dress.title} (${dress.code}) — ${locale === "ar" ? dress.branchNameAr : dress.branchNameEn}`,
     })) ?? [];
 
   return (

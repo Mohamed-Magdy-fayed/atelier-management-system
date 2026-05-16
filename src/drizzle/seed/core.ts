@@ -15,6 +15,7 @@ import {
   SEED_SYSTEM_ACTOR,
   type SeedProfileName,
 } from "./constants";
+import { seedDefaultSettings } from "./settings";
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
 
@@ -355,6 +356,8 @@ export async function seedScenario(
       await tx.insert(UsersTable).values(batch);
       seededCustomerCount += batch.length;
     }
+
+    await seedDefaultSettings(tx, SEED_SYSTEM_ACTOR);
 
     return {
       adminUser,

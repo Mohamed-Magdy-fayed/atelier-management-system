@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2Icon, PlusIcon, SaveIcon, XIcon } from "lucide-react";
+import { Loader2Icon, SaveIcon, XIcon } from "lucide-react";
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useId, useMemo } from "react";
 import { toast } from "sonner";
@@ -24,40 +24,26 @@ import {
 } from "@/components/ui/dialog";
 import { FieldGroup, FieldSet } from "@/components/ui/field";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { settingsLabels } from "@/drizzle/schemas/system/settings-table";
+import { Muted } from "@/components/ui/typography";
 import { useTranslation } from "@/features/core/i18n/client";
+import { translationKey } from "@/features/core/i18n/global";
+import {
+  getSettingDisplayDescription,
+  getSettingDisplayName,
+} from "@/features/system/settings/lib/setting-i18n";
+import {
+  getSystemSettingDefinition,
+  SYSTEM_SETTING_CODE,
+} from "@/features/system/settings/lib/system-settings-registry";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { SettingGridRow } from "@/integrations/trpc/routers/settings";
 
 const isActiveValues = ["", "true", "false"] as const;
 
-const settingFormSchema = z.object({
-  code: z.string().trim().min(1).max(128),
-  label: z.enum(settingsLabels),
-  description: z.string().trim().max(4000).optional(),
-  isActive: z.enum(isActiveValues),
-  value: z.string().trim().max(8000).optional(),
-  amount: z
-    .string()
-    .optional()
-    .superRefine((raw, ctx) => {
-      if (!raw?.trim()) return;
-      const n = Number(raw);
-      if (!Number.isInteger(n) || n < 0 || n > 10_000_000) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Invalid amount",
-        });
-      }
-    }),
-});
-
-type SettingFormValues = z.infer<typeof settingFormSchema>;
-
 type SettingFormDialogProps = {
   onOpenChange: (open: boolean) => void;
   open: boolean;
-  setting?: SettingGridRow | null;
+  setting: SettingGridRow | null;
 };
 
 function mapIsActiveToForm(
@@ -76,6 +62,29 @@ function mapIsActiveToPayload(
   return null;
 }
 
+const settingFormSchema = z.object({
+  isActive: z.enum(isActiveValues),
+  value: z
+    .string()
+    .trim()
+    .max(8000, translationKey("forms.validation.max8000")),
+  amount: z
+    .string()
+    .optional()
+    .superRefine((raw, ctx) => {
+      if (!raw?.trim()) return;
+      const n = Number(raw);
+      if (!Number.isInteger(n) || n < 0 || n > 10_000_000) {
+        ctx.addIssue({
+          code: "custom",
+          message: translationKey("forms.validation.invalidAmount"),
+        });
+      }
+    }),
+});
+
+type SettingFormValues = z.infer<typeof settingFormSchema>;
+
 export function SettingFormDialog({
   onOpenChange,
   open,
@@ -84,25 +93,9 @@ export function SettingFormDialog({
   const { t } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const isEdit = setting != null;
-
-  const createMut = useMutation(trpc.settings.create.mutationOptions());
   const updateMut = useMutation(trpc.settings.update.mutationOptions());
 
-  const labelSelectOptions = useMemo(
-    () =>
-      settingsLabels.map((value) => ({
-        value,
-        label: String(
-          t(
-            value === "policy"
-              ? "systemPages.settingsLabelPolicy"
-              : "systemPages.settingsLabelIntegration",
-          ),
-        ),
-      })),
-    [t],
-  );
+  const definition = setting ? getSystemSettingDefinition(setting.code) : null;
 
   const isActiveSelectOptions = useMemo(
     () => [
@@ -122,64 +115,53 @@ export function SettingFormDialog({
     [t],
   );
 
-  const defaultValues = useMemo<SettingFormValues>(
-    () => ({
-      code: setting?.code ?? "",
-      label: (setting?.label as (typeof settingsLabels)[number]) ?? "policy",
-      description: setting?.description ?? "",
-      isActive: mapIsActiveToForm(setting?.isActive),
-      value: setting?.value ?? "",
-      amount:
-        setting?.amount != null && setting.amount !== null
-          ? String(setting.amount)
-          : "",
-    }),
-    [setting],
-  );
+  const defaultValues = useMemo<SettingFormValues>(() => {
+    if (!setting) {
+      return { isActive: "", value: "", amount: "" };
+    }
+    return {
+      isActive: mapIsActiveToForm(setting.isActive),
+      value: setting.value ?? "",
+      amount: setting.amount != null ? String(setting.amount) : "",
+    };
+  }, [setting]);
 
   const form = useAppForm({
     defaultValues,
     validators: { onSubmit: settingFormSchema },
     onSubmit: async ({ value }) => {
+      if (!setting || !definition) return;
+
       const amountTrim = value.amount?.trim();
       const amount =
-        amountTrim && amountTrim.length > 0 ? Number(amountTrim) : null;
-
-      const action: Promise<unknown> =
-        isEdit && setting
-          ? updateMut.mutateAsync({
-              id: setting.id,
-              label: value.label,
-              description: value.description?.trim() || null,
-              isActive: mapIsActiveToPayload(value.isActive),
-              value: value.value?.trim() || null,
-              amount,
-            })
-          : createMut.mutateAsync({
-              code: value.code,
-              label: value.label,
-              description: value.description?.trim() || null,
-              isActive: mapIsActiveToPayload(value.isActive),
-              value: value.value?.trim() || null,
-              amount,
-            });
+        definition.editable.amount && amountTrim && amountTrim.length > 0
+          ? Number(amountTrim)
+          : definition.editable.amount
+            ? null
+            : undefined;
 
       try {
         await toast
-          .promise(action, {
-            loading: String(t("common.saving")),
-            success: String(
-              t(
-                isEdit
-                  ? "systemPages.settingUpdated"
-                  : "systemPages.settingCreated",
-              ),
-            ),
-            error: (err) =>
-              err instanceof Error
-                ? err.message
-                : String(t("systemPages.settingSaveFailed")),
-          })
+          .promise(
+            updateMut.mutateAsync({
+              id: setting.id,
+              ...(definition.editable.isActive
+                ? { isActive: mapIsActiveToPayload(value.isActive ?? "") }
+                : {}),
+              ...(definition.editable.value
+                ? { value: value.value?.trim() || null }
+                : {}),
+              ...(definition.editable.amount ? { amount } : {}),
+            }),
+            {
+              loading: String(t("common.saving")),
+              success: String(t("systemPages.settingUpdated")),
+              error: (err) =>
+                err instanceof Error
+                  ? err.message
+                  : String(t("systemPages.settingSaveFailed")),
+            },
+          )
           .unwrap();
         await queryClient.invalidateQueries({
           queryKey: trpc.settings.pathKey(),
@@ -192,14 +174,13 @@ export function SettingFormDialog({
   });
 
   useEffect(() => {
-    if (open) {
+    if (open && setting) {
       form.reset(defaultValues);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, setting?.id]);
 
-  const pending = createMut.isPending || updateMut.isPending;
-  const SubmitIcon = pending ? Loader2Icon : isEdit ? SaveIcon : PlusIcon;
+  const pending = updateMut.isPending;
   const formId = useId();
 
   const handleBodySubmit = useCallback(
@@ -210,23 +191,20 @@ export function SettingFormDialog({
     [form],
   );
 
+  if (!setting || !definition) {
+    return null;
+  }
+
+  const displayName = getSettingDisplayName(setting.code, t);
+  const displayDescription = getSettingDisplayDescription(setting.code, t);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md">
         <DialogHeader className="shrink-0 px-4 pt-4">
-          <DialogTitle>
-            {String(
-              t(isEdit ? "systemPages.editSetting" : "systemPages.addSetting"),
-            )}
-          </DialogTitle>
+          <DialogTitle>{String(t("systemPages.editSetting"))}</DialogTitle>
           <DialogDescription>
-            {String(
-              t(
-                isEdit
-                  ? "systemPages.editSettingDescription"
-                  : "systemPages.addSettingDescription",
-              ),
-            )}
+            {String(t("systemPages.editSettingDescription"))}
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="min-h-0 flex-1 px-4 py-4">
@@ -235,76 +213,81 @@ export function SettingFormDialog({
             className="space-y-4"
             onSubmit={handleBodySubmit}
           >
+            <div className="space-y-3 rounded-lg border bg-muted/30 p-3 text-sm">
+              <div className="space-y-1">
+                <div className="font-medium text-foreground">
+                  {String(t("systemPages.settingsCode"))}
+                </div>
+                <div className="font-mono text-xs">{setting.code}</div>
+              </div>
+              <div className="space-y-1">
+                <div className="font-medium text-foreground">
+                  {String(t("systemPages.settingsName"))}
+                </div>
+                <div>{displayName}</div>
+              </div>
+              <div className="space-y-1">
+                <div className="font-medium text-foreground">
+                  {String(t("forms.description"))}
+                </div>
+                <Muted className="text-xs leading-relaxed">
+                  {displayDescription}
+                </Muted>
+              </div>
+            </div>
             <FieldSet disabled={pending}>
               <FieldGroup>
-                {!isEdit ? (
-                  <form.AppField name="code">
+                {definition.editable.isActive ? (
+                  <form.AppField name="isActive">
                     {(field) => (
-                      <field.StringField
-                        label={String(t("systemPages.settingsCode"))}
-                        placeholder={String(
-                          t("systemPages.settingsCodePlaceholder"),
+                      <field.SelectField
+                        label={String(
+                          t(
+                            setting.code ===
+                              SYSTEM_SETTING_CODE.SHOW_CATALOG_PRICES
+                              ? "systemPages.settingsShowPricesState"
+                              : "systemPages.settingsIsActive",
+                          ),
                         )}
-                        autoFocus
+                        options={isActiveSelectOptions}
                       />
                     )}
                   </form.AppField>
-                ) : setting ? (
-                  <div className="space-y-1.5 text-sm">
-                    <div className="font-medium text-foreground">
-                      {String(t("systemPages.settingsCode"))}
-                    </div>
-                    <div className="rounded-md border bg-muted/40 px-3 py-2 font-mono text-xs">
-                      {setting.code}
-                    </div>
-                  </div>
                 ) : null}
-                <form.AppField name="label">
-                  {(field) => (
-                    <field.SelectField
-                      label={String(t("systemPages.settingsCategory"))}
-                      options={labelSelectOptions}
-                    />
-                  )}
-                </form.AppField>
-                <form.AppField name="description">
-                  {(field) => (
-                    <field.StringField
-                      label={String(t("forms.description"))}
-                      placeholder={String(
-                        t("systemPages.settingsDescriptionPlaceholder"),
-                      )}
-                    />
-                  )}
-                </form.AppField>
-                <form.AppField name="isActive">
-                  {(field) => (
-                    <field.SelectField
-                      label={String(t("systemPages.settingsIsActive"))}
-                      options={isActiveSelectOptions}
-                    />
-                  )}
-                </form.AppField>
-                <form.AppField name="value">
-                  {(field) => (
-                    <field.StringField
-                      label={String(t("systemPages.settingsValue"))}
-                      placeholder={String(
-                        t("systemPages.settingsValuePlaceholder"),
-                      )}
-                    />
-                  )}
-                </form.AppField>
-                <form.AppField name="amount">
-                  {(field) => (
-                    <field.StringField
-                      label={String(t("systemPages.settingsAmount"))}
-                      placeholder={String(
-                        t("systemPages.settingsAmountPlaceholder"),
-                      )}
-                    />
-                  )}
-                </form.AppField>
+                {definition.editable.value ? (
+                  <form.AppField name="value">
+                    {(field) =>
+                      setting.code ===
+                      SYSTEM_SETTING_CODE.RESERVATION_USAGE_POLICY ? (
+                        <field.TextareaField
+                          label={String(t("systemPages.settingsValue"))}
+                          placeholder={String(
+                            t("systemPages.settingsValuePlaceholder"),
+                          )}
+                        />
+                      ) : (
+                        <field.StringField
+                          label={String(t("systemPages.settingsValue"))}
+                          placeholder={String(
+                            t("systemPages.settingsValuePlaceholder"),
+                          )}
+                        />
+                      )
+                    }
+                  </form.AppField>
+                ) : null}
+                {definition.editable.amount ? (
+                  <form.AppField name="amount">
+                    {(field) => (
+                      <field.StringField
+                        label={String(t("systemPages.settingsAmount"))}
+                        placeholder={String(
+                          t("systemPages.settingsAmountPlaceholder"),
+                        )}
+                      />
+                    )}
+                  </form.AppField>
+                ) : null}
               </FieldGroup>
             </FieldSet>
           </OverlayFormBody>
@@ -326,14 +309,14 @@ export function SettingFormDialog({
               size="default"
               disabled={pending}
             >
-              <SubmitIcon
-                className={pending ? "size-3.5 animate-spin" : "size-3.5"}
-              />
+              {pending ? (
+                <Loader2Icon className="size-3.5 animate-spin" />
+              ) : (
+                <SaveIcon className="size-3.5" />
+              )}
               {pending
                 ? String(t("common.saving"))
-                : isEdit
-                  ? String(t("common.save"))
-                  : String(t("common.create"))}
+                : String(t("common.save"))}
             </OverlayFormSubmitButton>
           </OverlayFormFooterActions>
         </DialogFooter>

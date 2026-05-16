@@ -1,7 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,10 +8,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
 import { useTranslation } from "@/features/core/i18n/client";
+import { ReceiptBody } from "@/features/system/reservations/components/receipt/reservation-receipt-sections";
+import { useReservationReceipt } from "@/features/system/reservations/components/receipt/use-reservation-receipt";
+import { mapToReceiptProps } from "@/features/system/reservations/lib/receipt/map-receipt-props";
 import type { ReservationGridRow } from "@/integrations/trpc/routers/reservations";
-import { formatCurrency } from "@/lib/format";
 
 type ReservationReceiptDialogProps = {
   onOpenChange: (open: boolean) => void;
@@ -21,134 +20,82 @@ type ReservationReceiptDialogProps = {
   reservation: ReservationGridRow | null;
 };
 
-function ReceiptLine({
-  label,
-  value,
-  destructive,
-}: {
-  label: string;
-  value: string;
-  destructive?: boolean;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span
-        className={destructive ? "font-medium text-destructive" : "font-medium"}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
 export function ReservationReceiptDialog({
   onOpenChange,
   open,
   reservation,
 }: ReservationReceiptDialogProps) {
-  const { t, locale } = useTranslation();
-  const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
-
-  const dateFmt = useMemo(
-    () =>
-      new Intl.DateTimeFormat(locale === "ar" ? "ar" : "en", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }),
-    [locale],
-  );
+  const { t } = useTranslation();
 
   if (!reservation) return null;
 
-  const fmt = (n: number) => formatCurrency(n, currencyLocale);
-
-  function handlePrint() {
-    window.print();
-  }
+  const receiptData = mapToReceiptProps({
+    reservationCode: reservation.reservationCode,
+    customerName: reservation.customerName,
+    customerPhone: reservation.customerPhone ?? "",
+    dress: {
+      id: reservation.dressId,
+      title: reservation.dressTitle,
+      code: reservation.dressCode,
+      pricePerDay: reservation.totalPrice,
+      insurance: reservation.insurance,
+    },
+    receivingDateTime: new Date(reservation.receivingDateTime),
+    occasionDate: new Date(reservation.occasionDate),
+    returnDateTime: new Date(reservation.returnDateTime),
+    discount: reservation.discount,
+    depositPaid: reservation.depositPaid,
+    notes: reservation.notes,
+    status: reservation.status,
+  });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-4 sm:max-w-md print:shadow-none">
-        <DialogHeader>
-          <DialogTitle>
-            {String(t("systemPages.reservationsReservationReceipt"))}
-          </DialogTitle>
-        </DialogHeader>
-        <div
-          className="receipt-section space-y-3 border-b border-dashed py-2"
-          id="reservation-receipt"
-        >
-          <p className="text-center font-semibold text-lg">
-            {reservation.reservationCode}
-          </p>
-          <ReceiptLine
-            label={String(t("systemPages.reservationsCustomerName"))}
-            value={reservation.customerName}
-          />
-          <ReceiptLine
-            label={String(t("systemPages.reservationsCustomerPhone"))}
-            value={reservation.customerPhone ?? "—"}
-          />
-          <ReceiptLine
-            label={String(t("systemPages.reservationsDress"))}
-            value={`${reservation.dressTitle} (${reservation.dressCode})`}
-          />
-          <Separator />
-          <ReceiptLine
-            label={String(t("systemPages.reservationsReceiving"))}
-            value={dateFmt.format(new Date(reservation.receivingDateTime))}
-          />
-          <ReceiptLine
-            label={String(t("systemPages.reservationsOccasion"))}
-            value={dateFmt.format(new Date(reservation.occasionDate))}
-          />
-          <ReceiptLine
-            label={String(t("systemPages.reservationsReturn"))}
-            value={dateFmt.format(new Date(reservation.returnDateTime))}
-          />
-          <Separator />
-          <ReceiptLine
-            label={String(t("systemPages.reservationsTotalDue"))}
-            value={fmt(reservation.totalPrice)}
-          />
-          {reservation.discount > 0 ? (
-            <ReceiptLine
-              label={String(t("systemPages.reservationsDiscount"))}
-              value={`-${fmt(reservation.discount)}`}
-              destructive
-            />
-          ) : null}
-          <ReceiptLine
-            label={String(t("systemPages.reservationsDepositPaid"))}
-            value={fmt(reservation.depositPaid)}
-          />
-          <ReceiptLine
-            label={String(t("systemPages.reservationsTotalPaid"))}
-            value={fmt(reservation.totalPaid)}
-          />
-          <ReceiptLine
-            label={String(t("systemPages.reservationsRemaining"))}
-            value={fmt(reservation.remainingBalance)}
-          />
-          <ReceiptLine
-            label={String(t("systemPages.reservationsInsurance"))}
-            value={fmt(reservation.insurance)}
-          />
-        </div>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            {t("common.close")}
-          </Button>
-          <Button type="button" onClick={handlePrint}>
-            {String(t("systemPages.reservationsPrint"))}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+    <Dialog onOpenChange={onOpenChange} open={open}>
+      <ReceiptDialogBody
+        onOpenChange={onOpenChange}
+        receiptData={receiptData}
+        title={String(t("systemPages.reservationsReservationReceipt"))}
+      />
     </Dialog>
+  );
+}
+
+function ReceiptDialogBody({
+  receiptData,
+  title,
+  onOpenChange,
+}: {
+  receiptData: ReturnType<typeof mapToReceiptProps>;
+  title: string;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { t } = useTranslation();
+  const hook = useReservationReceipt(receiptData);
+
+  return (
+  <>
+    <DialogContent className="max-h-[min(90vh,720px)] max-w-2xl gap-4 overflow-y-auto print:shadow-none">
+      <DialogHeader>
+        <DialogTitle>{title}</DialogTitle>
+      </DialogHeader>
+      <ReceiptBody data={receiptData} variant="full" />
+      <DialogFooter>
+        <Button onClick={() => onOpenChange(false)} type="button" variant="outline">
+          {t("common.close")}
+        </Button>
+        <Button onClick={() => hook.handlePrint()} type="button">
+          {String(t("systemPages.reservationsPrint"))}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+    <div
+      aria-hidden
+      className="pointer-events-none fixed start-0 top-0 -z-50 w-[80mm] overflow-hidden opacity-0"
+    >
+      <div id="reservation-receipt-print-root" ref={hook.printContainerRef}>
+        <ReceiptBody data={receiptData} variant="print" />
+      </div>
+    </div>
+  </>
   );
 }

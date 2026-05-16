@@ -1,9 +1,14 @@
-import { count, eq, sql } from "drizzle-orm";
+import { and, asc, count, eq, isNull, ne, sql } from "drizzle-orm";
 
-import { DressesTable, ReservationsTable } from "@/drizzle/schema";
+import {
+  BranchesTable,
+  DressesTable,
+  ReservationsTable,
+} from "@/drizzle/schema";
 
 import { buildWhere, RESERVATION_EXPORT_ROW_LIMIT, sortExpr } from "./filters";
 import type {
+  DressOccasionBlockedRangesInput,
   ExportReservationsInput,
   ListReservationsInput,
   ReservationByIdInput,
@@ -184,9 +189,20 @@ export async function getReservationFormData(
   const session = getRequiredSession(ctx);
   assertAdminRole(session.user.role);
 
+  const scopedBranchId = input.branchId;
+  const dressConditions = [
+    eq(DressesTable.isActive, true),
+    isNull(DressesTable.deletedAt),
+  ];
+  if (scopedBranchId) {
+    dressConditions.push(eq(DressesTable.branchId, scopedBranchId));
+  }
+
   const [customers, dresses] = await Promise.all([
     ctx.db.query.RentalCustomersTable.findMany({
-      where: (customers, { eq }) => eq(customers.branchId, input.branchId),
+      where: scopedBranchId
+        ? (customers, { eq }) => eq(customers.branchId, scopedBranchId)
+        : undefined,
       orderBy: (customers, { asc }) => [asc(customers.name)],
       columns: {
         id: true,
@@ -194,22 +210,58 @@ export async function getReservationFormData(
         phone: true,
       },
     }),
-    ctx.db.query.DressesTable.findMany({
-      where: (dresses, { and, eq }) =>
-        and(eq(dresses.branchId, input.branchId), eq(dresses.isActive, true)),
-      orderBy: (dresses, { asc }) => [asc(dresses.title)],
-      columns: {
-        id: true,
-        code: true,
-        title: true,
-        pricePerDay: true,
-        depositAmount: true,
-        insurance: true,
-        size: true,
-        color: true,
-      },
-    }),
+    ctx.db
+      .select({
+        id: DressesTable.id,
+        branchId: DressesTable.branchId,
+        branchNameEn: BranchesTable.nameEn,
+        branchNameAr: BranchesTable.nameAr,
+        code: DressesTable.code,
+        title: DressesTable.title,
+        pricePerDay: DressesTable.pricePerDay,
+        depositAmount: DressesTable.depositAmount,
+        insurance: DressesTable.insurance,
+        size: DressesTable.size,
+        color: DressesTable.color,
+      })
+      .from(DressesTable)
+      .innerJoin(BranchesTable, eq(DressesTable.branchId, BranchesTable.id))
+      .where(and(...dressConditions))
+      .orderBy(asc(DressesTable.title)),
   ]);
 
   return { customers, dresses };
+}
+
+/** Occasion-day blocks for a dress (legacy `getDressReservationsDates`). */
+export async function getDressOccasionBlockedRanges(
+  ctx: TRPCContext,
+  input: DressOccasionBlockedRangesInput,
+) {
+  const session = getRequiredSession(ctx);
+  assertAdminRole(session.user.role);
+
+  const conditions = [
+    eq(ReservationsTable.dressId, input.dressId),
+    isNull(ReservationsTable.deletedAt),
+  ];
+  if (input.branchId) {
+    conditions.push(eq(ReservationsTable.branchId, input.branchId));
+  }
+  if (input.excludeReservationId) {
+    conditions.push(ne(ReservationsTable.id, input.excludeReservationId));
+  }
+
+  const reservations = await ctx.db.query.ReservationsTable.findMany({
+    where: and(...conditions),
+    columns: { occasionDate: true },
+  });
+
+  return reservations.map((reservation) => {
+    const start = new Date(reservation.occasionDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(reservation.occasionDate);
+    end.setHours(23, 59, 59, 999);
+    return { start: start.toISOString(), end: end.toISOString() };
+  });
 }

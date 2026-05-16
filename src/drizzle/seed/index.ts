@@ -1,5 +1,3 @@
-import { clearDb } from "@/drizzle/seed/clear-db";
-
 import {
   DEFAULT_SEED_PROFILE,
   SEED_ADMIN_EMAIL,
@@ -11,8 +9,10 @@ import {
 import { seedBaselineProfile } from "./profiles/baseline";
 import { seedDemoProfile } from "./profiles/demo";
 import { seedPerformanceProfile } from "./profiles/performance";
+import { seedSettingsProfile } from "./profiles/settings";
 
 const profileRunners = {
+  settings: seedSettingsProfile,
   baseline: seedBaselineProfile,
   demo: seedDemoProfile,
   performance: seedPerformanceProfile,
@@ -37,11 +37,8 @@ export {
 export async function runSeedProfile(
   profile: SeedProfileName = DEFAULT_SEED_PROFILE,
 ) {
-  await clearDb();
   const result = await profileRunners[profile]();
-  console.info(
-    `Seed profile "${result.profile}" summary: ${result.seededCustomerCount} customers, ${result.seededEmployees.length} employees.`,
-  );
+  console.info('Default settings upserted (profile: "%s").', result.profile);
   return result;
 }
 

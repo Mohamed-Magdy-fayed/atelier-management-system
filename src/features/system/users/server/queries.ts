@@ -2,6 +2,10 @@ import { and, asc, count, eq, isNull } from "drizzle-orm";
 
 import { BranchMembershipsTable, UsersTable } from "@/drizzle/schema";
 
+import {
+  getUserBranchIds as fetchUserBranchIds,
+  listAssignableBranches as fetchAssignableBranches,
+} from "./branch-memberships";
 import { buildWhere, EXPORT_ROW_LIMIT, sortExpr } from "./filters";
 import type {
   ExportRowsInput,
@@ -14,6 +18,18 @@ import {
   type TRPCContext,
 } from "./shared";
 import { type UserGridRow, userGridSelect } from "./types";
+
+export async function getUserBranchIds(ctx: TRPCContext, userId: string) {
+  const session = getRequiredSession(ctx);
+  assertStaffRole(session.user.role);
+  return fetchUserBranchIds(ctx, userId);
+}
+
+export async function listAssignableBranches(ctx: TRPCContext) {
+  const session = getRequiredSession(ctx);
+  assertStaffRole(session.user.role);
+  return fetchAssignableBranches(ctx);
+}
 
 export async function listEmployees(
   ctx: TRPCContext,

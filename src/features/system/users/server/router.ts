@@ -6,7 +6,13 @@ import {
   softDeleteUsers,
   updateUser,
 } from "./mutations";
-import { exportRows, listCustomers, listEmployees } from "./queries";
+import {
+  exportRows,
+  getUserBranchIds,
+  listAssignableBranches,
+  listCustomers,
+  listEmployees,
+} from "./queries";
 import {
   bulkSetVerifiedInput,
   commitImportInput,
@@ -15,11 +21,18 @@ import {
   listEmployeesInput,
   previewImportInput,
   softDeleteInput,
+  userIdInput,
   userMutationSchema,
   userUpdateSchema,
 } from "./schemas";
 
 export const usersRouter = createTRPCRouter({
+  listAssignableBranches: protectedProcedure.query(async ({ ctx }) =>
+    listAssignableBranches(ctx),
+  ),
+  getBranchIds: protectedProcedure
+    .input(userIdInput)
+    .query(async ({ ctx, input }) => getUserBranchIds(ctx, input.id)),
   listEmployees: protectedProcedure
     .input(listEmployeesInput)
     .query(async ({ ctx, input }) => listEmployees(ctx, input)),

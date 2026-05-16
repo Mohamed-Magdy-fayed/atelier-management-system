@@ -24,6 +24,7 @@ import {
   DataTablePagination,
   DataTableToolbar,
   DataTableViewOptions,
+  getEntityColumnPinning,
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
@@ -61,10 +62,9 @@ export function CustomersTablePage() {
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
-    left: ["select"],
-    right: [],
-  });
+  const [columnPinning, setColumnPinning] = useState<ColumnPinningState>(() =>
+    getEntityColumnPinning(),
+  );
   const [rowAction, setRowAction] = useState<RowAction>(null);
   const [createOpen, setCreateOpen] = useState(false);
 

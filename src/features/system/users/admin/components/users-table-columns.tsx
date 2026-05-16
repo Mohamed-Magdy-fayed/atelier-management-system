@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
 import {
+  createEntityActionsColumn,
   createSelectColumn,
   DataTableColumnHeader,
   isDateRangeValue,
@@ -186,20 +187,12 @@ export function buildUserGridColumns(opts: {
         return rowTimestampInYmdRange(row.original.lastSignInAt, value);
       },
     },
-    {
-      id: "actions",
-      enableHiding: false,
-      enableSorting: false,
+    createEntityActionsColumn({
+      t,
       size: 48,
-      meta: { label: String(t("common.actions")) },
-      header: () => (
-        <span className="text-xs font-medium">
-          {String(t("common.actions"))}
-        </span>
-      ),
       cell: ({ row }) => (
         <UserRowActions row={row.original} setRowAction={setRowAction} />
       ),
-    },
+    }),
   ];
 }

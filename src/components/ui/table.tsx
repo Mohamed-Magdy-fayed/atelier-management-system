@@ -1,17 +1,19 @@
 import type * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { ScrollArea } from "./scroll-area";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
-    <ScrollArea className="w-full rounded-md border border-border">
+    <div
+      data-slot="table-container"
+      className="relative w-full overflow-x-auto rounded-md border border-border"
+    >
       <table
         data-slot="table"
         className={cn("w-max min-w-full caption-bottom text-xs", className)}
         {...props}
       />
-    </ScrollArea>
+    </div>
   );
 }
 
@@ -53,7 +55,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+        "border-b border-border bg-background transition-colors hover:bg-muted data-[state=selected]:bg-muted",
         className,
       )}
       {...props}

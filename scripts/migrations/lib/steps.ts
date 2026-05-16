@@ -1,3 +1,5 @@
+import { mapLegacySettingRow } from "@/features/system/settings/lib/legacy-setting-map";
+
 import { MIGRATION_ACTOR } from "./config";
 import type { MigrationSql } from "./connections";
 import { markStepCompleted } from "./state";
@@ -681,12 +683,55 @@ export const migrationSteps: MigrationStep[] = [
       >`SELECT * FROM settings`;
 
       if (!dryRun) {
+        const mergedByCode = new Map<
+          string,
+          {
+            id: string;
+            code: string;
+            label: string;
+            description: string | null;
+            isActive: boolean | null;
+            value: string | null;
+            amount: number | null;
+            createdBy: string;
+            createdAt: Date;
+            updatedBy: string | null;
+            updatedAt: Date | null;
+          }
+        >();
+
         for (const row of legacyRows) {
+          const mapped = mapLegacySettingRow({
+            code: row.code,
+            label: row.label,
+            description: row.description,
+            isActive: row.isActive,
+            value: row.value,
+            amount: row.amount,
+          });
+          if (!mapped) continue;
+
           const createdBy =
             row.createdBy?.trim() && row.createdBy.length <= 64
               ? row.createdBy.slice(0, 64)
               : MIGRATION_ACTOR;
 
+          mergedByCode.set(mapped.code, {
+            id: row.id,
+            code: mapped.code,
+            label: mapped.label,
+            description: mapped.description,
+            isActive: mapped.isActive,
+            value: mapped.value,
+            amount: mapped.amount,
+            createdBy,
+            createdAt: row.createdAt,
+            updatedBy: row.updatedBy,
+            updatedAt: row.updatedAt,
+          });
+        }
+
+        for (const row of mergedByCode.values()) {
           await target`
             INSERT INTO settings (
               id, code, label, description, "isActive", value, amount,
@@ -700,14 +745,18 @@ export const migrationSteps: MigrationStep[] = [
               ${sqlNullable(row.isActive)},
               ${sqlNullable(row.value)},
               ${sqlNullable(row.amount)},
-              ${createdBy},
+              ${row.createdBy},
               ${row.createdAt},
               ${sqlNullable(row.updatedBy ? row.updatedBy.slice(0, 64) : null)},
               ${sqlNullable(row.updatedAt)}
             )
-            ON CONFLICT (id) DO UPDATE SET
-              value = EXCLUDED.value,
+            ON CONFLICT (code) DO UPDATE SET
+              label = EXCLUDED.label,
+              description = EXCLUDED.description,
+              "isActive" = EXCLUDED."isActive",
+              value = coalesce(nullif(trim(EXCLUDED.value), ''), settings.value),
               amount = EXCLUDED.amount,
+              "updatedBy" = EXCLUDED."updatedBy",
               "updatedAt" = EXCLUDED."updatedAt"
           `;
         }

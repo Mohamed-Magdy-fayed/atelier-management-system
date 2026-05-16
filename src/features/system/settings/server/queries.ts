@@ -1,6 +1,7 @@
-import { asc, count, desc, eq, ilike, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
 
 import { SettingsTable } from "@/drizzle/schema";
+import { SYSTEM_SETTING_CODES } from "@/features/system/settings/lib/system-settings-registry";
 
 import type { ListSettingsInput } from "./schemas";
 import {
@@ -11,17 +12,21 @@ import {
 import type { SettingGridRow } from "./types";
 
 function buildWhereClause(input: ListSettingsInput) {
+  const systemOnly = inArray(SettingsTable.code, [...SYSTEM_SETTING_CODES]);
   const query = input.globalFilter?.trim();
 
   if (!query) {
-    return undefined;
+    return systemOnly;
   }
 
   const likeValue = `%${query}%`;
-  return or(
-    ilike(SettingsTable.code, likeValue),
-    ilike(SettingsTable.description, likeValue),
-    ilike(SettingsTable.value, likeValue),
+  return and(
+    systemOnly,
+    or(
+      ilike(SettingsTable.code, likeValue),
+      ilike(SettingsTable.description, likeValue),
+      ilike(SettingsTable.value, likeValue),
+    ),
   );
 }
 

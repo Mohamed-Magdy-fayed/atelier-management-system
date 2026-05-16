@@ -489,6 +489,15 @@ Entity forms should follow:
 - entity-owned labels and placeholders
 - bilingual validation feedback where user-facing
 
+### Zod validation messages (translation keys)
+
+User-visible Zod errors must be **i18n keys** (dotted paths such as `forms.validation.required`), not literal English copy in the schema.
+
+- Use **`translationKey()`** from [`src/features/core/i18n/global`](../src/features/core/i18n/global/index.ts) for every Zod `message` argument, including **`superRefine`** / **`ctx.addIssue({ message })`**.
+- Define the strings under **`forms.validation`** (or another shared namespace) in both [`en.ts`](../src/features/core/i18n/global/en.ts) and [`ar.ts`](../src/features/core/i18n/global/ar.ts).
+- Inline field errors and the invalid-submit toast are translated automatically by **`FormBase`** and **`useAppForm`** via [`src/components/forms/validation-messages.ts`](../src/components/forms/validation-messages.ts).
+- If you validate with **`safeParse`** outside the form (e.g. multistep “next” buttons), show issues with **`translateZodIssueMessages`** from the same module so the toast matches the active locale.
+
 ### Overlay forms (modals and sheets)
 
 Use this pattern whenever a form lives inside a **dialog** or **sheet**: keep **fields** in a **scrollable** middle region and put **primary actions** (submit, cancel, etc.) in a **fixed footer** outside the scrolling area. That matches system dialogs and admin CRUD modals and avoids submit buttons scrolling away on long forms.
@@ -539,6 +548,7 @@ When adding or editing an entity form in a modal:
 3. Keep mutations, `toast.promise`, `FieldSet disabled={pending}`, and **`form.reset`** behavior in the feature; only the **layout and submit wiring** are standardized.
 4. For **`SystemDialog`**, prefer footer **`actions`** + **`OverlayFormBody`** in **`children`**; use **`<form.AppForm>`** when the footer needs **`form.Subscribe`**.
 5. After substantive form or dialog changes, run **`npm run build`** (project standard sanity check).
+6. Follow **Form Pattern → Zod validation messages (translation keys)** for all user-facing Zod messages.
 
 ## Blueprint For AI Agents
 

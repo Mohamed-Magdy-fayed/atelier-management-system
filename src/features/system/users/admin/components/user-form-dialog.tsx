@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2Icon, PlusIcon, SaveIcon, XIcon } from "lucide-react";
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useId, useMemo } from "react";
@@ -34,6 +34,7 @@ const userFormSchema = z.object({
   phone: z.string().trim().max(16),
   age: z.number().int().min(0).max(150).nullable(),
   role: z.enum(["admin", "employee", "customer"]),
+  branchIds: z.array(z.string().uuid()),
 });
 
 type UserFormValues = z.infer<typeof userFormSchema>;
@@ -43,6 +44,7 @@ export type UserFormDialogProps = {
   onOpenChange: (open: boolean) => void;
   user?: UserGridRow | null;
   defaultRole?: UserFormValues["role"];
+  /** Prefills branch assignment when creating from a branch-scoped screen. */
   branchId?: string;
 };
 
@@ -53,14 +55,45 @@ export function UserFormDialog({
   defaultRole = "customer",
   branchId,
 }: UserFormDialogProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const isEdit = user != null;
   const resolvedRole = (user?.role as UserFormValues["role"]) ?? defaultRole;
+  const assignsBranches =
+    resolvedRole === "employee" || resolvedRole === "admin";
 
   const createMut = useMutation(trpc.users.create.mutationOptions());
   const updateMut = useMutation(trpc.users.update.mutationOptions());
+
+  const branchesQuery = useQuery({
+    ...trpc.users.listAssignableBranches.queryOptions(),
+    enabled: open && assignsBranches,
+  });
+
+  const userBranchIdsQuery = useQuery({
+    ...trpc.users.getBranchIds.queryOptions({ id: user?.id ?? "" }),
+    enabled: open && isEdit && assignsBranches && Boolean(user?.id),
+  });
+
+  const branchOptions = useMemo(
+    () =>
+      (branchesQuery.data ?? []).map((branch) => ({
+        value: branch.id,
+        label: locale === "ar" ? branch.nameAr : branch.nameEn,
+      })),
+    [branchesQuery.data, locale],
+  );
+
+  const initialBranchIds = useMemo(() => {
+    if (isEdit && userBranchIdsQuery.data) {
+      return userBranchIdsQuery.data;
+    }
+    if (branchId) {
+      return [branchId];
+    }
+    return [];
+  }, [branchId, isEdit, userBranchIdsQuery.data]);
 
   const defaultValues = useMemo<UserFormValues>(
     () => ({
@@ -69,26 +102,27 @@ export function UserFormDialog({
       phone: user?.phone ?? "",
       age: user?.age ?? null,
       role: resolvedRole,
+      branchIds: initialBranchIds,
     }),
-    [user, resolvedRole],
+    [initialBranchIds, resolvedRole, user],
   );
 
   const form = useAppForm({
     defaultValues,
     validators: { onSubmit: userFormSchema },
     onSubmit: async ({ value }) => {
-      if (!isEdit && resolvedRole === "employee" && !branchId) {
-        toast.error(String(t("systemPages.reservationBranchRequired")));
+      if (assignsBranches && value.branchIds.length === 0) {
+        toast.error(String(t("systemPages.userBranchesRequired")));
         return;
       }
 
       const payload = {
-        ...value,
+        name: value.name,
+        email: value.email,
         phone: value.phone ? value.phone : null,
+        age: value.age,
         role: resolvedRole,
-        ...(!isEdit && resolvedRole === "employee" && branchId
-          ? { branchId }
-          : {}),
+        ...(assignsBranches ? { branchIds: value.branchIds } : {}),
       };
       const action =
         isEdit && user
@@ -121,9 +155,10 @@ export function UserFormDialog({
   });
 
   useEffect(() => {
-    if (open) form.reset(defaultValues);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, user?.id]);
+    if (!open) return;
+    if (isEdit && userBranchIdsQuery.isPending) return;
+    form.reset(defaultValues);
+  }, [defaultValues, form, isEdit, open, userBranchIdsQuery.isPending]);
 
   const pending = createMut.isPending || updateMut.isPending;
   const entityLabel = t(
@@ -186,6 +221,20 @@ export function UserFormDialog({
                 <form.AppField name="age">
                   {(f) => <f.NumberField label={String(t("forms.age"))} />}
                 </form.AppField>
+                {assignsBranches ? (
+                  <form.AppField name="branchIds">
+                    {(f) => (
+                      <f.SelectField
+                        multiple
+                        label={String(t("systemPages.userAssignedBranches"))}
+                        placeholder={String(
+                          t("systemPages.userAssignedBranchesPlaceholder"),
+                        )}
+                        options={branchOptions}
+                      />
+                    )}
+                  </form.AppField>
+                ) : null}
               </FieldGroup>
             </FieldSet>
           </OverlayFormBody>
@@ -205,7 +254,7 @@ export function UserFormDialog({
             <OverlayFormSubmitButton
               formId={formId}
               size="default"
-              disabled={pending}
+              disabled={pending || (assignsBranches && branchesQuery.isPending)}
             >
               <SubmitIcon
                 className={pending ? "size-3.5 animate-spin" : "size-3.5"}
