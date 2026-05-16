@@ -25,11 +25,14 @@ export type BranchState =
       hasActiveOrg: false;
       activeBranch: undefined;
       branches: FullBranch[];
+      /** True when the user is assigned to every branch (may use “all branches” view). */
+      canViewAllBranches: boolean;
     }
   | {
       hasActiveOrg: true;
       activeBranch: FullBranch;
       branches: FullBranch[];
+      canViewAllBranches: boolean;
     };
 
 export type Cookies = {

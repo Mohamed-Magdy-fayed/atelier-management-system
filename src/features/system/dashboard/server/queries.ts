@@ -23,12 +23,25 @@ import {
   ReservationsTable,
   UsersTable,
 } from "@/drizzle/schema";
+import { TRPCError } from "@trpc/server";
+
+import {
+  assertOperationalStaff,
+  resolveListBranchId,
+} from "@/features/system/shared/staff-access";
 import type { createTRPCContext } from "@/integrations/trpc/init";
 
 import { buildDashboardDateContext, parseDashboardRange } from "../lib/dates";
 import type { DashboardData } from "./types";
 
 type Ctx = Awaited<ReturnType<typeof createTRPCContext>>;
+
+function getRequiredSession(ctx: Ctx) {
+  if (!ctx.session) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return ctx.session;
+}
 
 export type GetDashboardInput = {
   branchId?: string;
@@ -40,7 +53,9 @@ export async function getDashboardData(
   ctx: Ctx,
   input: GetDashboardInput,
 ): Promise<DashboardData> {
-  const branchId = input.branchId;
+  const session = getRequiredSession(ctx);
+  assertOperationalStaff(session.user.role);
+  const branchId = await resolveListBranchId(ctx, session, input.branchId);
   const dates = buildDashboardDateContext();
   const { rangeStart, rangeEnd } = parseDashboardRange(input, dates);
 

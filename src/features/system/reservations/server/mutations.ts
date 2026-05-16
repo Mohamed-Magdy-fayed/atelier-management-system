@@ -21,10 +21,12 @@ import type {
   ReservationUpdateStatusInput,
 } from "./schemas";
 import {
-  assertAdminRole,
-  getRequiredSession,
-  type TRPCContext,
-} from "./shared";
+  assertOperationalStaff,
+  assertReservationIdsAccessible,
+  assertUserCanAccessBranch,
+} from "@/features/system/shared/staff-access";
+
+import { getRequiredSession, type TRPCContext } from "./shared";
 
 function normalizeReservationCode(code: string) {
   return code.trim().toUpperCase();
@@ -153,7 +155,8 @@ export async function generateReservationCodeForBranch(
   input: ReservationGenerateCodeInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  await assertUserCanAccessBranch(ctx, session, input.branchId);
 
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
@@ -187,7 +190,8 @@ export async function createReservation(
   input: ReservationMutationInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  await assertUserCanAccessBranch(ctx, session, input.branchId);
 
   if (input.depositPaid < 100) {
     throw new TRPCError({
@@ -277,10 +281,10 @@ export async function updateReservation(
   input: ReservationUpdateInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
 
   const existing = await ctx.db.query.ReservationsTable.findFirst({
-    columns: { id: true, status: true },
+    columns: { id: true, status: true, branchId: true },
     where: and(
       eq(ReservationsTable.id, input.id),
       isNull(ReservationsTable.deletedAt),
@@ -291,6 +295,18 @@ export async function updateReservation(
     throw new TRPCError({
       code: "NOT_FOUND",
       message: ctx.t("systemPages.reservationNotFound"),
+    });
+  }
+
+  await assertUserCanAccessBranch(ctx, session, existing.branchId);
+  await assertUserCanAccessBranch(ctx, session, input.branchId);
+  if (
+    session.user.role === "employee" &&
+    input.branchId !== existing.branchId
+  ) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Employees cannot move reservations to another branch",
     });
   }
 
@@ -342,10 +358,10 @@ export async function updateReservationStatus(
   input: ReservationUpdateStatusInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
 
   const existing = await ctx.db.query.ReservationsTable.findFirst({
-    columns: { id: true },
+    columns: { id: true, branchId: true },
     where: and(
       eq(ReservationsTable.id, input.id),
       isNull(ReservationsTable.deletedAt),
@@ -358,6 +374,8 @@ export async function updateReservationStatus(
       message: ctx.t("systemPages.reservationNotFound"),
     });
   }
+
+  await assertUserCanAccessBranch(ctx, session, existing.branchId);
 
   await ctx.db
     .update(ReservationsTable)
@@ -375,7 +393,7 @@ export async function collectReservationPayment(
   input: ReservationCollectPaymentInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
 
   const reservation = await ctx.db.query.ReservationsTable.findFirst({
     where: and(
@@ -390,6 +408,8 @@ export async function collectReservationPayment(
       message: ctx.t("systemPages.reservationNotFound"),
     });
   }
+
+  await assertUserCanAccessBranch(ctx, session, reservation.branchId);
 
   const outstanding =
     reservation.totalPrice - reservation.discount - reservation.totalPaid;
@@ -428,7 +448,7 @@ export async function deleteReservation(
   input: ReservationDeleteInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
 
   if (session.user.role !== "admin") {
     throw new TRPCError({
@@ -469,7 +489,8 @@ export async function bulkUpdateReservationStatus(
   input: ReservationBulkUpdateStatusInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  await assertReservationIdsAccessible(ctx, session, input.ids);
 
   await ctx.db
     .update(ReservationsTable)
@@ -492,7 +513,7 @@ export async function bulkDeleteReservations(
   input: ReservationBulkDeleteInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
 
   if (session.user.role !== "admin") {
     throw new TRPCError({

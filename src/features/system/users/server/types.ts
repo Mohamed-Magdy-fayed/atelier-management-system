@@ -47,6 +47,16 @@ export type UserGridRow = {
   deletedBy: string | null;
 };
 
+export type EmployeeBranchRef = {
+  id: string;
+  nameEn: string;
+  nameAr: string;
+};
+
+export type EmployeeGridRow = UserGridRow & {
+  branches: EmployeeBranchRef[];
+};
+
 export const userGridSelect = {
   id: UsersTable.id,
   name: UsersTable.name,

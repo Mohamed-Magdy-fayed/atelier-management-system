@@ -30,6 +30,7 @@ import type { EditableBranch } from "./types";
 type BranchManagerDropdownProps = {
   branches: EditableBranch[];
   canManageBranches: boolean;
+  canViewAllBranches: boolean;
   isPending: boolean;
   locale: string;
   onCreateBranch: () => void;
@@ -43,6 +44,7 @@ type BranchManagerDropdownProps = {
 export function BranchManagerDropdown({
   branches,
   canManageBranches,
+  canViewAllBranches,
   isPending,
   locale,
   onCreateBranch,
@@ -66,9 +68,11 @@ export function BranchManagerDropdown({
       >
         <DropdownMenuGroup>
           <DropdownMenuLabel>
-            {t("authTranslations.branch.create.title")}
+            {branches.length === 0
+              ? t("authTranslations.branch.create.title")
+              : t("authTranslations.branch.switcher.selectActiveBranch")}
           </DropdownMenuLabel>
-          {branches.length > 0 ? (
+          {branches.length > 0 && canViewAllBranches ? (
             <>
               <DropdownMenuItem
                 disabled={isPending}

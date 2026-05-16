@@ -9,10 +9,12 @@ import type {
   ListDressesInput,
 } from "./schemas";
 import {
-  assertAdminRole,
-  getRequiredSession,
-  type TRPCContext,
-} from "./shared";
+  assertOperationalStaff,
+  assertUserCanAccessBranch,
+  resolveListBranchId,
+} from "@/features/system/shared/staff-access";
+
+import { getRequiredSession, type TRPCContext } from "./shared";
 import type { DressGridRow } from "./types";
 
 const dressGridSelect = {
@@ -39,9 +41,10 @@ const dressGridSelect = {
 
 export async function listDresses(ctx: TRPCContext, input: ListDressesInput) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
-  const whereClause = buildWhere(input);
+  const whereClause = buildWhere({ ...input, branchId });
   const [{ value: total }] = await ctx.db
     .select({ value: count() })
     .from(DressesTable)
@@ -71,12 +74,13 @@ export async function exportDresses(
   input: ExportDressesInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const rows = await ctx.db
     .select(dressGridSelect)
     .from(DressesTable)
-    .where(buildWhere(input))
+    .where(buildWhere({ ...input, branchId }))
     .orderBy(sortExpr(input.sorting))
     .limit(DRESS_EXPORT_ROW_LIMIT);
 
@@ -87,7 +91,7 @@ export async function exportDresses(
 
 export async function getDressById(ctx: TRPCContext, input: DressByIdInput) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
 
   const dress = await ctx.db.query.DressesTable.findFirst({
     where: and(eq(DressesTable.id, input.id), isNull(DressesTable.deletedAt)),
@@ -99,6 +103,8 @@ export async function getDressById(ctx: TRPCContext, input: DressByIdInput) {
       message: ctx.t("systemPages.dressNotFound"),
     });
   }
+
+  await assertUserCanAccessBranch(ctx, session, dress.branchId);
 
   return dress;
 }

@@ -438,6 +438,8 @@ export default {
         clearActiveBranch: {
           success: "Viewing all branches",
           error: "Unable to clear the active branch",
+          notAssignedToAll:
+            "You must be assigned to every branch to view all branches at once",
         },
         createBranch: {
           success: "Branch created",
@@ -466,6 +468,7 @@ export default {
       switcher: {
         add: "Add branch",
         select: "Select branch",
+        selectActiveBranch: "Select active branch",
         allBranches: "All branches",
         edit: "Edit branch",
         empty: "Create an branch",

@@ -12,10 +12,12 @@ import type {
   DressUpdateInput,
 } from "./schemas";
 import {
-  assertAdminRole,
-  getRequiredSession,
-  type TRPCContext,
-} from "./shared";
+  assertDressIdsAccessible,
+  assertOperationalStaff,
+  assertUserCanAccessBranch,
+} from "@/features/system/shared/staff-access";
+
+import { getRequiredSession, type TRPCContext } from "./shared";
 
 function normalizeCode(code: string) {
   return code.trim().toUpperCase();
@@ -47,7 +49,8 @@ async function ensureUniqueActiveCode(
 
 export async function createDress(ctx: TRPCContext, input: DressMutationInput) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  await assertUserCanAccessBranch(ctx, session, input.branchId);
 
   const code = normalizeCode(input.code);
   await ensureUniqueActiveCode(ctx, code);
@@ -78,10 +81,10 @@ export async function createDress(ctx: TRPCContext, input: DressMutationInput) {
 
 export async function updateDress(ctx: TRPCContext, input: DressUpdateInput) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
 
   const dress = await ctx.db.query.DressesTable.findFirst({
-    columns: { id: true },
+    columns: { id: true, branchId: true },
     where: and(eq(DressesTable.id, input.id), isNull(DressesTable.deletedAt)),
   });
 
@@ -89,6 +92,18 @@ export async function updateDress(ctx: TRPCContext, input: DressUpdateInput) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: ctx.t("systemPages.dressNotFound"),
+    });
+  }
+
+  await assertUserCanAccessBranch(ctx, session, dress.branchId);
+  await assertUserCanAccessBranch(ctx, session, input.branchId);
+  if (
+    session.user.role === "employee" &&
+    input.branchId !== dress.branchId
+  ) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Employees cannot move dresses to another branch",
     });
   }
 
@@ -121,10 +136,10 @@ export async function updateDress(ctx: TRPCContext, input: DressUpdateInput) {
 
 export async function deleteDress(ctx: TRPCContext, input: DressDeleteInput) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
 
   const dress = await ctx.db.query.DressesTable.findFirst({
-    columns: { id: true },
+    columns: { id: true, branchId: true },
     where: and(eq(DressesTable.id, input.id), isNull(DressesTable.deletedAt)),
   });
 
@@ -134,6 +149,8 @@ export async function deleteDress(ctx: TRPCContext, input: DressDeleteInput) {
       message: ctx.t("systemPages.dressNotFound"),
     });
   }
+
+  await assertUserCanAccessBranch(ctx, session, dress.branchId);
 
   await ctx.db
     .update(DressesTable)
@@ -152,10 +169,10 @@ export async function setDressActive(
   input: DressSetActiveInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
 
   const dress = await ctx.db.query.DressesTable.findFirst({
-    columns: { id: true },
+    columns: { id: true, branchId: true },
     where: and(eq(DressesTable.id, input.id), isNull(DressesTable.deletedAt)),
   });
 
@@ -165,6 +182,8 @@ export async function setDressActive(
       message: ctx.t("systemPages.dressNotFound"),
     });
   }
+
+  await assertUserCanAccessBranch(ctx, session, dress.branchId);
 
   await ctx.db
     .update(DressesTable)
@@ -182,7 +201,8 @@ export async function bulkSetDressesActive(
   input: DressBulkSetActiveInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  await assertDressIdsAccessible(ctx, session, input.ids);
 
   await ctx.db
     .update(DressesTable)
@@ -202,7 +222,8 @@ export async function bulkArchiveDresses(
   input: DressBulkArchiveInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  await assertDressIdsAccessible(ctx, session, input.ids);
 
   await ctx.db
     .update(DressesTable)

@@ -424,6 +424,8 @@ export default {
         clearActiveBranch: {
           success: "يتم الآن عرض كل الفروع",
           error: "تعذر إلغاء تحديد الفرع الحالية",
+          notAssignedToAll:
+            "يجب أن تكون مخصصًا لكل الفروع لعرضها جميعًا في آن واحد",
         },
         createBranch: {
           success: "تم إنشاء الفرع",
@@ -452,6 +454,7 @@ export default {
       switcher: {
         add: "إضافة فرع",
         select: "اختر الفرع",
+        selectActiveBranch: "اختر الفرع النشط",
         allBranches: "كل الفروع",
         edit: "تعديل الفرع",
         empty: "قم بإنشاء فرع",

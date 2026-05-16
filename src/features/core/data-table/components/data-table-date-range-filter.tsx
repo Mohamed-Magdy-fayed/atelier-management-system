@@ -1,7 +1,7 @@
 "use client";
 
 import type { Column } from "@tanstack/react-table";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, XIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { ar, enUS } from "react-day-picker/locale";
@@ -177,14 +177,14 @@ export function DataTableDateRangeFilter<TData, TValue>({
   );
 
   const presetsRow = (
-    <div className="flex max-w-[16rem] flex-wrap gap-1 border-b border-border p-2">
+    <div className="flex flex-row justify-stretch items-center flex-wrap gap-1 border-b border-border p-2">
       {presets.map((p) => (
         <Button
           key={p.key}
           type="button"
-          variant="ghost"
+          variant="secondary"
           size="sm"
-          className="h-7 px-2 text-xs"
+          className="flex-1"
           onClick={p.onClick}
         >
           {p.label}
@@ -193,15 +193,15 @@ export function DataTableDateRangeFilter<TData, TValue>({
       {active ? (
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className="ms-auto h-7 px-2 text-xs text-muted-foreground"
           onClick={() => {
             setRange(undefined);
             column.setFilterValue(undefined);
           }}
         >
-          {String(t("dataTable.clear"))}
+          <XIcon className="text-destructive" />
+          {t("dataTable.clear")}
         </Button>
       ) : null}
     </div>
@@ -249,7 +249,7 @@ export function DataTableDateRangeFilter<TData, TValue>({
   return (
     <Popover>
       <PopoverTrigger render={trigger} />
-      <PopoverContent align="start" className="w-auto p-0">
+      <PopoverContent align="start" className="w-auto p-0 max-w-min">
         {presetsRow}
         {calendar}
       </PopoverContent>

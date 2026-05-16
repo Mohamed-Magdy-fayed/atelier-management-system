@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { FilterFn } from "@tanstack/react-table";
+import type { FilterFn, Table } from "@tanstack/react-table";
 import { PlusIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -25,19 +25,24 @@ import {
 import { useTranslation } from "@/features/core/i18n/client";
 import { UsersImportButton } from "@/features/core/import-review";
 import { useTRPC } from "@/integrations/trpc/client";
-import type { UserGridRow } from "@/integrations/trpc/routers/users";
+import type {
+  EmployeeGridRow,
+  UserGridRow,
+} from "@/integrations/trpc/routers/users";
 
 import { UserDeleteDialog } from "./components/user-delete-dialog";
 import { UserFormDialog } from "./components/user-form-dialog";
 import { UserInfoModal } from "./components/user-info-modal";
 import type { UserRowActionVariant } from "./components/user-row-actions";
+import {
+  buildEmployeeGridColumns,
+  EmployeesGridFilters,
+} from "./components";
 import { UsersBulkActions } from "./components/users-bulk-actions";
-import { UsersGridFilters } from "./components/users-grid-filters";
-import { buildUserGridColumns } from "./components/users-table-columns";
 
 type RowAction = { row: UserGridRow; variant: UserRowActionVariant } | null;
 
-const userGlobalFilter: FilterFn<UserGridRow> = (row, _columnId, value) => {
+const userGlobalFilter: FilterFn<EmployeeGridRow> = (row, _columnId, value) => {
   const q = String(value ?? "").toLowerCase();
   if (!q) return true;
   const n = row.original.name?.toLowerCase() ?? "";
@@ -54,8 +59,22 @@ export function EmployeesTablePage() {
     ? branchState.activeBranch.id
     : undefined;
   const addEmployeeLabel = `${t("common.add")} ${t("systemPages.roleEmployee")}`;
+
+  const { data: assignableBranches } = useQuery(
+    trpc.users.listAssignableBranches.queryOptions(),
+  );
+
+  const branchFilterOptions = useMemo(
+    () =>
+      (assignableBranches ?? []).map((branch) => ({
+        value: branch.id,
+        label: locale === "ar" ? branch.nameAr : branch.nameEn,
+      })),
+    [assignableBranches, locale],
+  );
+
   const { data, isFetching } = useQuery(
-    trpc.users.listEmployees.queryOptions({ branchId }),
+    trpc.users.listEmployees.queryOptions({}),
   );
 
   const [rowAction, setRowAction] = useState<RowAction>(null);
@@ -64,8 +83,14 @@ export function EmployeesTablePage() {
   const rows = data?.rows ?? [];
 
   const columns = useMemo(
-    () => buildUserGridColumns({ t, locale, setRowAction }),
-    [t, locale],
+    () =>
+      buildEmployeeGridColumns({
+        t,
+        locale,
+        setRowAction,
+        branchFilterOptions,
+      }),
+    [branchFilterOptions, locale, setRowAction, t],
   );
 
   const { table, globalFilter, setGlobalFilter } = useDataTable({
@@ -93,7 +118,12 @@ export function EmployeesTablePage() {
             globalFilter={globalFilter}
             onGlobalFilterChange={(v) => setGlobalFilter(v)}
             searchPlaceholder={t("dataTable.searchUsersHint")}
-            filterSlot={<UsersGridFilters table={table} />}
+            filterSlot={
+              <EmployeesGridFilters
+                table={table}
+                branchFilterOptions={branchFilterOptions}
+              />
+            }
           >
             <Tooltip>
               <TooltipTrigger
@@ -120,6 +150,11 @@ export function EmployeesTablePage() {
                 name: row.name,
                 email: row.email,
                 phone: row.phone,
+                branches: row.branches
+                  .map((branch) =>
+                    locale === "ar" ? branch.nameAr : branch.nameEn,
+                  )
+                  .join(", "),
                 age: row.age,
                 emailVerifiedAt: row.emailVerifiedAt,
                 lastSignInAt: row.lastSignInAt,
@@ -132,7 +167,7 @@ export function EmployeesTablePage() {
         footer={<DataTablePagination table={table} />}
         actionBar={
           <DataTableActionBar table={table}>
-            <UsersBulkActions table={table} />
+            <UsersBulkActions table={table as unknown as Table<UserGridRow>} />
           </DataTableActionBar>
         }
       />

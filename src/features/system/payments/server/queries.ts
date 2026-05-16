@@ -4,10 +4,11 @@ import { PaymentsTable } from "@/drizzle/schema";
 import { buildWhere, PAYMENT_EXPORT_ROW_LIMIT, sortExpr } from "./filters";
 import type { ExportPaymentsInput, ListPaymentsInput } from "./schemas";
 import {
-  assertAdminRole,
-  getRequiredSession,
-  type TRPCContext,
-} from "./shared";
+  assertOperationalStaff,
+  resolveListBranchId,
+} from "@/features/system/shared/staff-access";
+
+import { getRequiredSession, type TRPCContext } from "./shared";
 import type { PaymentGridRow } from "./types";
 
 const paymentGridSelect = {
@@ -25,9 +26,10 @@ const paymentGridSelect = {
 
 export async function listPayments(ctx: TRPCContext, input: ListPaymentsInput) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
-  const whereClause = buildWhere(input);
+  const whereClause = buildWhere({ ...input, branchId });
   const [{ value: total }] = await ctx.db
     .select({ value: count() })
     .from(PaymentsTable)
@@ -57,12 +59,13 @@ export async function exportPayments(
   input: ExportPaymentsInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const rows = await ctx.db
     .select(paymentGridSelect)
     .from(PaymentsTable)
-    .where(buildWhere(input))
+    .where(buildWhere({ ...input, branchId }))
     .orderBy(sortExpr(input.sorting))
     .limit(PAYMENT_EXPORT_ROW_LIMIT);
 

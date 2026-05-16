@@ -38,24 +38,23 @@ export function SelectManyField({
   const anchor = useComboboxAnchor();
   const { t } = useTranslation();
 
-  const labels = Object.fromEntries(
-    options.map((option) => [option.value, option.label]),
-  );
-
   return (
     <Combobox
       autoHighlight
+      isItemEqualToValue={(a, b) => a.value === b.value}
       items={options}
+      itemToStringLabel={(option) => option.label}
+      itemToStringValue={(option) => option.label}
       multiple
       onValueChange={setValue}
       value={value}
     >
       <ComboboxChips className="w-full" ref={anchor}>
         <ComboboxValue>
-          {(selectedValues) => (
+          {(selectedValues: SelectOption[]) => (
             <>
-              {selectedValues.map((value: string) => (
-                <ComboboxChip key={value}>{labels[value]}</ComboboxChip>
+              {selectedValues.map((option) => (
+                <ComboboxChip key={option.value}>{option.label}</ComboboxChip>
               ))}
               <ComboboxChipsInput placeholder={placeholder} />
               <InputGroupAddon align={"inline-end"}>
@@ -75,7 +74,7 @@ export function SelectManyField({
         <ComboboxEmpty>{t("common.noOptionsFound")}</ComboboxEmpty>
         <ComboboxList>
           {(item: SelectOption) => (
-            <ComboboxItem key={item.value} value={item.value}>
+            <ComboboxItem key={item.value} value={item}>
               {item.label}
             </ComboboxItem>
           )}

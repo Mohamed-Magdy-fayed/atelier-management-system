@@ -15,10 +15,12 @@ import type {
   ReservationFormDataInput,
 } from "./schemas";
 import {
-  assertAdminRole,
-  getRequiredSession,
-  type TRPCContext,
-} from "./shared";
+  assertOperationalStaff,
+  assertUserCanAccessBranch,
+  resolveListBranchId,
+} from "@/features/system/shared/staff-access";
+
+import { getRequiredSession, type TRPCContext } from "./shared";
 import type { ReservationDetailRow, ReservationGridRow } from "./types";
 
 const reservationGridSelect = {
@@ -65,9 +67,10 @@ export async function listReservations(
   input: ListReservationsInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
-  const whereClause = buildWhere(input);
+  const whereClause = buildWhere({ ...input, branchId });
   const [{ value: total }] = await ctx.db
     .select({ value: count() })
     .from(ReservationsTable)
@@ -96,10 +99,11 @@ export async function exportReservations(
   input: ExportReservationsInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const rows = await reservationListQuery(ctx)
-    .where(buildWhere(input))
+    .where(buildWhere({ ...input, branchId }))
     .orderBy(sortExpr(input.sorting))
     .limit(RESERVATION_EXPORT_ROW_LIMIT);
 
@@ -113,7 +117,7 @@ export async function getReservationById(
   input: ReservationByIdInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
 
   const reservation = await ctx.db.query.ReservationsTable.findFirst({
     where: eq(ReservationsTable.id, input.id),
@@ -128,6 +132,8 @@ export async function getReservationById(
   if (!reservation || reservation.deletedAt) {
     return null;
   }
+
+  await assertUserCanAccessBranch(ctx, session, reservation.branchId);
 
   const remainingBalance =
     reservation.totalPrice - reservation.discount - reservation.totalPaid;
@@ -187,9 +193,13 @@ export async function getReservationFormData(
   input: ReservationFormDataInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
 
-  const scopedBranchId = input.branchId;
+  const scopedBranchId = await resolveListBranchId(
+    ctx,
+    session,
+    input.branchId,
+  );
   const dressConditions = [
     eq(DressesTable.isActive, true),
     isNull(DressesTable.deletedAt),
@@ -239,15 +249,29 @@ export async function getDressOccasionBlockedRanges(
   input: DressOccasionBlockedRangesInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+
+  const dress = await ctx.db.query.DressesTable.findFirst({
+    where: and(eq(DressesTable.id, input.dressId), isNull(DressesTable.deletedAt)),
+    columns: { branchId: true },
+  });
+
+  if (!dress) {
+    return [];
+  }
+
+  await assertUserCanAccessBranch(ctx, session, dress.branchId);
+
+  const branchId =
+    session.user.role === "admin"
+      ? (input.branchId ?? dress.branchId)
+      : dress.branchId;
 
   const conditions = [
     eq(ReservationsTable.dressId, input.dressId),
     isNull(ReservationsTable.deletedAt),
+    eq(ReservationsTable.branchId, branchId),
   ];
-  if (input.branchId) {
-    conditions.push(eq(ReservationsTable.branchId, input.branchId));
-  }
   if (input.excludeReservationId) {
     conditions.push(ne(ReservationsTable.id, input.excludeReservationId));
   }

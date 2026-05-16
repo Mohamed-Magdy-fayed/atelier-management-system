@@ -1,6 +1,6 @@
 "use server";
 
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray } from "drizzle-orm";
 import { cacheTag } from "next/cache";
 import { z } from "zod";
 
@@ -215,6 +215,62 @@ export type FullBranch = Pick<
   Branch,
   "id" | "nameEn" | "nameAr" | "ownerId"
 > & { isCurrent: boolean | null };
+
+async function userCanViewAllBranches(userId: string): Promise<boolean> {
+  const [totalRow, membershipRow] = await Promise.all([
+    db.select({ value: count() }).from(BranchesTable),
+    db
+      .select({ value: count() })
+      .from(BranchMembershipsTable)
+      .where(eq(BranchMembershipsTable.userId, userId)),
+  ]);
+
+  const totalBranches = totalRow[0]?.value ?? 0;
+  const membershipCount = membershipRow[0]?.value ?? 0;
+
+  return totalBranches > 0 && membershipCount === totalBranches;
+}
+
+/** Users without every-branch assignment must have one active branch. */
+async function ensureActiveBranchWhenRequired(userId: string): Promise<void> {
+  if (await userCanViewAllBranches(userId)) {
+    return;
+  }
+
+  const current = await db.query.BranchMembershipsTable.findFirst({
+    where: and(
+      eq(BranchMembershipsTable.userId, userId),
+      eq(BranchMembershipsTable.isCurrent, true),
+    ),
+    columns: { branchId: true },
+  });
+
+  if (current) {
+    return;
+  }
+
+  const firstMembership = await db.query.BranchMembershipsTable.findFirst({
+    where: eq(BranchMembershipsTable.userId, userId),
+    orderBy: [desc(BranchMembershipsTable.createdAt)],
+    columns: { branchId: true },
+  });
+
+  if (!firstMembership) {
+    return;
+  }
+
+  await db
+    .update(BranchMembershipsTable)
+    .set({ isCurrent: true })
+    .where(
+      and(
+        eq(BranchMembershipsTable.userId, userId),
+        eq(BranchMembershipsTable.branchId, firstMembership.branchId),
+      ),
+    );
+
+  revalidateAuthCache({ id: userId, branchId: firstMembership.branchId });
+}
 export async function listBranchesForUserAction(): Promise<Array<FullBranch>> {
   const actor = await getCurrentUser({ redirectIfNotFound: true });
 
@@ -378,6 +434,15 @@ export async function clearActiveBranchForUserAction(): Promise<
     };
   }
 
+  if (!(await userCanViewAllBranches(userId))) {
+    return {
+      isError: true,
+      message: t(
+        "authTranslations.branch.actions.clearActiveBranch.notAssignedToAll",
+      ),
+    };
+  }
+
   try {
     await db
       .update(BranchMembershipsTable)
@@ -396,6 +461,12 @@ export async function getBranches(
   userId: string,
   options?: { includeAllBranches?: boolean },
 ): Promise<BranchState> {
+  const canViewAllBranches = await userCanViewAllBranches(userId);
+
+  if (!canViewAllBranches) {
+    await ensureActiveBranchWhenRequired(userId);
+  }
+
   const branches = await getBranchesByUserId(
     userId,
     options?.includeAllBranches ?? false,
@@ -405,8 +476,8 @@ export async function getBranches(
   const hasActiveOrg = activeBranch !== undefined;
 
   if (!hasActiveOrg) {
-    return { hasActiveOrg: false, branches, activeBranch };
+    return { hasActiveOrg: false, branches, activeBranch, canViewAllBranches };
   }
 
-  return { hasActiveOrg, activeBranch, branches };
+  return { hasActiveOrg, activeBranch, branches, canViewAllBranches };
 }

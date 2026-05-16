@@ -1,4 +1,5 @@
 export {
+  type EmployeeGridRow,
   type UserGridRow,
   type UserImportAction,
   type UserImportCommitRow,

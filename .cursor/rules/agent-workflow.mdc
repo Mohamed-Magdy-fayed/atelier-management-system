@@ -30,6 +30,13 @@ Follow [`docs/entity-blueprint.md`](../../docs/entity-blueprint.md) and [`AGENTS
 - **Overlay forms**: modals use `OverlayFormBody` + footer `OverlayFormSubmitButton` per the blueprint Form Pattern.
 - **Zod messages**: use `translationKey()` for user-facing validation, not literal English in schemas.
 
+## Branch-scoped operations (employees)
+
+- **Dresses, reservations, payments, rental customers, and dashboard** use `assertOperationalStaff` + `resolveListBranchId` / `assertUserCanAccessBranch` from `src/features/system/shared/staff-access.ts`.
+- **Employees** must pass `branchId` from the active branch on list/mutation inputs; the server verifies branch membership. They cannot use “all branches” mode or access another branch’s rows.
+- **Admins** may omit `branchId` on lists (all branches) or pass any branch; mutations still respect payload `branchId`.
+- **Settings, branches admin, and employees** screens stay **admin-only** (`assertAdminRole`). Reservation **delete** / bulk delete remain admin-only.
+
 ## Documenting new lessons
 
 When you learn something worth repeating (tooling quirk, project convention, repeated mistake):

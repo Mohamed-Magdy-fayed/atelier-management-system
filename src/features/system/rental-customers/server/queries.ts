@@ -11,10 +11,11 @@ import type {
   ListRentalCustomersInput,
 } from "./schemas";
 import {
-  assertAdminRole,
-  getRequiredSession,
-  type TRPCContext,
-} from "./shared";
+  assertOperationalStaff,
+  resolveListBranchId,
+} from "@/features/system/shared/staff-access";
+
+import { getRequiredSession, type TRPCContext } from "./shared";
 import type { RentalCustomerGridRow } from "./types";
 
 const rentalCustomerGridSelect = {
@@ -31,9 +32,10 @@ export async function listRentalCustomers(
   input: ListRentalCustomersInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
-  const whereClause = buildWhere(input);
+  const whereClause = buildWhere({ ...input, branchId });
   const [{ value: total }] = await ctx.db
     .select({ value: count() })
     .from(RentalCustomersTable)
@@ -63,12 +65,13 @@ export async function exportRentalCustomers(
   input: ExportRentalCustomersInput,
 ) {
   const session = getRequiredSession(ctx);
-  assertAdminRole(session.user.role);
+  assertOperationalStaff(session.user.role);
+  const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const rows = await ctx.db
     .select(rentalCustomerGridSelect)
     .from(RentalCustomersTable)
-    .where(buildWhere(input))
+    .where(buildWhere({ ...input, branchId }))
     .orderBy(sortExpr(input.sorting))
     .limit(RENTAL_CUSTOMER_EXPORT_ROW_LIMIT);
 

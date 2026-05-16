@@ -1,6 +1,10 @@
-import { and, asc, count, eq, isNull } from "drizzle-orm";
+import { and, asc, count, eq, inArray, isNull } from "drizzle-orm";
 
-import { BranchMembershipsTable, UsersTable } from "@/drizzle/schema";
+import {
+  BranchesTable,
+  BranchMembershipsTable,
+  UsersTable,
+} from "@/drizzle/schema";
 
 import {
   getUserBranchIds as fetchUserBranchIds,
@@ -17,7 +21,12 @@ import {
   getRequiredSession,
   type TRPCContext,
 } from "./shared";
-import { type UserGridRow, userGridSelect } from "./types";
+import {
+  type EmployeeBranchRef,
+  type EmployeeGridRow,
+  type UserGridRow,
+  userGridSelect,
+} from "./types";
 
 export async function getUserBranchIds(ctx: TRPCContext, userId: string) {
   const session = getRequiredSession(ctx);
@@ -43,30 +52,74 @@ export async function listEmployees(
     isNull(UsersTable.deletedAt),
   );
 
-  if (input.branchId) {
-    const rows = await ctx.db
-      .select(userGridSelect)
-      .from(UsersTable)
-      .innerJoin(
-        BranchMembershipsTable,
-        and(
-          eq(BranchMembershipsTable.userId, UsersTable.id),
-          eq(BranchMembershipsTable.branchId, input.branchId),
-        ),
-      )
-      .where(employeeWhere)
-      .orderBy(asc(UsersTable.name));
+  const branchFilterIds = Array.from(
+    new Set(
+      [
+        ...(input.branchIds ?? []),
+        ...(input.branchId ? [input.branchId] : []),
+      ],
+    ),
+  );
 
-    return { rows: rows as UserGridRow[] };
+  const rows =
+    branchFilterIds.length > 0
+      ? await ctx.db
+          .selectDistinct(userGridSelect)
+          .from(UsersTable)
+          .innerJoin(
+            BranchMembershipsTable,
+            eq(BranchMembershipsTable.userId, UsersTable.id),
+          )
+          .where(
+            and(
+              employeeWhere,
+              inArray(BranchMembershipsTable.branchId, branchFilterIds),
+            ),
+          )
+          .orderBy(asc(UsersTable.name))
+      : await ctx.db
+          .select(userGridSelect)
+          .from(UsersTable)
+          .where(employeeWhere)
+          .orderBy(asc(UsersTable.name));
+
+  const userIds = rows.map((row) => row.id);
+  if (userIds.length === 0) {
+    return { rows: [] as EmployeeGridRow[] };
   }
 
-  const rows = await ctx.db
-    .select(userGridSelect)
-    .from(UsersTable)
-    .where(employeeWhere)
-    .orderBy(asc(UsersTable.name));
+  const membershipRows = await ctx.db
+    .select({
+      userId: BranchMembershipsTable.userId,
+      id: BranchesTable.id,
+      nameEn: BranchesTable.nameEn,
+      nameAr: BranchesTable.nameAr,
+    })
+    .from(BranchMembershipsTable)
+    .innerJoin(
+      BranchesTable,
+      eq(BranchMembershipsTable.branchId, BranchesTable.id),
+    )
+    .where(inArray(BranchMembershipsTable.userId, userIds))
+    .orderBy(asc(BranchesTable.nameEn));
 
-  return { rows: rows as UserGridRow[] };
+  const branchesByUserId = new Map<string, EmployeeBranchRef[]>();
+  for (const row of membershipRows) {
+    const existing = branchesByUserId.get(row.userId) ?? [];
+    existing.push({
+      id: row.id,
+      nameEn: row.nameEn,
+      nameAr: row.nameAr,
+    });
+    branchesByUserId.set(row.userId, existing);
+  }
+
+  const enriched: EmployeeGridRow[] = rows.map((row) => ({
+    ...row,
+    branches: branchesByUserId.get(row.id) ?? [],
+  }));
+
+  return { rows: enriched };
 }
 
 export async function listCustomers(

@@ -194,7 +194,10 @@ export function ReservationFormDialog({
     reservation?.branchId ??
     (branchState?.hasActiveOrg ? branchState.activeBranch.id : undefined);
   const isAllBranchesMode =
-    !isEdit && branchState != null && !branchState.hasActiveOrg;
+    !isEdit &&
+    branchState != null &&
+    branchState.canViewAllBranches &&
+    !branchState.hasActiveOrg;
   const formDataInput = activeBranchId ? { branchId: activeBranchId } : {};
   const createMut = useMutation(trpc.reservations.create.mutationOptions());
   const updateMut = useMutation(trpc.reservations.update.mutationOptions());

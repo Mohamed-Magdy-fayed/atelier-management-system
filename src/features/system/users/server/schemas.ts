@@ -3,7 +3,10 @@ import { z } from "zod";
 import { userRoleValues } from "@/drizzle/schema";
 
 export const listEmployeesInput = z.object({
+  /** @deprecated Prefer `branchIds`. Kept for active-branch shortcuts. */
   branchId: z.string().uuid().optional(),
+  /** Employees assigned to any of these branches are returned (OR). */
+  branchIds: z.array(z.string().uuid()).optional(),
 });
 
 export const listCustomersInput = z.object({

@@ -43,11 +43,14 @@ export function BranchManager({
   const branchState = useBranch();
   const isCustomer = isAuthenticated ? session.user.role === "customer" : false;
   const isAdmin = isAuthenticated ? session.user.role === "admin" : false;
-  const canManageBranches = isAdmin;
   const hasBranchState = branchState != null;
   const hasActiveOrg = hasBranchState ? branchState.hasActiveOrg : false;
   const branches = hasBranchState ? branchState.branches : [];
   const activeBranch = hasBranchState ? branchState.activeBranch : undefined;
+  const canViewAllBranches = hasBranchState
+    ? branchState.canViewAllBranches
+    : false;
+  const canManageBranches = isAdmin && canViewAllBranches;
   const isSwitcherDisabled = !isAdmin && branches.length === 0;
 
   const [openDialog, setOpenDialog] = useState<"branch:create" | undefined>();
@@ -101,14 +104,16 @@ export function BranchManager({
     });
   }
 
-  const branchLabel =
-    !hasActiveOrg || !activeBranch
-      ? branches.length > 0
-        ? String(t("authTranslations.branch.switcher.allBranches"))
-        : String(t("authTranslations.branch.switcher.select"))
-      : locale === "ar"
+  const isAllBranchesView =
+    canViewAllBranches && (!hasActiveOrg || !activeBranch);
+
+  const branchLabel = isAllBranchesView
+    ? String(t("authTranslations.branch.switcher.allBranches"))
+    : activeBranch
+      ? locale === "ar"
         ? activeBranch.nameAr
-        : activeBranch.nameEn;
+        : activeBranch.nameEn
+      : String(t("authTranslations.branch.switcher.select"));
 
   const triggerButton =
     variant === "sidebar" ? (
@@ -196,6 +201,7 @@ export function BranchManager({
         trigger={triggerButton}
         branches={branches}
         canManageBranches={canManageBranches}
+        canViewAllBranches={canViewAllBranches}
         isPending={isPending}
         locale={locale}
         onCreateBranch={() => setOpenDialog("branch:create")}
