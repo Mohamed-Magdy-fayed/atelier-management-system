@@ -35,4 +35,7 @@ export { createEntityActionsColumn } from "./lib/entity-actions-column";
 export { getEntityColumnPinning } from "./lib/entity-column-pinning";
 export { getPinningClassName } from "./lib/pinning";
 export { createSelectColumn } from "./lib/select-column";
+export { EntityAuditInfoDialog } from "./components/entity-audit-info-dialog";
+export type { EntityAuditRecord } from "./components/entity-audit-info-dialog";
+export { EntityPageHeader } from "./components/entity-page-header";
 export type { DataTableMode } from "./types";

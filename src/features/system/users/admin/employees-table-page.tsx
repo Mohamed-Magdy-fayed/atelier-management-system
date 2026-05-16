@@ -11,7 +11,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { H2 } from "@/components/ui/typography";
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import {
   DataTable,
@@ -20,6 +19,7 @@ import {
   DataTablePagination,
   DataTableToolbar,
   DataTableViewOptions,
+  EntityPageHeader,
   useDataTable,
 } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
@@ -84,9 +84,7 @@ export function EmployeesTablePage() {
         isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"
       }
     >
-      <div className="space-y-1">
-        <H2>{t("systemPages.employeesTitle")}</H2>
-      </div>
+      <EntityPageHeader slug="employees" />
       <DataTable
         table={table}
         toolbar={

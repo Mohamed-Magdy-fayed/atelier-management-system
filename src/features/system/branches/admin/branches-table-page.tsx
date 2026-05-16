@@ -15,13 +15,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { H2 } from "@/components/ui/typography";
 import {
   DataTable,
   type DataTableControlledState,
   DataTablePagination,
   DataTableToolbar,
   DataTableViewOptions,
+  EntityPageHeader,
   getEntityColumnPinning,
   useDataTable,
   useTableUrlState,
@@ -137,9 +137,7 @@ export function BranchesTablePage() {
         isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"
       }
     >
-      <div className="space-y-1">
-        <H2>{t("systemPages.branchesTitle")}</H2>
-      </div>
+      <EntityPageHeader slug="branches" />
 
       <DataTable
         table={table}

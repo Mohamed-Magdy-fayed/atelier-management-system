@@ -1,0 +1,39 @@
+---
+description: Agent workflow, verification, and lessons learned (always follow)
+alwaysApply: true
+---
+
+# Agent workflow
+
+These rules apply to every task. **Update this file** when a mistake or convention is discovered in a session so it is not repeated in later sessions.
+
+## Verification
+
+- After substantive app or type changes, run **`npm run build`** and fix failures before considering the task done.
+- On Windows PowerShell, chain commands with **`;`**, not `&&` (e.g. `Set-Location <repo>; npm run build`).
+- Prefer fixing TypeScript/build errors over leaving the branch broken.
+
+## Editing discipline
+
+- Use normal file edits (`StrReplace`, `Write`). **Do not** run ad-hoc Node/sed/regex shell scripts to patch source files unless the user explicitly asks for a scripted migration.
+- When `StrReplace` fails, re-read the file and match the exact text (including JSX closing tags).
+- Keep changes scoped to the request; avoid drive-by refactors.
+
+## System admin screens (`src/features/system/**`)
+
+Follow [`docs/entity-blueprint.md`](../../docs/entity-blueprint.md) and [`AGENTS.md`](../../AGENTS.md).
+
+- **Registry** (`src/features/system/registry/entities.ts`) is the source of truth for import/export, row selection, bulk actions, filters, and row actions. UI must match registry (or update registry when adding capability).
+- **Page headers**: use `EntityPageHeader` with the entity `slug` from the registry (not hand-rolled `H2` / `Lead`).
+- **Info dialogs**: default **audit-only** via `EntityAuditInfoDialog`; business fields stay in the table or edit form.
+- **Row selection**: if the registry has `supportsRowSelection: false`, do not add `createSelectColumn` or `DataTableActionBar`. Server tables using `DataTableControlledState` still pass `rowSelection` / `onRowSelectionChange` (empty state is fine) because the type requires them.
+- **Overlay forms**: modals use `OverlayFormBody` + footer `OverlayFormSubmitButton` per the blueprint Form Pattern.
+- **Zod messages**: use `translationKey()` for user-facing validation, not literal English in schemas.
+
+## Documenting new lessons
+
+When you learn something worth repeating (tooling quirk, project convention, repeated mistake):
+
+1. Add a short bullet under the relevant section **in this file**.
+2. If it belongs in product docs, update `AGENTS.md` or `docs/entity-blueprint.md` as appropriate.
+3. Do not rely on chat memory alone for cross-session behavior.

@@ -8,7 +8,6 @@ import type {
 } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 
-import { H2 } from "@/components/ui/typography";
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import {
   DataTable,
@@ -18,18 +17,27 @@ import {
   DataTablePagination,
   DataTableToolbar,
   DataTableViewOptions,
+  EntityPageHeader,
   getEntityColumnPinning,
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useTRPC } from "@/integrations/trpc/client";
+import type { PaymentGridRow } from "@/integrations/trpc/routers/payments";
 
 import {
   buildPaymentColumns,
+  PaymentInfoModal,
   PaymentsBulkActions,
   PaymentsGridFilters,
+  type PaymentRowActionVariant,
 } from "./components";
+
+type RowAction = {
+  row: PaymentGridRow;
+  variant: PaymentRowActionVariant;
+} | null;
 
 export function PaymentsTablePage() {
   const trpc = useTRPC();
@@ -52,6 +60,7 @@ export function PaymentsTablePage() {
   } = useTableUrlState({ page: 1, perPage: 20 });
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [rowAction, setRowAction] = useState<RowAction>(null);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnPinning, setColumnPinning] = useState<ColumnPinningState>(() =>
     getEntityColumnPinning(),
@@ -113,9 +122,11 @@ export function PaymentsTablePage() {
   );
 
   const columns = useMemo(
-    () => buildPaymentColumns({ locale, t }),
+    () => buildPaymentColumns({ locale, setRowAction, t }),
     [locale, t],
   );
+
+  const closeRowAction = () => setRowAction(null);
 
   const {
     table,
@@ -150,9 +161,7 @@ export function PaymentsTablePage() {
         isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"
       }
     >
-      <div className="space-y-1">
-        <H2>{t("systemPages.paymentsTitle")}</H2>
-      </div>
+      <EntityPageHeader slug="payments" />
 
       <DataTable
         table={table}
@@ -187,6 +196,14 @@ export function PaymentsTablePage() {
             <PaymentsBulkActions table={table} />
           </DataTableActionBar>
         }
+      />
+
+      <PaymentInfoModal
+        open={rowAction?.variant === "info"}
+        onOpenChange={(open) => {
+          if (!open) closeRowAction();
+        }}
+        payment={rowAction?.variant === "info" ? rowAction.row : null}
       />
     </div>
   );

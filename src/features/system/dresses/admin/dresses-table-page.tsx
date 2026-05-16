@@ -15,7 +15,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { H2 } from "@/components/ui/typography";
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import {
   DataTable,
@@ -25,6 +24,7 @@ import {
   DataTablePagination,
   DataTableToolbar,
   DataTableViewOptions,
+  EntityPageHeader,
   getEntityColumnPinning,
   useDataTable,
   useTableUrlState,
@@ -174,9 +174,7 @@ export function DressesTablePage() {
         isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"
       }
     >
-      <div className="space-y-1">
-        <H2>{t("systemPages.dressesTitle")}</H2>
-      </div>
+      <EntityPageHeader slug="dresses" />
 
       <DataTable
         table={table}

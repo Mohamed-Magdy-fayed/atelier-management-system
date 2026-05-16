@@ -3,11 +3,17 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import {
+  createEntityActionsColumn,
   createSelectColumn,
   DataTableColumnHeader,
 } from "@/features/core/data-table";
 import type { useTranslation } from "@/features/core/i18n/client";
 import type { PaymentGridRow } from "@/integrations/trpc/routers/payments";
+
+import {
+  PaymentRowActions,
+  type SetPaymentRowAction,
+} from "./payment-row-actions";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
@@ -43,9 +49,10 @@ function paymentMethodTranslationId(method: string) {
 
 export function buildPaymentColumns(opts: {
   locale: string;
+  setRowAction: SetPaymentRowAction;
   t: Translate;
 }): ColumnDef<PaymentGridRow>[] {
-  const { locale, t } = opts;
+  const { locale, setRowAction, t } = opts;
   const dateFmt = new Intl.DateTimeFormat(locale === "ar" ? "ar" : "en", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -104,5 +111,12 @@ export function buildPaymentColumns(opts: {
           ? dateFmt.format(new Date(row.original.createdAt))
           : "—",
     },
+    createEntityActionsColumn({
+      t,
+      size: 48,
+      cell: ({ row }) => (
+        <PaymentRowActions row={row.original} setRowAction={setRowAction} />
+      ),
+    }),
   ];
 }

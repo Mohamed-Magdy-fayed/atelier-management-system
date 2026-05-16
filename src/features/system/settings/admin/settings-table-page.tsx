@@ -8,7 +8,6 @@ import type {
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 
-import { H2, Muted } from "@/components/ui/typography";
 import {
   DataTable,
   DataTableActionBar,
@@ -16,6 +15,7 @@ import {
   DataTablePagination,
   DataTableToolbar,
   DataTableViewOptions,
+  EntityPageHeader,
   getEntityColumnPinning,
   useDataTable,
   useTableUrlState,
@@ -132,10 +132,7 @@ export function SettingsTablePage() {
         isFetching ? "space-y-4 opacity-80 transition-opacity" : "space-y-4"
       }
     >
-      <div className="space-y-1">
-        <H2>{t("systemPages.settingsTitle")}</H2>
-        <Muted className="text-sm">{String(t("systemPages.settingsLead"))}</Muted>
-      </div>
+      <EntityPageHeader slug="settings" />
 
       <DataTable
         table={table}
