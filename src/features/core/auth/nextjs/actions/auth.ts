@@ -110,10 +110,7 @@ export async function signUpAction(
       });
 
       if (existing) {
-        return {
-          isError: true,
-          message: t("authTranslations.signUp.error.duplicate"),
-        };
+        throw new Error(t("authTranslations.signUp.error.duplicate"));
       }
 
       const salt = generateSalt();
@@ -135,10 +132,7 @@ export async function signUpAction(
         });
 
       if (!user) {
-        return {
-          isError: true,
-          message: t("authTranslations.signUp.error.generic"),
-        };
+        throw new Error(t("authTranslations.signUp.error.generic"));
       }
 
       await trx.insert(UserCredentialsTable).values({
@@ -150,7 +144,6 @@ export async function signUpAction(
       return { isError: false, user };
     });
 
-  if (result.isError) return { isError: true, message: result.message };
   await createUserSession(result.user, await cookies());
 
   const { linkRentalCustomersToUser } = await import(

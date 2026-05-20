@@ -32,7 +32,7 @@ export async function Providers({ children, locale, theme }: ProvidersProps) {
               <DirectionProvider direction={locale === "ar" ? "rtl" : "ltr"}>
                 <TooltipProvider>
                   {children}
-                  <Toaster />
+                  <Toaster visibleToasts={3} />
                 </TooltipProvider>
               </DirectionProvider>
             </TRPCReactProvider>

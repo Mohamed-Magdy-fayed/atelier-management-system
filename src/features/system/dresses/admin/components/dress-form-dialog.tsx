@@ -1,7 +1,14 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { DicesIcon, Loader2Icon, PlusIcon, SaveIcon, XIcon } from "lucide-react";
+import {
+  DicesIcon,
+  InfoIcon,
+  Loader2Icon,
+  PlusIcon,
+  SaveIcon,
+  XIcon,
+} from "lucide-react";
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useId, useMemo } from "react";
 import { toast } from "sonner";
@@ -14,6 +21,7 @@ import {
   OverlayFormFooterActions,
   OverlayFormSubmitButton,
 } from "@/components/forms/overlay-form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -119,6 +127,7 @@ export function DressFormDialog({
   const branchId =
     dress?.branchId ??
     (branchState?.hasActiveOrg ? branchState.activeBranch.id : undefined);
+  const needsActiveBranch = !branchId;
 
   const createMut = useMutation(trpc.dresses.create.mutationOptions());
   const updateMut = useMutation(trpc.dresses.update.mutationOptions());
@@ -241,6 +250,17 @@ export function DressFormDialog({
           >
             <FieldSet disabled={pending}>
               <FieldGroup>
+                {needsActiveBranch ? (
+                  <Alert variant="default">
+                    <InfoIcon />
+                    <AlertTitle>
+                      {String(t("systemPages.dressBranchRequired"))}
+                    </AlertTitle>
+                    <AlertDescription>
+                      {String(t("systemPages.dressFormAllBranchesHint"))}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
                 <form.AppField name="code">
                   {(field) => {
                     const invalid =
@@ -404,20 +424,39 @@ export function DressFormDialog({
               <XIcon className="size-3.5" />
               {t("common.cancel")}
             </Button>
-            <OverlayFormSubmitButton
-              formId={formId}
-              size="default"
-              disabled={pending || !branchId}
-            >
-              <SubmitIcon
-                className={pending ? "size-3.5 animate-spin" : "size-3.5"}
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <span className="inline-flex min-w-0 flex-1">
+                    <OverlayFormSubmitButton
+                      aria-describedby={
+                        needsActiveBranch ? "dress-form-branch-hint" : undefined
+                      }
+                      className="w-full"
+                      disabled={pending || needsActiveBranch}
+                      formId={formId}
+                      size="default"
+                    >
+                      <SubmitIcon
+                        className={
+                          pending ? "size-3.5 animate-spin" : "size-3.5"
+                        }
+                      />
+                      {pending
+                        ? String(t("common.saving"))
+                        : isEdit
+                          ? String(t("common.save"))
+                          : String(t("common.create"))}
+                    </OverlayFormSubmitButton>
+                  </span>
+                }
               />
-              {pending
-                ? String(t("common.saving"))
-                : isEdit
-                  ? String(t("common.save"))
-                  : String(t("common.create"))}
-            </OverlayFormSubmitButton>
+              {needsActiveBranch ? (
+                <TooltipContent id="dress-form-branch-hint" side="top">
+                  {String(t("systemPages.dressBranchRequired"))}
+                </TooltipContent>
+              ) : null}
+            </Tooltip>
           </OverlayFormFooterActions>
         </DialogFooter>
       </DialogContent>

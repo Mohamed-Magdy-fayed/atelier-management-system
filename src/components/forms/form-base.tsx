@@ -11,12 +11,19 @@ import {
 } from "@/components/ui/field";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useFieldContext } from "./hooks";
-import { translateFormErrorMessage } from "./validation-messages";
+import {
+  extractValidationErrorMessage,
+  flattenValidationErrors,
+  translateFormErrorMessage,
+} from "./validation-messages";
+import { TranslationKey } from "@/features/core/i18n/lib";
+import { mainTranslations } from "@/features/core/i18n/global";
 
 export type FormFieldProps = {
   label: string;
   description?: string;
   autoFocus?: boolean;
+  disabled?: boolean;
 };
 
 type FormBaseProps = FormFieldProps & {
@@ -29,22 +36,22 @@ export function FormBase({
   label,
   description,
   controlFirst,
+  disabled,
 }: FormBaseProps) {
   const field = useFieldContext();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
-
   const translateErrorMessage = (message?: string) =>
-    translateFormErrorMessage((key) => String(t(key as never)), message);
+    translateFormErrorMessage((key) => t(key as TranslationKey<typeof mainTranslations>, {}), message, {
+      locale,
+      fallbackLocale: "en",
+    });
 
-  const errors = field.state.meta.errors.map((e) => {
-    if (typeof e === "string") {
-      return { message: translateErrorMessage(e) };
-    }
+  const errors = flattenValidationErrors(field.state.meta.errors)
+    .map((entry) => extractValidationErrorMessage(entry))
+    .filter((message): message is string => Boolean(message))
+    .map((message) => ({ message: translateErrorMessage(message) }));
 
-    const message = (e as { message?: string })?.message;
-    return { ...(e as object), message: translateErrorMessage(message) };
-  });
 
   const labelElement = (
     <>
@@ -68,7 +75,7 @@ export function FormBase({
   }
 
   return (
-    <Field data-invalid={isInvalid}>
+    <Field data-invalid={isInvalid} group-data-disabled={disabled}>
       {labelElement}
       {children}
       {errorElement}

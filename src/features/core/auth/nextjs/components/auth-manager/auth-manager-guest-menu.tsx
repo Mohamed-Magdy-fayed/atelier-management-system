@@ -16,6 +16,10 @@ import {
 import { ThemeToggle } from "@/features/core/color-theme/client";
 import { LanguageToggle, useTranslation } from "@/features/core/i18n/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+
+const guestMenuItemClassName =
+  "min-h-10 gap-2.5 px-2.5 py-2.5 text-sm sm:min-h-7 sm:py-1 sm:text-xs/relaxed";
 
 export function AuthManagerGuestMenu({ trigger }: { trigger: ReactElement }) {
   const { t } = useTranslation();
@@ -26,23 +30,29 @@ export function AuthManagerGuestMenu({ trigger }: { trigger: ReactElement }) {
       <DropdownMenuTrigger render={trigger} />
       <DropdownMenuContent
         align="start"
-        className="min-w-56 rounded-lg"
+        className={cn("min-w-56 rounded-lg", isMobile && "p-1.5")}
         side={isMobile ? "bottom" : "right"}
         sideOffset={4}
       >
-        <DropdownMenuGroup>
-          <DropdownMenuItem render={<Link href="/sign-in" />}>
+        <DropdownMenuGroup className="flex flex-col gap-1">
+          <DropdownMenuItem
+            className={guestMenuItemClassName}
+            render={<Link href="/sign-in" />}
+          >
             <LogInIcon />
             {t("authTranslations.signIn.title")}
           </DropdownMenuItem>
-          <DropdownMenuItem render={<Link href="/sign-up" />}>
+          <DropdownMenuItem
+            className={guestMenuItemClassName}
+            render={<Link href="/sign-up" />}
+          >
             <UserPlusIcon />
             {t("authTranslations.signUp.title")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className={isMobile ? "my-2" : undefined} />
         <DropdownMenuGroup>
-          <ButtonGroup className="w-full *:flex-1">
+          <ButtonGroup className="w-full gap-1 *:flex-1">
             <ThemeToggle />
             <LanguageToggle />
           </ButtonGroup>

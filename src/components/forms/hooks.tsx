@@ -3,7 +3,11 @@ import { toast } from "sonner";
 
 import { FormImageField } from "@/components/forms/image-field";
 import { useTranslation } from "@/features/core/i18n/client";
-import { translateFormErrorMessage } from "@/components/forms/validation-messages";
+import {
+  extractValidationErrorMessage,
+  flattenValidationErrors,
+  translateFormErrorMessage,
+} from "@/components/forms/validation-messages";
 import { FormBooleanField } from "./boolean-field";
 import { FormComboboxOneField } from "./combobox-one-field";
 import { FormDateField } from "./date-field";
@@ -42,25 +46,39 @@ const { useAppForm: useAppFormBase } = createFormHook({
 });
 
 const useAppForm: typeof useAppFormBase = (opts) => {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   return useAppFormBase({
     ...opts,
     onSubmitInvalid: (props) => {
+      const { formApi } = props;
+      for (const fieldName of Object.keys(formApi.state.fieldMeta)) {
+        const meta = formApi.getFieldMeta(
+          fieldName as keyof typeof formApi.state.fieldMeta,
+        );
+        if (meta?.errors && meta.errors.length > 0) {
+          formApi.setFieldMeta(
+            fieldName as keyof typeof formApi.state.fieldMeta,
+            (prev) => ({ ...prev, isTouched: true }),
+          );
+        }
+      }
       opts.onSubmitInvalid?.(props);
-      const errors = Object.values(props.formApi.state.fieldMeta)
-        .flatMap((meta) => {
+      const errors = flattenValidationErrors(
+        Object.values(formApi.state.fieldMeta).flatMap((meta) => {
           const fieldMeta = meta as { errors?: unknown[] } | undefined;
           return fieldMeta?.errors ?? [];
-        })
-        .filter(Boolean);
+        }),
+      );
       if (errors.length > 0) {
         const message = errors
           .map((e) => {
-            const raw =
-              typeof e === "string" ? e : (e as { message?: string })?.message;
+            const raw = extractValidationErrorMessage(e);
             return raw
-              ? translateFormErrorMessage((key) => String(t(key as never)), raw)
+              ? translateFormErrorMessage((key) => String(t(key as never)), raw, {
+                  locale,
+                  fallbackLocale: "en",
+                })
               : undefined;
           })
           .filter(Boolean)

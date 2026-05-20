@@ -39,6 +39,7 @@ export default async function PublicHomePage() {
   const labels = {
     perDay: t("publicCatalog.perDay"),
     branchSection: t("publicCatalog.branchSectionTitle"),
+    noImage: t("publicCatalog.noImage"),
   };
 
   return (

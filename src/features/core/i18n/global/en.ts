@@ -127,6 +127,7 @@ export default {
     phone: "Phone",
     validation: {
       required: "This field is required.",
+      invalidEmail: "Please enter a valid email address",
       invalidUuid: "Select a valid item from the list.",
       max32: "Must be at most 32 characters.",
       max64: "Must be at most 64 characters.",
@@ -200,6 +201,8 @@ export default {
     authPanelLead:
       "Staff use this workspace for reservations, branches, and daily operations.",
     headerAccountMenu: "Account menu",
+    myAccount: "My account",
+    workspace: "Workspace",
     mobileTabBarLabel: "Site navigation",
     tabHome: "Home",
     tabBrowse: "Browse",
@@ -222,6 +225,7 @@ export default {
     sortTitleAsc: "Title A–Z",
     sortNewest: "Newest listed",
     applyFilters: "Apply filters",
+    noImage: "No photo available",
     empty: "No dresses match your filters.",
     perDay: "per day",
     depositLabel: "Deposit",
@@ -488,6 +492,8 @@ export default {
     dressDeactivated: "Dress deactivated.",
     dressStatusChangeFailed: "Could not update dress status.",
     dressBranchRequired: "Select an active branch before saving a dress.",
+    dressFormAllBranchesHint:
+      "All branches is selected. Choose a branch from the branch switcher in the sidebar, then you can create a dress for that location.",
     bulkActivateDresses: "Activate selected dresses",
     bulkDeactivateDresses: "Deactivate selected dresses",
     bulkArchiveDresses: "Archive selected dresses",

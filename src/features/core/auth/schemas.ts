@@ -44,6 +44,11 @@ export const passwordSchema = z
     }
   });
 
+export const signInEmailStepSchema = z.object({
+  email: z.email(translationKey("authTranslations.validation.invalidEmail")),
+  password: z.string(),
+});
+
 export const signInSchema = z.object({
   email: z.email(translationKey("authTranslations.validation.invalidEmail")),
   password: z
@@ -54,7 +59,7 @@ export const signInSchema = z.object({
 export const signUpSchema = z.object({
   name: z.string(),
   email: z.email(translationKey("authTranslations.validation.invalidEmail")),
-  phone: z.string(),
+  phone: z.string().min(10, translationKey("authTranslations.profile.phone.error.invalid")),
   password: passwordSchema,
 });
 

@@ -221,7 +221,8 @@ export async function listPublicDresses(input: {
   const safePage = Math.min(page, pageCount);
   const offset = (safePage - 1) * perPage;
 
-  const sort = normalizePublicDressSort(input.sort);
+  const hidePrices = await getPublicCatalogHidePrices();
+  const sort = normalizePublicDressSort(input.sort, { hidePrices });
 
   const orderByClause =
     sort === "popularity"

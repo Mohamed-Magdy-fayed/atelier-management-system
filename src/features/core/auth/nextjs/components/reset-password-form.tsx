@@ -8,7 +8,7 @@ import { useAppForm } from "@/components/forms/hooks";
 import { BackLink } from "@/components/general/back-link";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
-import { FieldSet } from "@/components/ui/field";
+import { FieldError, FieldSet } from "@/components/ui/field";
 import {
   InputOTP,
   InputOTPGroup,
@@ -19,13 +19,15 @@ import { LoadingSwap } from "@/components/ui/loading-swap";
 import { resetPasswordAction } from "@/features/core/auth/nextjs/actions";
 import { passwordResetSubmissionSchema } from "@/features/core/auth/schemas";
 import { useTranslation } from "@/features/core/i18n/client";
+import { TranslationKey } from "@/features/core/i18n/lib";
+import { mainTranslations } from "@/features/core/i18n/global";
 
 export function ResetPasswordForm({
   initialEmail = "",
 }: {
   initialEmail?: string;
 }) {
-  const { t } = useTranslation();
+  const { t, dir } = useTranslation();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -60,7 +62,7 @@ export function ResetPasswordForm({
         <form.AppField name="email">
           {(field) => (
             <field.EmailField
-              autoFocus
+              disabled={!!initialEmail}
               label={t("authTranslations.signIn.emailLabel")}
               placeholder="example@example.com"
             />
@@ -68,28 +70,31 @@ export function ResetPasswordForm({
         </form.AppField>
 
         <div dir="ltr">
-          <form.AppField name="otp">
+          <form.AppField name="otp" defaultMeta={{ isValid: false }}>
             {(field) => (
-              <InputOTP
-                autoFocus
-                containerClassName="justify-center"
-                disabled={isPending}
-                maxLength={6}
-                onChange={(val) => field.handleChange(val)}
-                value={field.state.value}
-              >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                </InputOTPGroup>
-                <InputOTPSeparator />
-                <InputOTPGroup>
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
+              <>
+                <InputOTP
+                  autoFocus
+                  containerClassName="justify-center"
+                  disabled={isPending}
+                  maxLength={6}
+                  onChange={(val) => field.handleChange(val)}
+                  value={field.state.value}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} aria-invalid={field.state.meta.isTouched && !field.state.meta.isValid} />
+                    <InputOTPSlot index={1} aria-invalid={field.state.meta.isTouched && !field.state.meta.isValid} />
+                    <InputOTPSlot index={2} aria-invalid={field.state.meta.isTouched && !field.state.meta.isValid} />
+                  </InputOTPGroup>
+                  <InputOTPSeparator />
+                  <InputOTPGroup>
+                    <InputOTPSlot index={3} aria-invalid={field.state.meta.isTouched && !field.state.meta.isValid} />
+                    <InputOTPSlot index={4} aria-invalid={field.state.meta.isTouched && !field.state.meta.isValid} />
+                    <InputOTPSlot index={5} aria-invalid={field.state.meta.isTouched && !field.state.meta.isValid} />
+                  </InputOTPGroup>
+                </InputOTP>
+                <FieldError dir={dir} errors={field.state.meta.errors.map((error) => ({ message: t(error?.message as TranslationKey<typeof mainTranslations>, {}) }))} />
+              </>
             )}
           </form.AppField>
         </div>

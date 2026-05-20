@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { H1, Muted } from "@/components/ui/typography";
 import { getLocaleCookie, getT } from "@/features/core/i18n/server";
 import { DressAvailabilityChecker } from "@/features/public-catalog/components/dress-availability-checker";
+import { PublicDressCoverImage } from "@/features/public-catalog/components/public-dress-cover-image";
 import { PublicShell } from "@/features/public-catalog/components/public-shell";
 import {
   getPublicCatalogHidePrices,
@@ -58,6 +59,8 @@ export default async function PublicDressDetailPage({ params }: Props) {
   );
 
   const fmt = (n: number) => formatCurrency(n, currencyLocale);
+  const size = dress.size?.trim() || undefined;
+  const color = dress.color?.trim() || undefined;
   const gallery = dress.images?.slice(1) ?? [];
   const mapHref = dress.branchMapUrl?.trim();
   const whatsappHref = toWhatsAppUrl(dress.branchPhone);
@@ -86,18 +89,11 @@ export default async function PublicDressDetailPage({ params }: Props) {
         <div className="grid gap-10 lg:grid-cols-[minmax(0,320px)_1fr] lg:gap-14">
           <div className="space-y-4">
             <div className="aspect-[3/4] overflow-hidden rounded-2xl border bg-muted shadow-sm">
-              {dress.images?.[0] ? (
-                // eslint-disable-next-line @next/next/no-img-element -- remote dress URLs
-                <img
-                  alt={dress.title}
-                  className="size-full object-cover"
-                  src={dress.images[0]}
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center text-muted-foreground text-sm">
-                  —
-                </div>
-              )}
+              <PublicDressCoverImage
+                alt={dress.title}
+                noImageLabel={t("publicCatalog.noImage")}
+                src={dress.images?.[0]}
+              />
             </div>
             {gallery.length > 0 ? (
               <div>
@@ -138,18 +134,22 @@ export default async function PublicDressDetailPage({ params }: Props) {
                   </dt>
                   <dd className="font-medium">{dress.code}</dd>
                 </div>
-                <div>
-                  <dt className="text-muted-foreground text-xs">
-                    {t("publicCatalog.size")}
-                  </dt>
-                  <dd className="font-medium">{dress.size ?? "—"}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground text-xs">
-                    {t("publicCatalog.color")}
-                  </dt>
-                  <dd className="font-medium">{dress.color ?? "—"}</dd>
-                </div>
+                {size ? (
+                  <div>
+                    <dt className="text-muted-foreground text-xs">
+                      {t("publicCatalog.size")}
+                    </dt>
+                    <dd className="font-medium">{size}</dd>
+                  </div>
+                ) : null}
+                {color ? (
+                  <div>
+                    <dt className="text-muted-foreground text-xs">
+                      {t("publicCatalog.color")}
+                    </dt>
+                    <dd className="font-medium">{color}</dd>
+                  </div>
+                ) : null}
                 {!hidePrices ? (
                   <>
                     <div>
@@ -187,9 +187,11 @@ export default async function PublicDressDetailPage({ params }: Props) {
                   {dress.description}
                 </p>
               ) : null}
-              <Muted className="block text-xs leading-relaxed">
-                {t("publicCatalog.staffOnlyNotice")}
-              </Muted>
+              {!hidePrices ? (
+                <Muted className="block text-xs leading-relaxed">
+                  {t("publicCatalog.staffOnlyNotice")}
+                </Muted>
+              ) : null}
             </section>
 
             <section className="space-y-4 rounded-2xl border border-border/70 bg-card p-6 shadow-sm">

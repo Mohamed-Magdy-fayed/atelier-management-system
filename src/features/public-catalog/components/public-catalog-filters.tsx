@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { LinkButton } from "@/components/general/link-button";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -14,7 +13,8 @@ import {
 } from "@/components/ui/select";
 import { PublicBranchSelect } from "@/features/public-catalog/components/public-branch-select";
 import {
-  PUBLIC_DRESS_SORT_VALUES,
+  getPublicDressSortOptions,
+  normalizePublicDressSort,
   type PublicDressSort,
 } from "@/features/public-catalog/lib/public-dress-sort";
 
@@ -27,12 +27,14 @@ export function PublicCatalogFilters({
   branchId,
   search,
   sort: sortProp,
+  hidePrices = false,
   labels,
 }: {
   branches: PublicBranchOption[];
   branchId?: string;
   search?: string;
   sort?: string;
+  hidePrices?: boolean;
   labels: {
     searchPlaceholder: string;
     filterBranch: string;
@@ -48,23 +50,18 @@ export function PublicCatalogFilters({
   };
 }) {
   const router = useRouter();
+  const sortOptions = getPublicDressSortOptions(hidePrices);
   const [branch, setBranch] = useState(branchId);
   const [query, setQuery] = useState(search ?? "");
-  const [sort, setSort] = useState<PublicDressSort>(
-    (PUBLIC_DRESS_SORT_VALUES as readonly string[]).includes(sortProp ?? "")
-      ? (sortProp as PublicDressSort)
-      : DEFAULT_SORT,
+  const [sort, setSort] = useState<PublicDressSort>(() =>
+    normalizePublicDressSort(sortProp, { hidePrices }),
   );
 
   useEffect(() => {
     setBranch(branchId);
     setQuery(search ?? "");
-    setSort(
-      (PUBLIC_DRESS_SORT_VALUES as readonly string[]).includes(sortProp ?? "")
-        ? (sortProp as PublicDressSort)
-        : DEFAULT_SORT,
-    );
-  }, [branchId, search, sortProp]);
+    setSort(normalizePublicDressSort(sortProp, { hidePrices }));
+  }, [branchId, hidePrices, search, sortProp]);
 
   function buildHref(next: {
     branchId?: string;
@@ -91,6 +88,13 @@ export function PublicCatalogFilters({
     router.push(buildHref({ page: "1" }));
   }
 
+  function clear() {
+    setBranch(undefined);
+    setQuery("");
+    setSort(DEFAULT_SORT);
+    router.push("/browse");
+  }
+
   const sortLabelMap: Record<PublicDressSort, string> = {
     popularity: labels.sortPopularity,
     priceAsc: labels.sortPriceAsc,
@@ -112,7 +116,7 @@ export function PublicCatalogFilters({
           {labels.searchPlaceholder}
         </label>
         <input
-          className="border-input bg-background h-10 rounded-md border px-3 text-sm outline-none ring-ring/40 focus-visible:ring-2"
+          className="border-border bg-background h-10 rounded-md border px-3 text-sm outline-none ring-ring/40 focus-visible:ring-2"
           id="pub-search"
           onChange={(e) => setQuery(e.target.value)}
           placeholder={labels.searchPlaceholder}
@@ -146,7 +150,7 @@ export function PublicCatalogFilters({
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {PUBLIC_DRESS_SORT_VALUES.map((key) => (
+            {sortOptions.map((key) => (
               <SelectItem key={key} value={key}>
                 {sortLabelMap[key]}
               </SelectItem>
@@ -158,9 +162,9 @@ export function PublicCatalogFilters({
         <Button type="submit" variant="default">
           {labels.applyFilters}
         </Button>
-        <LinkButton href="/browse" variant="ghost">
+        <Button onClick={clear} type="button" variant="ghost">
           {labels.clear}
-        </LinkButton>
+        </Button>
       </div>
     </form>
   );

@@ -27,12 +27,12 @@ export default async function PublicBrowsePage({ searchParams }: Props) {
   const page = Math.max(Number.parseInt(sp.page ?? "1", 10) || 1, 1);
   const branchId = sp.branchId?.trim() || undefined;
   const search = sp.search?.trim() || undefined;
-  const sort = normalizePublicDressSort(sp.sort);
+  const hidePrices = await getPublicCatalogHidePrices();
+  const sort = normalizePublicDressSort(sp.sort, { hidePrices });
 
-  const [branches, catalog, hidePrices] = await Promise.all([
+  const [branches, catalog] = await Promise.all([
     listPublicBranches(),
     listPublicDresses({ branchId, search, page, perPage: 24, sort }),
-    getPublicCatalogHidePrices(),
   ]);
 
   const branchOptions = branches.map((b) => ({
@@ -43,6 +43,7 @@ export default async function PublicBrowsePage({ searchParams }: Props) {
   const labels = {
     perDay: t("publicCatalog.perDay"),
     branchSection: t("publicCatalog.branchSectionTitle"),
+    noImage: t("publicCatalog.noImage"),
   };
 
   const filterLabels = {
@@ -90,14 +91,17 @@ export default async function PublicBrowsePage({ searchParams }: Props) {
           <Lead className="max-w-2xl text-muted-foreground">
             {t("publicCatalog.lead")}
           </Lead>
-          <Muted className="block max-w-2xl text-xs leading-relaxed">
-            {t("publicCatalog.staffOnlyNotice")}
-          </Muted>
+          {!hidePrices ? (
+            <Muted className="block max-w-2xl text-xs leading-relaxed">
+              {t("publicCatalog.staffOnlyNotice")}
+            </Muted>
+          ) : null}
         </header>
 
         <PublicCatalogFilters
           branchId={branchId}
           branches={branchOptions}
+          hidePrices={hidePrices}
           labels={filterLabels}
           search={search}
           sort={sort}

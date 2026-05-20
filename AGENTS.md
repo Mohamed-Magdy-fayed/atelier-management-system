@@ -16,3 +16,4 @@ Always follow [`.cursor/rules/agent-workflow.mdc`](.cursor/rules/agent-workflow.
 - Use normal file edits, not ad-hoc shell scripts, for source patches.
 - Keep system screens aligned with the entity blueprint and registry (`EntityPageHeader`, audit-only info dialogs, selection/action bar rules).
 - **When you discover a repeatable mistake or convention, document it in `agent-workflow.mdc`** (and here or the blueprint when appropriate) so future sessions follow it.
+- **Inline form/system notices**: use shadcn `Alert` with the proper variant (`default` vs `destructive`); see agent-workflow **UI feedback (shadcn)**.

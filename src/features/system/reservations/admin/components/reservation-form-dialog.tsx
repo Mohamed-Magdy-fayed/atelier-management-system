@@ -2,7 +2,7 @@
 
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2Icon, PlusIcon, SaveIcon, XIcon } from "lucide-react";
+import { InfoIcon, Loader2Icon, PlusIcon, SaveIcon, XIcon } from "lucide-react";
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import {
   OverlayFormFooterActions,
   OverlayFormSubmitButton,
 } from "@/components/forms/overlay-form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -736,9 +737,15 @@ export function ReservationFormDialog({
       <FieldGroup>
         <div hidden={createStep !== 1} className="space-y-4">
           {isAllBranchesMode ? (
-            <div className="rounded-md border border-dashed bg-muted/40 px-3 py-2 text-muted-foreground text-sm">
-              {String(t("systemPages.reservationsFormAllBranchesHint"))}
-            </div>
+            <Alert variant="default">
+              <InfoIcon />
+              <AlertTitle>
+                {String(t("authTranslations.branch.switcher.allBranches"))}
+              </AlertTitle>
+              <AlertDescription>
+                {String(t("systemPages.reservationsFormAllBranchesHint"))}
+              </AlertDescription>
+            </Alert>
           ) : null}
           {!formDataLoading && dressOptions.length === 0 ? (
             <p className="text-muted-foreground text-sm">

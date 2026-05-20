@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Muted } from "@/components/ui/typography";
+import { PublicDressCoverImage } from "@/features/public-catalog/components/public-dress-cover-image";
 import type { PublicDressRow } from "@/features/public-catalog/server/queries";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,7 @@ export function PublicDressCard({
   labels: {
     perDay: string;
     branchSection: string;
+    noImage: string;
   };
   hidePrices?: boolean;
 }) {
@@ -33,18 +35,12 @@ export function PublicDressCard({
       )}
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-        {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element -- remote dress URLs (Cloudinary / uploads)
-          <img
-            alt={dress.title}
-            className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            src={cover}
-          />
-        ) : (
-          <div className="flex size-full items-center justify-center text-muted-foreground text-sm">
-            —
-          </div>
-        )}
+        <PublicDressCoverImage
+          alt={dress.title}
+          className="transition-transform duration-500 group-hover:scale-[1.03]"
+          noImageLabel={labels.noImage}
+          src={cover}
+        />
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">
           <Badge className="bg-background/90 font-mono text-xs text-foreground backdrop-blur-sm">
             {dress.code}

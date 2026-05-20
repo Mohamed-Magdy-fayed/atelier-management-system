@@ -18,8 +18,8 @@ import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Separator } from "@/components/ui/separator";
 import { Status, StatusIndicator } from "@/components/ui/status";
-import { canViewAdminDashboard } from "@/features/core/auth/core/permissions";
 import { signOutAction } from "@/features/core/auth/nextjs/actions";
+import { getPublicAccountDestination } from "@/features/public-catalog/lib/public-account-destination";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { ThemeToggle } from "@/features/core/color-theme/client";
 import { LanguageToggle, useTranslation } from "@/features/core/i18n/client";
@@ -89,7 +89,9 @@ export function AuthManagerSheetPanel() {
   const hasEmail = !!session.user.email;
   const isEmailVerified = !!session.user.emailVerifiedAt;
   const display = session.user.name?.trim() || session.user.email;
-  const showDashboardLink = canViewAdminDashboard(session.user);
+  const accountPage = getPublicAccountDestination(session.user);
+  const AccountIcon =
+    accountPage.href === "/dashboard" ? LayoutDashboardIcon : UserIcon;
 
   return (
     <>
@@ -106,14 +108,12 @@ export function AuthManagerSheetPanel() {
         <p className="mb-3 truncate px-3 text-muted-foreground text-xs">
           {session.user.email}
         </p>
-        {showDashboardLink ? (
-          <SheetAction>
-            <Link className="flex w-full items-center gap-3" href="/dashboard">
-              <LayoutDashboardIcon className="size-5 shrink-0 text-muted-foreground" />
-              {String(t("common.dashboard"))}
-            </Link>
-          </SheetAction>
-        ) : null}
+        <SheetAction>
+          <Link className="flex w-full items-center gap-3" href={accountPage.href}>
+            <AccountIcon className="size-5 shrink-0 text-muted-foreground" />
+            {String(t(accountPage.labelKey))}
+          </Link>
+        </SheetAction>
         <SheetAction onClick={() => setOpenDialog("profile")}>
           <UserIcon className="size-5 shrink-0 text-muted-foreground" />
           {t("authTranslations.profile.title")}

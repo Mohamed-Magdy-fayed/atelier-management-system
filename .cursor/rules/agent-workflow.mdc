@@ -13,11 +13,22 @@ These rules apply to every task. **Update this file** when a mistake or conventi
 - On Windows PowerShell, chain commands with **`;`**, not `&&` (e.g. `Set-Location <repo>; npm run build`).
 - Prefer fixing TypeScript/build errors over leaving the branch broken.
 
+## TanStack form fields (`src/components/forms/**`)
+
+- `createFormHook` here registers **`fieldComponents` only** (`formComponents: {}`). **`useFormContext()` throws** inside `EmailField` / `PasswordField` / `FormBase` — only `useFieldContext()` is valid there.
+- To show inline errors after a failed submit without `useFormContext`, mark invalid fields touched in **`useAppForm` → `onSubmitInvalid`** via `formApi.setFieldMeta` (see `hooks.tsx`). **`FormBase`** translates Zod `translationKey()` messages; do not add per-field `onChange`/`onBlur` validators or `validateField` unless the flow cannot use form-level `validators.onSubmit` (sign-in email step uses `signInEmailStepSchema` + `form.handleSubmit()` like forgot-password).
+
 ## Editing discipline
 
 - Use normal file edits (`StrReplace`, `Write`). **Do not** run ad-hoc Node/sed/regex shell scripts to patch source files unless the user explicitly asks for a scripted migration.
 - When `StrReplace` fails, re-read the file and match the exact text (including JSX closing tags).
+- **JSX layout elements**: use normal HTML `div` / `span` only. This app does not use Framer Motion for shells or filters—never write `motion.div` or `</motion.div>` (invalid tags that break the build).
 - Keep changes scoped to the request; avoid drive-by refactors.
+
+## UI feedback (shadcn)
+
+- **Inline notices** (form hints, prerequisites, non-blocking guidance): use `Alert`, `AlertTitle`, and `AlertDescription` from `@/components/ui/alert` with the correct **variant** — `default` for informational messages, `destructive` for errors/blockers. Include a lucide icon (e.g. `InfoIcon`, `AlertTriangleIcon`) as a child of `Alert`, matching existing usage in `form-alert.tsx` and `dress-availability-checker.tsx`.
+- Do **not** hand-roll notice boxes with `div` + dashed borders for these cases.
 
 ## System admin screens (`src/features/system/**`)
 

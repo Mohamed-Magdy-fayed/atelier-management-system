@@ -4,7 +4,9 @@ import { Muted } from "@/components/ui/typography";
 import { AuthManagerHeaderTrigger } from "@/features/core/auth/nextjs/components/auth-manager-header-trigger";
 import { getT } from "@/features/core/i18n/server";
 
+import { PublicDesktopNav } from "./public-desktop-nav";
 import { PublicMobileTabBar } from "./public-mobile-tab-bar";
+import { PublicSignedInLink } from "./public-signed-in-link";
 
 export async function PublicShell({ children }: { children: React.ReactNode }) {
   const { t } = await getT();
@@ -13,9 +15,9 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-svh flex-col overflow-hidden bg-background md:h-auto md:min-h-screen md:overflow-visible">
       <header className="sticky top-0 z-40 shrink-0 border-b border-border/60 bg-background/90 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 sm:gap-6 sm:px-6 lg:px-8">
           <Link
-            className="min-w-0 flex-1 space-y-0.5 transition-opacity hover:opacity-90"
+            className="min-w-0 shrink-0 space-y-0.5 transition-opacity hover:opacity-90"
             href="/"
           >
             <div className="font-serif text-xl font-semibold tracking-tight md:text-2xl">
@@ -25,7 +27,11 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
               {t("landing.badge")}
             </Muted>
           </Link>
-          <AuthManagerHeaderTrigger className="hidden md:inline-flex" />
+          <PublicDesktopNav className="flex-1 justify-center" />
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+            <PublicSignedInLink />
+            <AuthManagerHeaderTrigger className="shrink-0" />
+          </div>
         </div>
       </header>
 

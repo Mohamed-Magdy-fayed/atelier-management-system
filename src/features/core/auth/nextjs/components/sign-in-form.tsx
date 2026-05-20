@@ -28,7 +28,10 @@ import {
 } from "@/features/core/auth/nextjs/actions";
 import FormAlert from "@/features/core/auth/nextjs/components/form-alert";
 import { useOauthProviderIcon } from "@/features/core/auth/nextjs/components/useOauthProviderIcon";
-import { signInSchema } from "@/features/core/auth/schemas";
+import {
+  signInEmailStepSchema,
+  signInSchema,
+} from "@/features/core/auth/schemas";
 import { useTranslation } from "@/features/core/i18n/client";
 
 export function SignInForm() {
@@ -40,7 +43,7 @@ export function SignInForm() {
 
   const form = useAppForm({
     defaultValues: { email: "", password: "" },
-    validators: { onSubmit: signInSchema },
+    validators: { onSubmit: signInSchema, onDynamic: signInEmailStepSchema },
     onSubmit: async ({ value }) => {
       startTransition(async () => {
         const result = await signInAction(value);
@@ -95,9 +98,10 @@ export function SignInForm() {
   }
 
   async function handleContinueEmail() {
-    const email = form.getFieldValue("email");
-    if (!email) {
-      toast.error(t("authTranslations.signIn.emailRequired"));
+    form.validateField("email", "submit")
+    console.log(form.getFieldMeta("email"));
+    
+    if (!form.getFieldMeta("email")?.isValid) {
       return;
     }
     setStep("password");

@@ -14,6 +14,7 @@ import { useFieldContext } from "./hooks";
 export function FormEmailField({
   placeholder,
   autoFocus,
+  disabled,
   ...props
 }: FormFieldProps & { placeholder?: string }) {
   const field = useFieldContext<string>();
@@ -28,8 +29,9 @@ export function FormEmailField({
         <Separator orientation="vertical" />
         <InputGroupInput
           aria-invalid={isInvalid}
-          autoComplete="off"
+          autoComplete="email"
           autoFocus={autoFocus}
+          disabled={disabled}
           id={field.name}
           name={field.name}
           onBlur={field.handleBlur}

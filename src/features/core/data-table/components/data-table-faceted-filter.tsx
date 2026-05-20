@@ -10,6 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useTranslation } from "@/features/core/i18n/client";
 
@@ -80,31 +81,33 @@ export function DataTableFacetedFilter<TData, TValue>({
         }
       />
       <PopoverContent className="w-52 p-0" align="start">
-        <div className="flex flex-col gap-1 p-2">
-          {options.map((opt) => {
-            const is = selected.has(opt.value);
-            return (
-              <label
-                key={opt.value}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted"
-              >
-                <input
-                  type="checkbox"
-                  className="size-3.5 rounded border border-input accent-primary"
-                  checked={is}
-                  onChange={() => {
-                    const next = new Set(selected);
-                    if (is) next.delete(opt.value);
-                    else next.add(opt.value);
-                    const arr = [...next];
-                    column.setFilterValue(arr.length ? arr : undefined);
-                  }}
-                />
-                <span>{opt.label}</span>
-              </label>
-            );
-          })}
-        </div>
+        <ScrollArea className="max-h-[min(60dvh,16rem)]">
+          <div className="flex flex-col gap-1 p-2">
+            {options.map((opt) => {
+              const is = selected.has(opt.value);
+              return (
+                <label
+                  key={opt.value}
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs hover:bg-muted"
+                >
+                  <input
+                    type="checkbox"
+                    className="size-3.5 rounded border border-border accent-primary"
+                    checked={is}
+                    onChange={() => {
+                      const next = new Set(selected);
+                      if (is) next.delete(opt.value);
+                      else next.add(opt.value);
+                      const arr = [...next];
+                      column.setFilterValue(arr.length ? arr : undefined);
+                    }}
+                  />
+                  <span className="min-w-0 truncate">{opt.label}</span>
+                </label>
+              );
+            })}
+          </div>
+        </ScrollArea>
         {selected.size ? (
           <div className="border-t border-border p-2">
             <Button
