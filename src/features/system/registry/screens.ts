@@ -1,41 +1,32 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  BookOpen,
-  Briefcase,
   Building2,
-  FileText,
-  Inbox,
+  CalendarDays,
+  CreditCard,
   LayoutDashboard,
-  Mail,
-  MessageSquare,
   Settings,
-  Star,
+  Shirt,
   UserCircle,
   Users,
 } from "lucide-react";
 
 type NavTranslationKey =
   | "navDashboard"
-  | "navWork"
-  | "navBlogPosts"
-  | "navServices"
-  | "navTestimonials"
-  | "navLeads"
-  | "navSubscribers"
-  | "navUsers"
+  | "navEmployees"
+  | "navCustomers"
   | "navBranches"
+  | "navDresses"
+  | "navReservations"
+  | "navPayments"
   | "navSettings";
-
 type BreadcrumbTranslationKey =
   | "breadcrumbDashboard"
-  | "breadcrumbWork"
-  | "breadcrumbBlogPosts"
-  | "breadcrumbServices"
-  | "breadcrumbTestimonials"
-  | "breadcrumbLeads"
-  | "breadcrumbSubscribers"
-  | "breadcrumbUsers"
+  | "breadcrumbEmployees"
+  | "breadcrumbCustomers"
   | "breadcrumbBranches"
+  | "breadcrumbDresses"
+  | "breadcrumbReservations"
+  | "breadcrumbPayments"
   | "breadcrumbSettings";
 
 type SystemScreenRecord = {
@@ -61,84 +52,64 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     breadcrumbTranslationKey: "breadcrumbDashboard",
   },
   {
-    key: "work",
-    href: "/work-mgmt",
-    pathPrefixes: ["/work-mgmt"],
-    Icon: Briefcase,
-    showInNav: true,
-    protected: true,
-    navTranslationKey: "navWork",
-    breadcrumbTranslationKey: "breadcrumbWork",
-  },
-  {
-    key: "blogPosts",
-    href: "/blog-posts",
-    pathPrefixes: ["/blog-posts"],
-    Icon: FileText,
-    showInNav: true,
-    protected: true,
-    navTranslationKey: "navBlogPosts",
-    breadcrumbTranslationKey: "breadcrumbBlogPosts",
-  },
-  {
-    key: "services",
-    href: "/services-mgmt",
-    pathPrefixes: ["/services-mgmt"],
-    Icon: Inbox,
-    showInNav: true,
-    protected: true,
-    navTranslationKey: "navServices",
-    breadcrumbTranslationKey: "breadcrumbServices",
-  },
-  {
-    key: "testimonials",
-    href: "/testimonials",
-    pathPrefixes: ["/testimonials"],
-    Icon: Star,
-    showInNav: true,
-    protected: true,
-    navTranslationKey: "navTestimonials",
-    breadcrumbTranslationKey: "breadcrumbTestimonials",
-  },
-  {
-    key: "leads",
-    href: "/leads",
-    pathPrefixes: ["/leads"],
-    Icon: MessageSquare,
-    showInNav: true,
-    protected: true,
-    navTranslationKey: "navLeads",
-    breadcrumbTranslationKey: "breadcrumbLeads",
-  },
-  {
-    key: "subscribers",
-    href: "/subscribers",
-    pathPrefixes: ["/subscribers"],
-    Icon: Mail,
-    showInNav: true,
-    protected: true,
-    navTranslationKey: "navSubscribers",
-    breadcrumbTranslationKey: "breadcrumbSubscribers",
-  },
-  {
-    key: "users",
-    href: "/users",
-    pathPrefixes: ["/users"],
+    key: "employee",
+    href: "/employees",
+    pathPrefixes: ["/employees"],
     Icon: Users,
     showInNav: true,
     protected: true,
-    navTranslationKey: "navUsers",
-    breadcrumbTranslationKey: "breadcrumbUsers",
+    navTranslationKey: "navEmployees",
+    breadcrumbTranslationKey: "breadcrumbEmployees",
+  },
+  {
+    key: "customers",
+    href: "/rental-customers",
+    pathPrefixes: ["/rental-customers", "/customers"],
+    Icon: UserCircle,
+    showInNav: true,
+    protected: true,
+    navTranslationKey: "navCustomers",
+    breadcrumbTranslationKey: "breadcrumbCustomers",
   },
   {
     key: "branches",
     href: "/branches",
     pathPrefixes: ["/branches"],
     Icon: Building2,
-    showInNav: false,
+    showInNav: true,
     protected: true,
     navTranslationKey: "navBranches",
     breadcrumbTranslationKey: "breadcrumbBranches",
+  },
+  {
+    key: "dresses",
+    href: "/dresses",
+    pathPrefixes: ["/dresses"],
+    Icon: Shirt,
+    showInNav: true,
+    protected: true,
+    navTranslationKey: "navDresses",
+    breadcrumbTranslationKey: "breadcrumbDresses",
+  },
+  {
+    key: "reservations",
+    href: "/reservations",
+    pathPrefixes: ["/reservations"],
+    Icon: CalendarDays,
+    showInNav: true,
+    protected: true,
+    navTranslationKey: "navReservations",
+    breadcrumbTranslationKey: "breadcrumbReservations",
+  },
+  {
+    key: "payments",
+    href: "/payments",
+    pathPrefixes: ["/payments"],
+    Icon: CreditCard,
+    showInNav: true,
+    protected: true,
+    navTranslationKey: "navPayments",
+    breadcrumbTranslationKey: "breadcrumbPayments",
   },
   {
     key: "settings",
@@ -149,16 +120,6 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     protected: true,
     navTranslationKey: "navSettings",
     breadcrumbTranslationKey: "breadcrumbSettings",
-  },
-  {
-    key: "blog",
-    href: "/blog",
-    pathPrefixes: ["/blog"],
-    Icon: BookOpen,
-    showInNav: false,
-    protected: false,
-    navTranslationKey: null,
-    breadcrumbTranslationKey: null,
   },
   {
     key: "my-account",

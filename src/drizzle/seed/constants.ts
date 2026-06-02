@@ -1,5 +1,5 @@
 export const SEED_SYSTEM_ACTOR = "system:seed";
-export const SEED_ADMIN_EMAIL = "root@gateling.com";
+export const SEED_ADMIN_EMAIL = "root@mail.com";
 export const SEED_ADMIN_PASSWORD = "Make.1234";
 export const SEED_ADMIN_ID = "00000000-0000-0000-0000-000000000001";
 

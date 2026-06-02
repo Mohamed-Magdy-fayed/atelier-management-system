@@ -33,6 +33,11 @@ export async function updateProfileNameAction(
 
   await db.update(UsersTable).set(data).where(eq(UsersTable.id, userId));
 
+  const { linkRentalCustomersToUser } = await import(
+    "@/features/customer-portal/server/link-rental-customers"
+  );
+  await linkRentalCustomersToUser(userId);
+
   revalidateAuthCache({ id: userId, branchId: "" });
 
   return {

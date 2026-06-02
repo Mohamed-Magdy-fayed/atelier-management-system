@@ -8,8 +8,7 @@ loadEnv({
 
 const commands = {
   settings: {
-    description:
-      "Upsert default settings rows only (does not clear the database).",
+    description: "Upsert default settings rows only (does not clear the database).",
     action: async () => {
       const { runSeedProfile } = await import("@/drizzle/seed");
       await runSeedProfile("settings");
@@ -19,7 +18,7 @@ const commands = {
     description: 'Legacy alias for the "settings" seed profile.',
     action: async () => {
       const { runSeedProfile } = await import("@/drizzle/seed");
-      await runSeedProfile("baseline");
+      await runSeedProfile("settings");
     },
   },
   baseline: {

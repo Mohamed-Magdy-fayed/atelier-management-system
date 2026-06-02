@@ -1,6 +1,6 @@
 {
-  "name": "gateling-solutions",
-  "version": "1.0.0",
+  "name": "funtastic",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "lint": "biome check",
@@ -46,12 +46,11 @@
     "cmdk": "^1.1.1",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
-    "firebase": "^12.14.0",
-    "firebase-admin": "^13.10.0",
     "inngest": "^4.2.4",
     "input-otp": "^1.4.2",
     "lucide-react": "^1.8.0",
     "next": "16.2.4",
+    "next-cloudinary": "^6.17.5",
     "next-themes": "^0.4.6",
     "nodemailer": "^8.0.5",
     "postgres": "^3.4.9",

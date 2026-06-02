@@ -7,16 +7,9 @@ import {
 } from "@trpc/tanstack-react-query";
 import { cache } from "react";
 
-import { createCallerFactory, createTRPCContext } from "./init";
+import { createTRPCContext } from "./init";
 import { makeQueryClient } from "./query-client";
 import { appRouter } from "./routers/_app";
-
-/** Server-side tRPC caller — use for data fetching in Server Components. */
-const createCaller = createCallerFactory(appRouter);
-export const api = cache(async () => {
-  const ctx = await createTRPCContext();
-  return createCaller(ctx);
-});
 
 export const getQueryClient = cache(makeQueryClient);
 

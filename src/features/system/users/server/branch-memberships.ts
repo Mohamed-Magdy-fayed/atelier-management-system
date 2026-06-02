@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 
-import { BranchesTable, BranchMembershipsTable } from "@/drizzle/schema";
+import { BranchMembershipsTable, BranchesTable } from "@/drizzle/schema";
 
 import type { TRPCContext } from "./shared";
 

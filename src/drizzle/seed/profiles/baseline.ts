@@ -1,5 +1,5 @@
-import { seedScenario } from "../core";
+import { seedSettingsProfile } from "./settings";
 
 export async function seedBaselineProfile() {
-  return seedScenario({ profile: "baseline", seedPortfolioContent: false });
+  return seedSettingsProfile();
 }

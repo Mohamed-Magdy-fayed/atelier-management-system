@@ -27,6 +27,4 @@ export const settingBulkSetActiveSchema = z.object({
 export type ListSettingsInput = z.infer<typeof listSettingsInput>;
 export type SettingUpdateInput = z.infer<typeof settingUpdateSchema>;
 export type SettingSetActiveInput = z.infer<typeof settingSetActiveSchema>;
-export type SettingBulkSetActiveInput = z.infer<
-  typeof settingBulkSetActiveSchema
->;
+export type SettingBulkSetActiveInput = z.infer<typeof settingBulkSetActiveSchema>;

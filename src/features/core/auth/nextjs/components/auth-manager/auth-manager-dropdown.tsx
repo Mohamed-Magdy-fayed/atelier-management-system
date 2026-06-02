@@ -24,8 +24,9 @@ import {
 import { Status, StatusIndicator } from "@/components/ui/status";
 import { ThemeToggle } from "@/features/core/color-theme/client";
 import { LanguageToggle, useTranslation } from "@/features/core/i18n/client";
-import type { PublicAccountLabelKey } from "@/features/public-catalog/lib/public-account-destination";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+import type { PublicAccountLabelKey } from "@/features/public-catalog/lib/public-account-destination";
 
 import type { AuthManagerDialog } from "./types";
 

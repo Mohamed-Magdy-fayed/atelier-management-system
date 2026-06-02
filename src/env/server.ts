@@ -19,13 +19,8 @@ export const env = createEnv({
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
 
-    INNGEST_SIGNING_KEY: z.string().min(1).optional(),
-    INNGEST_EVENT_KEY: z.string().min(1).optional(),
-
-    FIREBASE_PROJECT_ID: z.string().min(1),
-    FIREBASE_CLIENT_EMAIL: z.string().min(1),
-    FIREBASE_PRIVATE_KEY: z.string().min(1),
-    FIREBASE_STORAGE_BUCKET: z.string().min(1),
+    WAPILOT_INSTANCE_ID: z.string().min(1),
+    WAPILOT_API_TOKEN: z.string().min(1),
 
     SMTP_HOST: z.string().min(1).optional(),
     SMTP_PORT: z.coerce.number().int().positive().optional(),

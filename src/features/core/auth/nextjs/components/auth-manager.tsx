@@ -2,12 +2,12 @@
 
 import { startTransition, useState } from "react";
 import { signOutAction } from "@/features/core/auth/nextjs/actions";
+import { getPublicAccountDestination } from "@/features/public-catalog/lib/public-account-destination";
 import { AuthManagerDialogs } from "@/features/core/auth/nextjs/components/auth-manager/auth-manager-dialogs";
 import { AuthManagerDropdown } from "@/features/core/auth/nextjs/components/auth-manager/auth-manager-dropdown";
 import { AuthManagerGuestMenu } from "@/features/core/auth/nextjs/components/auth-manager/auth-manager-guest-menu";
 import type { AuthManagerDialog } from "@/features/core/auth/nextjs/components/auth-manager/types";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
-import { getPublicAccountDestination } from "@/features/public-catalog/lib/public-account-destination";
 
 export function AuthManager({ trigger }: { trigger: React.ReactElement }) {
   const { isAuthenticated, session } = useAuth();

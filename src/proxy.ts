@@ -15,14 +15,7 @@ const authRoutes = [
   "/reset-password",
 ];
 
-const publicRoutes = [
-  "/verify-email",
-  "/oauth/",
-  "/collection",
-  "/view-dress",
-  "/work/",
-  "/blog/",
-];
+const publicRoutes = ["/verify-email", "/oauth/", "/collection", "/view-dress"];
 
 export async function proxy(request: NextRequest) {
   const response = (await middlewareAuth(request)) ?? NextResponse.next();

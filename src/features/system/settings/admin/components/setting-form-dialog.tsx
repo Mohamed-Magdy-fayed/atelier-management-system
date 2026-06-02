@@ -31,7 +31,10 @@ import {
   getSettingDisplayDescription,
   getSettingDisplayName,
 } from "@/features/system/settings/lib/setting-i18n";
-import { getSystemSettingDefinition } from "@/features/system/settings/lib/system-settings-registry";
+import {
+  getSystemSettingDefinition,
+  SYSTEM_SETTING_CODE,
+} from "@/features/system/settings/lib/system-settings-registry";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { SettingGridRow } from "@/integrations/trpc/routers/settings";
 
@@ -238,7 +241,14 @@ export function SettingFormDialog({
                   <form.AppField name="isActive">
                     {(field) => (
                       <field.SelectField
-                        label={String(t("systemPages.settingsIsActive"))}
+                        label={String(
+                          t(
+                            setting.code ===
+                              SYSTEM_SETTING_CODE.SHOW_CATALOG_PRICES
+                              ? "systemPages.settingsShowPricesState"
+                              : "systemPages.settingsIsActive",
+                          ),
+                        )}
                         options={isActiveSelectOptions}
                       />
                     )}
@@ -246,14 +256,24 @@ export function SettingFormDialog({
                 ) : null}
                 {definition.editable.value ? (
                   <form.AppField name="value">
-                    {(field) => (
-                      <field.StringField
-                        label={String(t("systemPages.settingsValue"))}
-                        placeholder={String(
-                          t("systemPages.settingsValuePlaceholder"),
-                        )}
-                      />
-                    )}
+                    {(field) =>
+                      setting.code ===
+                      SYSTEM_SETTING_CODE.RESERVATION_USAGE_POLICY ? (
+                        <field.TextareaField
+                          label={String(t("systemPages.settingsValue"))}
+                          placeholder={String(
+                            t("systemPages.settingsValuePlaceholder"),
+                          )}
+                        />
+                      ) : (
+                        <field.StringField
+                          label={String(t("systemPages.settingsValue"))}
+                          placeholder={String(
+                            t("systemPages.settingsValuePlaceholder"),
+                          )}
+                        />
+                      )
+                    }
                   </form.AppField>
                 ) : null}
                 {definition.editable.amount ? (
@@ -294,7 +314,9 @@ export function SettingFormDialog({
               ) : (
                 <SaveIcon className="size-3.5" />
               )}
-              {pending ? String(t("common.saving")) : String(t("common.save"))}
+              {pending
+                ? String(t("common.saving"))
+                : String(t("common.save"))}
             </OverlayFormSubmitButton>
           </OverlayFormFooterActions>
         </DialogFooter>

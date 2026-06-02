@@ -25,12 +25,7 @@ import {
   UserTokensTable,
 } from "./";
 
-export const userRoleValues = [
-  "super_admin",
-  "admin",
-  "employee",
-  "customer",
-] as const;
+export const userRoleValues = ["admin", "employee", "customer"] as const;
 export type UserRole = (typeof userRoleValues)[number];
 export const userRoleEnum = pgEnum("user_role", userRoleValues);
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import type { EmployeeBranchRef } from "@/features/system/users/server/types";
 import { cn } from "@/lib/utils";
+import type { EmployeeBranchRef } from "@/features/system/users/server/types";
 
 const MAX_VISIBLE = 2;
 
@@ -44,10 +44,7 @@ export function EmployeeBranchBadges({
         <Badge
           key={branch.id}
           variant="secondary"
-          className={cn(
-            "relative shrink-0 font-normal",
-            isStacked && index > 0 && "z-1",
-          )}
+          className={cn("relative shrink-0 font-normal", isStacked && index > 0 && "z-1")}
           title={branchLabel(branch, locale)}
         >
           {branchLabel(branch, locale)}

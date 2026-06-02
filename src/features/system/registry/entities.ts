@@ -1,61 +1,47 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  BookOpen,
-  Briefcase,
   Building2,
-  FileText,
-  Inbox,
-  Mail,
-  MessageSquare,
+  CalendarDays,
+  CreditCard,
   Settings,
-  Star,
+  Shirt,
+  UserCircle,
   Users,
 } from "lucide-react";
 
 import type { ScreenKey } from "./screens";
 
 type EntityNavTranslationKey =
-  | "navWork"
-  | "navBlogPosts"
-  | "navServices"
-  | "navTestimonials"
-  | "navLeads"
-  | "navSubscribers"
-  | "navUsers"
+  | "navCustomers"
+  | "navEmployees"
   | "navBranches"
+  | "navDresses"
+  | "navReservations"
+  | "navPayments"
   | "navSettings";
-
 type EntityBreadcrumbTranslationKey =
-  | "breadcrumbWork"
-  | "breadcrumbBlogPosts"
-  | "breadcrumbServices"
-  | "breadcrumbTestimonials"
-  | "breadcrumbLeads"
-  | "breadcrumbSubscribers"
-  | "breadcrumbUsers"
+  | "breadcrumbCustomers"
+  | "breadcrumbEmployees"
   | "breadcrumbBranches"
+  | "breadcrumbDresses"
+  | "breadcrumbReservations"
+  | "breadcrumbPayments"
   | "breadcrumbSettings";
-
 type EntityTitleKey =
-  | "workTitle"
-  | "blogPostsTitle"
-  | "servicesTitle"
-  | "testimonialsTitle"
-  | "leadsTitle"
-  | "subscribersTitle"
-  | "usersTitle"
+  | "customersTitle"
+  | "employeesTitle"
   | "branchesTitle"
+  | "dressesTitle"
+  | "reservationsTitle"
+  | "paymentsTitle"
   | "settingsTitle";
-
 type EntityLeadKey =
-  | "workLead"
-  | "blogPostsLead"
-  | "servicesLead"
-  | "testimonialsLead"
-  | "leadsLead"
-  | "subscribersLead"
-  | "usersLead"
+  | "customersLead"
+  | "employeesLead"
   | "branchesLead"
+  | "dressesLead"
+  | "reservationsLead"
+  | "paymentsLead"
   | "settingsLead";
 
 export type SystemEntityRegistryItem = {
@@ -82,151 +68,46 @@ export type SystemEntityRegistryItem = {
 
 export const SYSTEM_ENTITY_REGISTRY = [
   {
-    slug: "work",
-    route: "/work-mgmt",
-    screenKey: "work",
-    icon: Briefcase,
-    navLabelKey: "navWork",
-    breadcrumbLabelKey: "breadcrumbWork",
-    titleKey: "workTitle",
-    leadKey: "workLead",
-    branchScope: "global",
-    infoView: "audit-only",
-    supportsImport: false,
-    supportsExport: false,
-    supportsRowSelection: true,
-    supportsBulkActions: true,
-    filters: ["status", "industry"],
-    rowActions: ["info", "publish", "archive", "edit", "delete"],
-    bulkActions: ["archive", "delete"],
-    showInDashboard: true,
-    seedProfiles: ["baseline", "demo"],
-  },
-  {
-    slug: "blog-posts",
-    route: "/blog-posts",
-    screenKey: "blogPosts",
-    icon: FileText,
-    navLabelKey: "navBlogPosts",
-    breadcrumbLabelKey: "breadcrumbBlogPosts",
-    titleKey: "blogPostsTitle",
-    leadKey: "blogPostsLead",
-    branchScope: "global",
-    infoView: "audit-only",
-    supportsImport: false,
-    supportsExport: false,
-    supportsRowSelection: true,
-    supportsBulkActions: true,
-    filters: ["status"],
-    rowActions: ["info", "publish", "archive", "edit", "delete"],
-    bulkActions: ["archive", "delete"],
-    showInDashboard: true,
-    seedProfiles: ["baseline", "demo"],
-  },
-  {
-    slug: "services",
-    route: "/services-mgmt",
-    screenKey: "services",
-    icon: Inbox,
-    navLabelKey: "navServices",
-    breadcrumbLabelKey: "breadcrumbServices",
-    titleKey: "servicesTitle",
-    leadKey: "servicesLead",
-    branchScope: "global",
-    infoView: "audit-only",
-    supportsImport: false,
-    supportsExport: false,
-    supportsRowSelection: false,
-    supportsBulkActions: false,
-    filters: ["isActive"],
-    rowActions: ["info", "activate", "deactivate", "edit", "delete"],
-    bulkActions: [],
-    showInDashboard: false,
-    seedProfiles: ["baseline", "demo"],
-  },
-  {
-    slug: "testimonials",
-    route: "/testimonials",
-    screenKey: "testimonials",
-    icon: Star,
-    navLabelKey: "navTestimonials",
-    breadcrumbLabelKey: "breadcrumbTestimonials",
-    titleKey: "testimonialsTitle",
-    leadKey: "testimonialsLead",
-    branchScope: "global",
-    infoView: "audit-only",
-    supportsImport: false,
-    supportsExport: false,
-    supportsRowSelection: false,
-    supportsBulkActions: false,
-    filters: ["isVisible"],
-    rowActions: ["info", "toggleVisibility", "edit", "delete"],
-    bulkActions: [],
-    showInDashboard: false,
-    seedProfiles: ["baseline", "demo"],
-  },
-  {
-    slug: "leads",
-    route: "/leads",
-    screenKey: "leads",
-    icon: MessageSquare,
-    navLabelKey: "navLeads",
-    breadcrumbLabelKey: "breadcrumbLeads",
-    titleKey: "leadsTitle",
-    leadKey: "leadsLead",
-    branchScope: "global",
+    slug: "customers",
+    route: "/rental-customers",
+    screenKey: "customers",
+    icon: UserCircle,
+    navLabelKey: "navCustomers",
+    breadcrumbLabelKey: "breadcrumbCustomers",
+    titleKey: "customersTitle",
+    leadKey: "customersLead",
+    branchScope: "branch-aware",
     infoView: "audit-only",
     supportsImport: false,
     supportsExport: true,
     supportsRowSelection: false,
     supportsBulkActions: false,
-    filters: ["status", "source", "createdAt"],
-    rowActions: ["info", "markContacted", "markQualified", "close", "delete"],
+    filters: ["createdAt"],
+    rowActions: [],
     bulkActions: [],
     showInDashboard: true,
-    seedProfiles: ["demo"],
+    seedProfiles: ["baseline", "demo", "performance"],
   },
   {
-    slug: "subscribers",
-    route: "/subscribers",
-    screenKey: "subscribers",
-    icon: Mail,
-    navLabelKey: "navSubscribers",
-    breadcrumbLabelKey: "breadcrumbSubscribers",
-    titleKey: "subscribersTitle",
-    leadKey: "subscribersLead",
-    branchScope: "global",
-    infoView: "audit-only",
-    supportsImport: false,
-    supportsExport: true,
-    supportsRowSelection: false,
-    supportsBulkActions: false,
-    filters: ["status"],
-    rowActions: ["unsubscribe", "delete"],
-    bulkActions: [],
-    showInDashboard: true,
-    seedProfiles: ["demo"],
-  },
-  {
-    slug: "users",
-    route: "/users",
-    screenKey: "users",
+    slug: "employees",
+    route: "/employees",
+    screenKey: "employee",
     icon: Users,
-    navLabelKey: "navUsers",
-    breadcrumbLabelKey: "breadcrumbUsers",
-    titleKey: "usersTitle",
-    leadKey: "usersLead",
-    branchScope: "global",
+    navLabelKey: "navEmployees",
+    breadcrumbLabelKey: "breadcrumbEmployees",
+    titleKey: "employeesTitle",
+    leadKey: "employeesLead",
+    branchScope: "branch-aware",
     infoView: "audit-only",
-    supportsImport: false,
-    supportsExport: false,
-    supportsRowSelection: false,
-    supportsBulkActions: false,
-    filters: ["role", "createdAt"],
+    supportsImport: true,
+    supportsExport: true,
+    supportsRowSelection: true,
+    supportsBulkActions: true,
+    filters: ["verified", "age", "createdAt", "lastSignInAt"],
     rowActions: ["info", "edit", "delete"],
-    bulkActions: [],
-    showInDashboard: false,
-    seedProfiles: ["baseline"],
+    bulkActions: ["verify", "unverify", "delete"],
+    showInDashboard: true,
+    seedProfiles: ["baseline", "demo", "performance"],
   },
   {
     slug: "branches",
@@ -246,8 +127,85 @@ export const SYSTEM_ENTITY_REGISTRY = [
     filters: [],
     rowActions: ["info", "setActive", "edit", "delete"],
     bulkActions: [],
+    showInDashboard: true,
+    seedProfiles: ["baseline", "demo", "performance"],
+  },
+  {
+    slug: "dresses",
+    route: "/dresses",
+    screenKey: "dresses",
+    icon: Shirt,
+    navLabelKey: "navDresses",
+    breadcrumbLabelKey: "breadcrumbDresses",
+    titleKey: "dressesTitle",
+    leadKey: "dressesLead",
+    branchScope: "branch-aware",
+    infoView: "audit-only",
+    supportsImport: false,
+    supportsExport: true,
+    supportsRowSelection: true,
+    supportsBulkActions: true,
+    filters: ["isActive", "pricePerDay", "createdAt"],
+    rowActions: ["info", "edit", "activate", "deactivate", "delete"],
+    bulkActions: ["activate", "deactivate", "archive"],
+    showInDashboard: true,
+    seedProfiles: ["baseline", "demo", "performance"],
+  },
+  {
+    slug: "reservations",
+    route: "/reservations",
+    screenKey: "reservations",
+    icon: CalendarDays,
+    navLabelKey: "navReservations",
+    breadcrumbLabelKey: "breadcrumbReservations",
+    titleKey: "reservationsTitle",
+    leadKey: "reservationsLead",
+    branchScope: "branch-aware",
+    infoView: "audit-only",
+    supportsImport: false,
+    supportsExport: true,
+    supportsRowSelection: true,
+    supportsBulkActions: true,
+    filters: [
+      "status",
+      "dressId",
+      "receivingDateTime",
+      "occasionDate",
+      "returnDateTime",
+      "createdAt",
+    ],
+    rowActions: [
+      "info",
+      "receipt",
+      "edit",
+      "updateStatus",
+      "collectPayment",
+      "delete",
+    ],
+    bulkActions: ["updateStatus", "delete"],
+    showInDashboard: true,
+    seedProfiles: ["baseline", "demo"],
+  },
+  {
+    slug: "payments",
+    route: "/payments",
+    screenKey: "payments",
+    icon: CreditCard,
+    navLabelKey: "navPayments",
+    breadcrumbLabelKey: "breadcrumbPayments",
+    titleKey: "paymentsTitle",
+    leadKey: "paymentsLead",
+    branchScope: "branch-aware",
+    infoView: "audit-only",
+    supportsImport: false,
+    supportsExport: true,
+    supportsRowSelection: true,
+    supportsBulkActions: true,
+    filters: ["type", "method", "createdAt"],
+    rowActions: ["info"],
+    bulkActions: ["export"],
     showInDashboard: false,
-    seedProfiles: ["baseline"],
+    seedProfiles: ["demo"],
   },
   {
     slug: "settings",
@@ -262,34 +220,13 @@ export const SYSTEM_ENTITY_REGISTRY = [
     infoView: "audit-only",
     supportsImport: false,
     supportsExport: false,
-    supportsRowSelection: false,
-    supportsBulkActions: false,
+    supportsRowSelection: true,
+    supportsBulkActions: true,
     filters: [],
     rowActions: ["info", "edit"],
-    bulkActions: [],
+    bulkActions: ["enable", "disable"],
     showInDashboard: false,
     seedProfiles: ["baseline"],
-  },
-  {
-    slug: "blog",
-    route: "/blog",
-    screenKey: "blog",
-    icon: BookOpen,
-    navLabelKey: "navBlogPosts",
-    breadcrumbLabelKey: "breadcrumbBlogPosts",
-    titleKey: "blogPostsTitle",
-    leadKey: "blogPostsLead",
-    branchScope: "global",
-    infoView: "audit-only",
-    supportsImport: false,
-    supportsExport: false,
-    supportsRowSelection: false,
-    supportsBulkActions: false,
-    filters: [],
-    rowActions: [],
-    bulkActions: [],
-    showInDashboard: false,
-    seedProfiles: [],
   },
 ] as const satisfies readonly SystemEntityRegistryItem[];
 

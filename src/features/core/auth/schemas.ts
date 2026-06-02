@@ -59,9 +59,7 @@ export const signInSchema = z.object({
 export const signUpSchema = z.object({
   name: z.string(),
   email: z.email(translationKey("authTranslations.validation.invalidEmail")),
-  phone: z
-    .string()
-    .min(10, translationKey("authTranslations.profile.phone.error.invalid")),
+  phone: z.string().min(10, translationKey("authTranslations.profile.phone.error.invalid")),
   password: passwordSchema,
 });
 
@@ -90,16 +88,9 @@ export const changeEmailSchema = z
 export const sessionSchema = z.object({
   sessionId: z.string(),
   exp: z.number(),
-  hasPassword: z.boolean().optional().default(false),
   user: z.object({
     id: z.string(),
     role: z.enum(userRoleValues),
-    email: z.string().optional().nullable(),
-    name: z.string().optional().nullable(),
-    emailVerifiedAt: z.preprocess(
-      (val) => (val instanceof Date ? val.toISOString() : val),
-      z.string().optional().nullable(),
-    ),
   }),
 });
 

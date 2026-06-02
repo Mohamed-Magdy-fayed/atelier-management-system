@@ -7,8 +7,8 @@ import {
 } from "@/drizzle/schema";
 
 import {
-  listAssignableBranches as fetchAssignableBranches,
   getUserBranchIds as fetchUserBranchIds,
+  listAssignableBranches as fetchAssignableBranches,
 } from "./branch-memberships";
 import { buildWhere, EXPORT_ROW_LIMIT, sortExpr } from "./filters";
 import type {
@@ -53,10 +53,12 @@ export async function listEmployees(
   );
 
   const branchFilterIds = Array.from(
-    new Set([
-      ...(input.branchIds ?? []),
-      ...(input.branchId ? [input.branchId] : []),
-    ]),
+    new Set(
+      [
+        ...(input.branchIds ?? []),
+        ...(input.branchId ? [input.branchId] : []),
+      ],
+    ),
   );
 
   const rows =

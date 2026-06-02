@@ -33,6 +33,7 @@ export function FormImageField({
       for (const file of files) {
         try {
           options.onProgress(file, 20);
+          const previousImageUrl = field.state.value ?? null;
 
           const base64 = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
@@ -56,9 +57,10 @@ export function FormImageField({
           });
 
           const payload = await uploadImage({
+            fileName: file.name,
             mimeType: file.type,
             base64,
-            folder: "uploads",
+            oldUrl: previousImageUrl,
           });
 
           if (!payload?.url) {

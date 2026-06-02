@@ -19,10 +19,10 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { Separator } from "@/components/ui/separator";
 import { Status, StatusIndicator } from "@/components/ui/status";
 import { signOutAction } from "@/features/core/auth/nextjs/actions";
+import { getPublicAccountDestination } from "@/features/public-catalog/lib/public-account-destination";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { ThemeToggle } from "@/features/core/color-theme/client";
 import { LanguageToggle, useTranslation } from "@/features/core/i18n/client";
-import { getPublicAccountDestination } from "@/features/public-catalog/lib/public-account-destination";
 
 import { AuthManagerDialogs } from "./auth-manager-dialogs";
 import type { AuthManagerDialog } from "./types";
@@ -109,10 +109,7 @@ export function AuthManagerSheetPanel() {
           {session.user.email}
         </p>
         <SheetAction>
-          <Link
-            className="flex w-full items-center gap-3"
-            href={accountPage.href}
-          >
+          <Link className="flex w-full items-center gap-3" href={accountPage.href}>
             <AccountIcon className="size-5 shrink-0 text-muted-foreground" />
             {String(t(accountPage.labelKey))}
           </Link>
