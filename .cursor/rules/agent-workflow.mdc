@@ -10,8 +10,10 @@ These rules apply to every task. **Update this file** when a mistake or conventi
 ## Verification
 
 - After substantive app or type changes, run **`npm run build`** and fix failures before considering the task done.
+- Use **npm** for package scripts (not pnpm/yarn unless the user explicitly changes tooling).
 - On Windows PowerShell, chain commands with **`;`**, not `&&` (e.g. `Set-Location <repo>; npm run build`).
 - Prefer fixing TypeScript/build errors over leaving the branch broken.
+- Avoid exploratory shell commands unless needed for the task; prefer reading/editing source files.
 
 ## TanStack form fields (`src/components/forms/**`)
 
@@ -29,6 +31,8 @@ These rules apply to every task. **Update this file** when a mistake or conventi
 
 - **Inline notices** (form hints, prerequisites, non-blocking guidance): use `Alert`, `AlertTitle`, and `AlertDescription` from `@/components/ui/alert` with the correct **variant** — `default` for informational messages, `destructive` for errors/blockers. Include a lucide icon (e.g. `InfoIcon`, `AlertTriangleIcon`) as a child of `Alert`, matching existing usage in `form-alert.tsx` and `dress-availability-checker.tsx`.
 - Do **not** hand-roll notice boxes with `div` + dashed borders for these cases.
+- When a primary submit is **disabled**, show **why** (e.g. missing active branch on dress create) via `Alert` or field-level copy — not a silent disabled button.
+- Faceted table filter popovers with long option lists: cap height and use **`ScrollArea`** inside the popover.
 
 ## System admin screens (`src/features/system/**`)
 
@@ -47,6 +51,8 @@ Follow [`docs/entity-blueprint.md`](../../docs/entity-blueprint.md) and [`AGENTS
 - **Employees** must pass `branchId` from the active branch on list/mutation inputs; the server verifies branch membership. They cannot use “all branches” mode or access another branch’s rows.
 - **Admins** may omit `branchId` on lists (all branches) or pass any branch; mutations still respect payload `branchId`.
 - **Settings, branches admin, and employees** screens stay **admin-only** (`assertAdminRole`). Reservation **delete** / bulk delete remain admin-only.
+- **Employee default landing** after sign-in: **reservations** (`/reservations`), not customers — enforced via permissions (`EMPLOYEE_BLOCKED_SCREENS` includes `dashboard`) and post-auth redirects.
+- Legacy/public UX parity (receipts, multistep reservation, table pinning, theme): [`docs/legacy-parity.md`](../../docs/legacy-parity.md). Public/mobile: [`docs/public-experience.md`](../../docs/public-experience.md). Master index: [`AGENTS.md`](../../AGENTS.md).
 
 ## Documenting new lessons
 

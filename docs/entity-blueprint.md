@@ -12,6 +12,8 @@ It exists so that:
 
 ## Product Context
 
+> **AI agents:** Start at [`AGENTS.md`](../AGENTS.md) for the full replication index, permissions, and session-agreed rules. Use [`legacy-parity.md`](legacy-parity.md) when matching `dress-rental-system` behavior.
+
 `Funtastic` is not only an internal admin panel. The product direction is:
 
 - a polished company-facing experience for selling products, services, or bookings
