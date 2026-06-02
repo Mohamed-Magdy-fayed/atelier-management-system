@@ -14,11 +14,11 @@ export function AuthManagerHeaderTrigger({
 }: {
   className?: string;
 }) {
-  const { isAuthenticated, session } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
 
   const accountLabel = isAuthenticated
-    ? session.user.name?.trim() || session.user.email
+    ? String(t("landing.headerAccountMenu"))
     : String(t("landing.headerAccountMenu"));
 
   const trigger = (

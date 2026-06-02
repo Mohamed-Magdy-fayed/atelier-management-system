@@ -340,6 +340,14 @@ This is **not** the Next.js you know. APIs, conventions, and file structure may 
 
 <!-- END:nextjs-agent-rules -->
 
+## Product
+
+**Gateling Solutions** — B2B technology consulting portfolio at `gateling.com`.
+
+Target clients: cafes, schools, retail, events businesses in Egypt and MENA.
+
+Read [`CLAUDE.md`](CLAUDE.md) for full stack, env, repo map, and architecture rules.
+
 ---
 
 ## Definition of done (agent task)

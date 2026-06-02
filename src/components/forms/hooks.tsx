@@ -2,12 +2,12 @@ import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
 import { toast } from "sonner";
 
 import { FormImageField } from "@/components/forms/image-field";
-import { useTranslation } from "@/features/core/i18n/client";
 import {
   extractValidationErrorMessage,
   flattenValidationErrors,
   translateFormErrorMessage,
 } from "@/components/forms/validation-messages";
+import { useTranslation } from "@/features/core/i18n/client";
 import { FormBooleanField } from "./boolean-field";
 import { FormComboboxOneField } from "./combobox-one-field";
 import { FormDateField } from "./date-field";
@@ -75,10 +75,14 @@ const useAppForm: typeof useAppFormBase = (opts) => {
           .map((e) => {
             const raw = extractValidationErrorMessage(e);
             return raw
-              ? translateFormErrorMessage((key) => String(t(key as never)), raw, {
-                  locale,
-                  fallbackLocale: "en",
-                })
+              ? translateFormErrorMessage(
+                  (key) => String(t(key as never)),
+                  raw,
+                  {
+                    locale,
+                    fallbackLocale: "en",
+                  },
+                )
               : undefined;
           })
           .filter(Boolean)

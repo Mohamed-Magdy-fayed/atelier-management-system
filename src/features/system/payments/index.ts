@@ -1,1 +1,0 @@
-export { PaymentsTablePage } from "./admin";

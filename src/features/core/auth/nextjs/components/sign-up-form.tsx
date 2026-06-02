@@ -99,7 +99,10 @@ export function SignUpForm() {
         {t("authTranslations.signIn.continueWith")}
       </FieldSeparator>
 
-      <FieldSet className="grid gap-2" disabled={isPending || form.state.isSubmitting}>
+      <FieldSet
+        className="grid gap-2"
+        disabled={isPending || form.state.isSubmitting}
+      >
         <form.AppField name="name">
           {({ StringField }) => (
             <StringField label={t("authTranslations.signUp.nameLabel")} />

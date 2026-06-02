@@ -40,10 +40,7 @@ export function buildEmployeeGridColumns(opts: {
       options: branchFilterOptions,
     },
     cell: ({ row }) => (
-      <EmployeeBranchBadges
-        branches={row.original.branches}
-        locale={locale}
-      />
+      <EmployeeBranchBadges branches={row.original.branches} locale={locale} />
     ),
     filterFn: (row, _id, value) => {
       const selected = value as string[] | undefined;
@@ -55,14 +52,9 @@ export function buildEmployeeGridColumns(opts: {
   };
 
   const phoneIndex = base.findIndex(
-    (column) =>
-      "accessorKey" in column && column.accessorKey === "phone",
+    (column) => "accessorKey" in column && column.accessorKey === "phone",
   );
   const insertAt = phoneIndex >= 0 ? phoneIndex + 1 : 3;
 
-  return [
-    ...base.slice(0, insertAt),
-    branchesColumn,
-    ...base.slice(insertAt),
-  ];
+  return [...base.slice(0, insertAt), branchesColumn, ...base.slice(insertAt)];
 }

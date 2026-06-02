@@ -14,7 +14,7 @@ export function getRequiredSession(ctx: TRPCContext): ProtectedTRPCSession {
 }
 
 export function assertAdminRole(role: string) {
-  if (role !== "admin") {
+  if (role !== "super_admin" && role !== "admin") {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Insufficient permissions",

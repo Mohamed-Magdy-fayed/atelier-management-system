@@ -10,7 +10,10 @@ import type {
 } from "./schemas";
 
 export type SessionPayload = z.infer<typeof sessionSchema>;
-export type PartialUser = z.infer<typeof sessionSchema>["user"];
+type SessionUser = z.infer<typeof sessionSchema>["user"];
+export type PartialUser = Omit<SessionUser, "emailVerifiedAt"> & {
+  emailVerifiedAt?: Date | string | null;
+};
 export type AuthState =
   | {
       isAuthenticated: false;

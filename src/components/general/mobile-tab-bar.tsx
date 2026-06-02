@@ -50,13 +50,19 @@ export function MobileTabLink({
   return (
     <Link
       className={cn(
-        "flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[0.625rem] font-medium transition-colors",
+        "relative flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[0.625rem] font-medium transition-colors",
         active
-          ? "text-foreground"
+          ? "text-primary"
           : "text-muted-foreground hover:text-foreground active:bg-muted/60",
       )}
       href={href}
     >
+      <span
+        className={cn(
+          "absolute inset-x-3 top-0 h-[2.5px] rounded-full bg-primary transition-opacity duration-300",
+          active ? "opacity-100" : "opacity-0",
+        )}
+      />
       <Icon className="size-[1.35rem] shrink-0" aria-hidden />
       <span className="line-clamp-2 text-center leading-tight">{label}</span>
     </Link>
@@ -66,23 +72,33 @@ export function MobileTabLink({
 export function MobileTabButton({
   icon: Icon,
   label,
+  active,
   onClick,
   type = "button",
 }: {
   icon: LucideIcon;
   label: string;
+  active?: boolean;
   onClick?: () => void;
   type?: "button" | "submit";
 }) {
   return (
     <button
       className={cn(
-        "flex min-h-14 w-full flex-col items-center justify-center gap-0.5 px-1 py-2 text-[0.625rem] font-medium text-muted-foreground transition-colors",
-        "hover:text-foreground active:bg-muted/60",
+        "relative flex min-h-14 w-full flex-col items-center justify-center gap-0.5 px-1 py-2 text-[0.625rem] font-medium transition-colors",
+        active
+          ? "text-primary"
+          : "text-muted-foreground hover:text-foreground active:bg-muted/60",
       )}
       onClick={onClick}
       type={type}
     >
+      <span
+        className={cn(
+          "absolute inset-x-3 top-0 h-[2.5px] rounded-full bg-primary transition-opacity duration-300",
+          active ? "opacity-100" : "opacity-0",
+        )}
+      />
       <Icon className="size-[1.35rem] shrink-0" aria-hidden />
       <span className="line-clamp-2 text-center leading-tight">{label}</span>
     </button>

@@ -25,7 +25,9 @@ export function UserAvatar({
         alt={displayName}
       />
       <AvatarFallback className={fallbackClassName}>
-        {session.user.name ? getInitials(session.user.name) : displayName.slice(0, 2).toUpperCase()}
+        {session.user.name
+          ? getInitials(session.user.name)
+          : displayName.slice(0, 2).toUpperCase()}
       </AvatarFallback>
     </Avatar>
   );

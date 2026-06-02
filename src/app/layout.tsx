@@ -25,10 +25,44 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ateliér Alaa Elkasry",
+  title: {
+    default:
+      "Custom Software Development & Business Automation | Gateling Solutions",
+    template: "%s | Gateling Solutions",
+  },
   description:
-    "Browse curated evening wear, explore boutiques, check availability by date—reserve in person.",
+    "We find the most painful points in your business and resolve them with custom software and AI. Serving cafes, schools, retail & events across Egypt and MENA.",
+  metadataBase: new URL(process.env.BASE_URL ?? "https://gateling.com"),
+  openGraph: {
+    siteName: "Gateling Solutions",
+    type: "website",
+    images: [{ url: "/og-default.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
   icons: [{ rel: "icon", url: "/favicon.ico" }],
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://gateling.com/#org",
+      name: "Gateling Solutions",
+      url: "https://gateling.com",
+      logo: "https://gateling.com/logo.png",
+      email: "info@gateling.com",
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://gateling.com/#website",
+      name: "Gateling Solutions",
+      url: "https://gateling.com",
+      publisher: { "@id": "https://gateling.com/#org" },
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -60,6 +94,13 @@ async function Suspended({ children }: { children: React.ReactNode }) {
       )}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: structured data
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body>
         <Providers locale={locale} theme={theme}>
           {children}

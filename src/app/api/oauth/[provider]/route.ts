@@ -74,10 +74,6 @@ export async function GET(
     }
 
     await createUserSession(user, cookieJar);
-    const { linkRentalCustomersToUser } = await import(
-      "@/features/customer-portal/server/link-rental-customers"
-    );
-    await linkRentalCustomersToUser(user.id);
     authenticatedUser = user;
   } catch (error) {
     console.error(error);

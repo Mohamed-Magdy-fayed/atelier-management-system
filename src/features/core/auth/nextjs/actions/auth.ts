@@ -44,7 +44,13 @@ export async function signInAction(
 
   try {
     const user = await db.query.UsersTable.findFirst({
-      columns: { id: true, role: true },
+      columns: {
+        id: true,
+        role: true,
+        email: true,
+        name: true,
+        emailVerifiedAt: true,
+      },
       where: eq(UsersTable.email, normalizedEmail),
       with: {
         credentials: { columns: { passwordHash: true, passwordSalt: true } },
@@ -75,7 +81,7 @@ export async function signInAction(
       };
     }
 
-    await createUserSession(user, await cookies());
+    await createUserSession({ user, hasPassword: true }, await cookies());
     signedInUser = user;
   } catch (error) {
     return authError(error);
@@ -129,6 +135,8 @@ export async function signUpAction(
           id: UsersTable.id,
           name: UsersTable.name,
           role: UsersTable.role,
+          email: UsersTable.email,
+          emailVerifiedAt: UsersTable.emailVerifiedAt,
         });
 
       if (!user) {
@@ -145,12 +153,6 @@ export async function signUpAction(
     });
 
   await createUserSession(result.user, await cookies());
-
-  const { linkRentalCustomersToUser } = await import(
-    "@/features/customer-portal/server/link-rental-customers"
-  );
-  await linkRentalCustomersToUser(result.user.id);
-
   redirect(getPostAuthRedirect(result.user));
 }
 

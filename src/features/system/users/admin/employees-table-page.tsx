@@ -29,15 +29,11 @@ import type {
   EmployeeGridRow,
   UserGridRow,
 } from "@/integrations/trpc/routers/users";
-
+import { buildEmployeeGridColumns, EmployeesGridFilters } from "./components";
 import { UserDeleteDialog } from "./components/user-delete-dialog";
 import { UserFormDialog } from "./components/user-form-dialog";
 import { UserInfoModal } from "./components/user-info-modal";
 import type { UserRowActionVariant } from "./components/user-row-actions";
-import {
-  buildEmployeeGridColumns,
-  EmployeesGridFilters,
-} from "./components";
 import { UsersBulkActions } from "./components/users-bulk-actions";
 
 type RowAction = { row: UserGridRow; variant: UserRowActionVariant } | null;

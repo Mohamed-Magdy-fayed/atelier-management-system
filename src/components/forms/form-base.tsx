@@ -10,14 +10,14 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { useTranslation } from "@/features/core/i18n/client";
+import type { mainTranslations } from "@/features/core/i18n/global";
+import type { TranslationKey } from "@/features/core/i18n/lib";
 import { useFieldContext } from "./hooks";
 import {
   extractValidationErrorMessage,
   flattenValidationErrors,
   translateFormErrorMessage,
 } from "./validation-messages";
-import { TranslationKey } from "@/features/core/i18n/lib";
-import { mainTranslations } from "@/features/core/i18n/global";
 
 export type FormFieldProps = {
   label: string;
@@ -42,16 +42,19 @@ export function FormBase({
   const { t, locale } = useTranslation();
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
   const translateErrorMessage = (message?: string) =>
-    translateFormErrorMessage((key) => t(key as TranslationKey<typeof mainTranslations>, {}), message, {
-      locale,
-      fallbackLocale: "en",
-    });
+    translateFormErrorMessage(
+      (key) => t(key as TranslationKey<typeof mainTranslations>, {}),
+      message,
+      {
+        locale,
+        fallbackLocale: "en",
+      },
+    );
 
   const errors = flattenValidationErrors(field.state.meta.errors)
     .map((entry) => extractValidationErrorMessage(entry))
     .filter((message): message is string => Boolean(message))
     .map((message) => ({ message: translateErrorMessage(message) }));
-
 
   const labelElement = (
     <>

@@ -14,7 +14,6 @@ import {
   getSettingDisplayDescription,
   getSettingDisplayName,
 } from "@/features/system/settings/lib/setting-i18n";
-import { SYSTEM_SETTING_CODE } from "@/features/system/settings/lib/system-settings-registry";
 import type { SettingGridRow } from "@/integrations/trpc/routers/settings";
 
 import {
@@ -25,22 +24,11 @@ import {
 type Translate = ReturnType<typeof useTranslation>["t"];
 
 function stateLabel(
-  code: string,
+  _code: string,
   isActive: boolean | null,
   t: Translate,
 ): string {
-  if (isActive === null) {
-    return String(t("systemPages.settingsIsActiveUnset"));
-  }
-  if (code === SYSTEM_SETTING_CODE.SHOW_CATALOG_PRICES) {
-    return String(
-      t(
-        isActive
-          ? "systemPages.settingStatePricesShown"
-          : "systemPages.settingStatePricesHidden",
-      ),
-    );
-  }
+  if (isActive === null) return String(t("systemPages.settingsIsActiveUnset"));
   return String(
     t(
       isActive

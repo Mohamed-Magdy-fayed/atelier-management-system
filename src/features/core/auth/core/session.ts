@@ -44,15 +44,25 @@ export async function updateUserSessionData(
 }
 
 export async function createUserSession(
-  user: PartialUser,
+  userOrPayload: PartialUser | { user: PartialUser; hasPassword?: boolean },
   cookies: Pick<Cookies, "set">,
 ) {
+  const isPayload =
+    "user" in userOrPayload && typeof userOrPayload.user === "object";
+  const user = isPayload
+    ? (userOrPayload as { user: PartialUser }).user
+    : (userOrPayload as PartialUser);
+  const hasPassword = isPayload
+    ? ((userOrPayload as { hasPassword?: boolean }).hasPassword ?? false)
+    : false;
+
   const sessionId = crypto.randomBytes(512).toString("hex").normalize();
   await redisClient.set(
     `session:${sessionId}`,
     sessionSchema.parse({
       sessionId,
       exp: getSessionExpirationSeconds(),
+      hasPassword,
       user,
     }),
     {

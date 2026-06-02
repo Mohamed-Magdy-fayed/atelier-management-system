@@ -48,12 +48,19 @@ export { screenKeys, type ScreenKey };
 /** System screens employees cannot open (nav, proxy, and direct URLs). */
 const EMPLOYEE_BLOCKED_SCREENS = new Set<ScreenKey>([
   "branches",
-  "dashboard",
-  "employee",
   "settings",
+  "users",
+  "subscribers",
+  "services",
+  "testimonials",
 ]);
 
 export const rolesPermissions = {
+  super_admin: {
+    users: unrestricted,
+    screens: unrestricted,
+    branches: unrestricted,
+  },
   admin: {
     users: unrestricted,
     screens: unrestricted,
