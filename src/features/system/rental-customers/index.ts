@@ -1,1 +1,0 @@
-export { RentalCustomersTablePage } from "./admin";

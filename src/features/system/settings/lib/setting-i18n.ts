@@ -7,10 +7,7 @@ import {
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
-export function getSettingDisplayName(
-  code: string,
-  t: Translate,
-): string {
+export function getSettingDisplayName(code: string, t: Translate): string {
   const def = getSystemSettingDefinition(code);
   if (!def) return code;
   return String(t(`systemPages.${def.nameKey}`));

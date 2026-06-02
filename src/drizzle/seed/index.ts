@@ -11,19 +11,15 @@ import { seedDemoProfile } from "./profiles/demo";
 import { seedPerformanceProfile } from "./profiles/performance";
 import { seedSettingsProfile } from "./profiles/settings";
 
-const profileRunners = {
+const profileRunners: Record<
+  SeedProfileName,
+  () => Promise<{ profile: SeedProfileName }>
+> = {
   settings: seedSettingsProfile,
   baseline: seedBaselineProfile,
   demo: seedDemoProfile,
   performance: seedPerformanceProfile,
-} satisfies Record<
-  SeedProfileName,
-  () => Promise<{
-    profile: SeedProfileName;
-    seededCustomerCount: number;
-    seededEmployees: Array<{ id: string }>;
-  }>
->;
+};
 
 export {
   DEFAULT_SEED_PROFILE,
@@ -38,10 +34,10 @@ export async function runSeedProfile(
   profile: SeedProfileName = DEFAULT_SEED_PROFILE,
 ) {
   const result = await profileRunners[profile]();
-  console.info('Default settings upserted (profile: "%s").', result.profile);
+  console.info('Seed completed (profile: "%s").', result.profile);
   return result;
 }
 
 export async function seedAll() {
-  return runSeedProfile(DEFAULT_SEED_PROFILE);
+  return runSeedProfile("demo");
 }

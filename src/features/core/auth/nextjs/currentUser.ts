@@ -28,7 +28,10 @@ function _getCurrentUser(options?: {
 async function _getCurrentUser({
   withFullUser = false,
   redirectIfNotFound = false,
-} = {}) {
+}: {
+  withFullUser?: boolean;
+  redirectIfNotFound?: boolean;
+} = {}): Promise<User | PartialUser | null> {
   const cookieStore = await cookies();
   const session = await getUserSession(cookieStore);
   if (session?.user == null) {

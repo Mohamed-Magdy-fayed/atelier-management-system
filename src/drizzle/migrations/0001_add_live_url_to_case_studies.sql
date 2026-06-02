@@ -1,0 +1,1 @@
+ALTER TABLE "case_studies" ADD COLUMN "liveUrl" varchar(1024);

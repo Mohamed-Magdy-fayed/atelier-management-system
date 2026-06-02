@@ -19,8 +19,8 @@ import { LoadingSwap } from "@/components/ui/loading-swap";
 import { resetPasswordAction } from "@/features/core/auth/nextjs/actions";
 import { passwordResetSubmissionSchema } from "@/features/core/auth/schemas";
 import { useTranslation } from "@/features/core/i18n/client";
-import { TranslationKey } from "@/features/core/i18n/lib";
-import { mainTranslations } from "@/features/core/i18n/global";
+import type { mainTranslations } from "@/features/core/i18n/global";
+import type { TranslationKey } from "@/features/core/i18n/lib";
 
 export function ResetPasswordForm({
   initialEmail = "",
@@ -82,18 +82,56 @@ export function ResetPasswordForm({
                   value={field.state.value}
                 >
                   <InputOTPGroup>
-                    <InputOTPSlot index={0} aria-invalid={field.state.meta.isTouched && !field.state.meta.isValid} />
-                    <InputOTPSlot index={1} aria-invalid={field.state.meta.isTouched && !field.state.meta.isValid} />
-                    <InputOTPSlot index={2} aria-invalid={field.state.meta.isTouched && !field.state.meta.isValid} />
+                    <InputOTPSlot
+                      index={0}
+                      aria-invalid={
+                        field.state.meta.isTouched && !field.state.meta.isValid
+                      }
+                    />
+                    <InputOTPSlot
+                      index={1}
+                      aria-invalid={
+                        field.state.meta.isTouched && !field.state.meta.isValid
+                      }
+                    />
+                    <InputOTPSlot
+                      index={2}
+                      aria-invalid={
+                        field.state.meta.isTouched && !field.state.meta.isValid
+                      }
+                    />
                   </InputOTPGroup>
                   <InputOTPSeparator />
                   <InputOTPGroup>
-                    <InputOTPSlot index={3} aria-invalid={field.state.meta.isTouched && !field.state.meta.isValid} />
-                    <InputOTPSlot index={4} aria-invalid={field.state.meta.isTouched && !field.state.meta.isValid} />
-                    <InputOTPSlot index={5} aria-invalid={field.state.meta.isTouched && !field.state.meta.isValid} />
+                    <InputOTPSlot
+                      index={3}
+                      aria-invalid={
+                        field.state.meta.isTouched && !field.state.meta.isValid
+                      }
+                    />
+                    <InputOTPSlot
+                      index={4}
+                      aria-invalid={
+                        field.state.meta.isTouched && !field.state.meta.isValid
+                      }
+                    />
+                    <InputOTPSlot
+                      index={5}
+                      aria-invalid={
+                        field.state.meta.isTouched && !field.state.meta.isValid
+                      }
+                    />
                   </InputOTPGroup>
                 </InputOTP>
-                <FieldError dir={dir} errors={field.state.meta.errors.map((error) => ({ message: t(error?.message as TranslationKey<typeof mainTranslations>, {}) }))} />
+                <FieldError
+                  dir={dir}
+                  errors={field.state.meta.errors.map((error) => ({
+                    message: t(
+                      error?.message as TranslationKey<typeof mainTranslations>,
+                      {},
+                    ),
+                  }))}
+                />
               </>
             )}
           </form.AppField>

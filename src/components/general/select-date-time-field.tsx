@@ -135,10 +135,7 @@ export function SelectDateTimeField({
           </Button>
         }
       />
-      <PopoverContent
-        align="start"
-        className="w-auto gap-0 p-0 shadow-md"
-      >
+      <PopoverContent align="start" className="w-auto gap-0 p-0 shadow-md">
         <Calendar
           dir={dir}
           disabled={disabledDays || disabled}

@@ -41,12 +41,34 @@ Follow [`docs/entity-blueprint.md`](../../docs/entity-blueprint.md) and [`AGENTS
 - **Overlay forms**: modals use `OverlayFormBody` + footer `OverlayFormSubmitButton` per the blueprint Form Pattern.
 - **Zod messages**: use `translationKey()` for user-facing validation, not literal English in schemas.
 
+## Route naming (prevent conflicts)
+
+- **`(landing-pages)` routes take priority** — public routes like `/work`, `/blog`, `/services` belong there.
+- **`(system-pages)` admin routes must use a distinct path** — if the public site uses `/work`, the admin route must use `/work-mgmt`; if public uses `/blog`, admin uses `/blog-posts`.
+- **Never create two `page.tsx` files that resolve to the same URL path** — Next.js will throw at build time.
+- Always check `src/app/(landing-pages)/` for conflicts before adding a new system route.
+
+## Inngest background jobs (required)
+
+See `docs/inngest-offload-policy.md` for the full policy.
+
+- **Never** send email, ping search engines, or make external HTTP calls inline inside a tRPC mutation.
+- Fire an Inngest event instead; the function handles retries and failures outside the request lifecycle.
+- Pattern: `await inngest.send({ name: “lead/submitted”, data: { leadId } })` in the mutation, then handle in `src/integrations/inngest/functions/on-lead-submitted.ts`.
+- Always import the typed event map from `src/integrations/inngest/events.ts`.
+
+## Firebase Storage (image uploads)
+
+- All image/asset uploads use `src/integrations/firebase/storage.ts` — `uploadImage(file, path): Promise<string>`.
+- No Cloudinary imports anywhere in the codebase.
+- Server-side uploads use Firebase Admin SDK. Client-side uploads go through a tRPC upload mutation that calls the server helper.
+
 ## Branch-scoped operations (employees)
 
-- **Dresses, reservations, payments, rental customers, and dashboard** use `assertOperationalStaff` + `resolveListBranchId` / `assertUserCanAccessBranch` from `src/features/system/shared/staff-access.ts`.
+- **Leads, case studies, and dashboard** use `assertOperationalStaff` + `resolveListBranchId` / `assertUserCanAccessBranch` from `src/features/system/shared/staff-access.ts`.
 - **Employees** must pass `branchId` from the active branch on list/mutation inputs; the server verifies branch membership. They cannot use “all branches” mode or access another branch’s rows.
 - **Admins** may omit `branchId` on lists (all branches) or pass any branch; mutations still respect payload `branchId`.
-- **Settings, branches admin, and employees** screens stay **admin-only** (`assertAdminRole`). Reservation **delete** / bulk delete remain admin-only.
+- **Settings, branches admin, users** screens stay **admin-only** (`assertAdminRole`).
 
 ## Documenting new lessons
 

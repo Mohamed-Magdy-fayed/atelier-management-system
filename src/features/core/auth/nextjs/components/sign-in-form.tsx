@@ -98,9 +98,9 @@ export function SignInForm() {
   }
 
   async function handleContinueEmail() {
-    form.validateField("email", "submit")
+    form.validateField("email", "submit");
     console.log(form.getFieldMeta("email"));
-    
+
     if (!form.getFieldMeta("email")?.isValid) {
       return;
     }

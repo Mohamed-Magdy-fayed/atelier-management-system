@@ -160,8 +160,8 @@ export function CustomersTablePage() {
       }
     >
       <div className="space-y-1">
-        <H2>{t("systemPages.customersTitle")}</H2>
-        <Lead>{t("systemPages.customersLead")}</Lead>
+        <H2>{t("systemPages.usersTitle")}</H2>
+        <Lead>{t("systemPages.usersLead")}</Lead>
       </div>
       <DataTable
         table={table}

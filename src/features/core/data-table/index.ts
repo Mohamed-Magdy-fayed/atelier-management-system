@@ -12,6 +12,9 @@ export { DataTableSliderFilter } from "./components/data-table-slider-filter";
 export { DataTableTextFilter } from "./components/data-table-text-filter";
 export { DataTableToolbar } from "./components/data-table-toolbar";
 export { DataTableViewOptions } from "./components/data-table-view-options";
+export type { EntityAuditRecord } from "./components/entity-audit-info-dialog";
+export { EntityAuditInfoDialog } from "./components/entity-audit-info-dialog";
+export { EntityPageHeader } from "./components/entity-page-header";
 export {
   type DataTableControlledState,
   type UseDataTableArgs,
@@ -19,6 +22,8 @@ export {
 } from "./hooks/use-data-table";
 export { useTableUrlState } from "./hooks/use-table-url-state";
 export { downloadCsv, parseCsvToObjects, rowsToCsv } from "./lib/csv";
+export { createEntityActionsColumn } from "./lib/entity-actions-column";
+export { getEntityColumnPinning } from "./lib/entity-column-pinning";
 export type {
   DataTableDateRangeValue,
   DataTableNumberRangeValue,
@@ -31,11 +36,6 @@ export {
   serializeColumnFiltersForServer,
   toYmdLocal,
 } from "./lib/filter-values";
-export { createEntityActionsColumn } from "./lib/entity-actions-column";
-export { getEntityColumnPinning } from "./lib/entity-column-pinning";
 export { getPinningClassName } from "./lib/pinning";
 export { createSelectColumn } from "./lib/select-column";
-export { EntityAuditInfoDialog } from "./components/entity-audit-info-dialog";
-export type { EntityAuditRecord } from "./components/entity-audit-info-dialog";
-export { EntityPageHeader } from "./components/entity-page-header";
 export type { DataTableMode } from "./types";

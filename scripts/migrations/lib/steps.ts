@@ -58,14 +58,8 @@ export const migrationSteps: MigrationStep[] = [
 
       if (!dryRun) {
         const usedShortCodes = new Set<string>();
-        const {
-          addressEn,
-          addressAr,
-          phone,
-          opensAt,
-          closesAt,
-          mapUrl,
-        } = LEGACY_BRANCH_PLACEHOLDERS;
+        const { addressEn, addressAr, phone, opensAt, closesAt, mapUrl } =
+          LEGACY_BRANCH_PLACEHOLDERS;
 
         for (const row of legacyRows) {
           const nameEn = row.name.slice(0, 128);

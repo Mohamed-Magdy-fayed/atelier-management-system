@@ -28,8 +28,8 @@ import {
   buildSettingColumns,
   SettingFormDialog,
   SettingInfoModal,
-  SettingsBulkActions,
   type SettingRowActionVariant,
+  SettingsBulkActions,
 } from "./components";
 
 type RowAction = {
