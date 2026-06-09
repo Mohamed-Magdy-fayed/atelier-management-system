@@ -66,6 +66,19 @@ export async function getPublicCatalogHidePrices(): Promise<boolean> {
   return !(await getPublicCatalogShowPrices());
 }
 
+/** When true, the date-availability calendar is shown on dress detail pages. */
+export async function getPublicCatalogShowAvailabilityCalendar(): Promise<boolean> {
+  const row = await db.query.SettingsTable.findFirst({
+    columns: { isActive: true },
+    where: eq(
+      SettingsTable.code,
+      SYSTEM_SETTING_CODE.SHOW_AVAILABILITY_CALENDAR,
+    ),
+  });
+  if (!row || row.isActive === null) return true;
+  return row.isActive === true;
+}
+
 export async function getBusinessTimezone(): Promise<string> {
   const row = await db.query.SettingsTable.findFirst({
     columns: { value: true, isActive: true },
@@ -194,9 +207,9 @@ export async function listPublicDresses(input: {
   const searchCond =
     search && search.length > 0
       ? or(
-        ilike(DressesTable.title, `%${search}%`),
-        ilike(DressesTable.code, `%${search}%`),
-      )
+          ilike(DressesTable.title, `%${search}%`),
+          ilike(DressesTable.code, `%${search}%`),
+        )
       : undefined;
 
   const conditions = [
@@ -227,11 +240,11 @@ export async function listPublicDresses(input: {
   const orderByClause =
     sort === "popularity"
       ? [
-        desc(sql`COALESCE(rental_stats.rental_cnt, 0)`),
-        desc(sql`COALESCE(rental_stats.revenue, 0)`),
-        desc(DressesTable.timesRented),
-        asc(DressesTable.id),
-      ]
+          desc(sql`COALESCE(rental_stats.rental_cnt, 0)`),
+          desc(sql`COALESCE(rental_stats.revenue, 0)`),
+          desc(DressesTable.timesRented),
+          asc(DressesTable.id),
+        ]
       : sort === "priceAsc"
         ? [asc(DressesTable.pricePerDay), asc(DressesTable.id)]
         : sort === "priceDesc"
@@ -243,25 +256,25 @@ export async function listPublicDresses(input: {
   const rows =
     sort === "popularity"
       ? await db
-        .select(dressPublicSelect)
-        .from(DressesTable)
-        .innerJoin(BranchesTable, eq(DressesTable.branchId, BranchesTable.id))
-        .leftJoin(
-          rentalStatsSubquery,
-          sql`${DressesTable.id} = rental_stats."dressId"`,
-        )
-        .where(whereBase)
-        .orderBy(...orderByClause)
-        .limit(perPage)
-        .offset(offset)
+          .select(dressPublicSelect)
+          .from(DressesTable)
+          .innerJoin(BranchesTable, eq(DressesTable.branchId, BranchesTable.id))
+          .leftJoin(
+            rentalStatsSubquery,
+            sql`${DressesTable.id} = rental_stats."dressId"`,
+          )
+          .where(whereBase)
+          .orderBy(...orderByClause)
+          .limit(perPage)
+          .offset(offset)
       : await db
-        .select(dressPublicSelect)
-        .from(DressesTable)
-        .innerJoin(BranchesTable, eq(DressesTable.branchId, BranchesTable.id))
-        .where(whereBase)
-        .orderBy(...orderByClause)
-        .limit(perPage)
-        .offset(offset);
+          .select(dressPublicSelect)
+          .from(DressesTable)
+          .innerJoin(BranchesTable, eq(DressesTable.branchId, BranchesTable.id))
+          .where(whereBase)
+          .orderBy(...orderByClause)
+          .limit(perPage)
+          .offset(offset);
 
   return { rows: rows as PublicDressRow[], total, pageCount };
 }

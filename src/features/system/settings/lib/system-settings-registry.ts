@@ -12,6 +12,7 @@ export const SYSTEM_SETTING_CODE = {
   SHOW_CATALOG_PRICES: "00001",
   BUSINESS_TIMEZONE: "00002",
   RESERVATION_USAGE_POLICY: "00003",
+  SHOW_AVAILABILITY_CALENDAR: "00004",
 } as const;
 
 export type SystemSettingCode =
@@ -21,6 +22,7 @@ export const SYSTEM_SETTING_CODES: SystemSettingCode[] = [
   SYSTEM_SETTING_CODE.SHOW_CATALOG_PRICES,
   SYSTEM_SETTING_CODE.BUSINESS_TIMEZONE,
   SYSTEM_SETTING_CODE.RESERVATION_USAGE_POLICY,
+  SYSTEM_SETTING_CODE.SHOW_AVAILABILITY_CALENDAR,
 ];
 
 const LEGACY_SETTING_CODES = {
@@ -35,12 +37,14 @@ export type SystemSettingDefinition = {
   nameKey:
     | "settingName00001"
     | "settingName00002"
-    | "settingName00003";
+    | "settingName00003"
+    | "settingName00004";
   /** i18n key under `systemPages` */
   descriptionKey:
     | "settingDesc00001"
     | "settingDesc00002"
-    | "settingDesc00003";
+    | "settingDesc00003"
+    | "settingDesc00004";
   /** English fallback stored in DB on seed (not user-editable). */
   descriptionEn: string;
   editable: {
@@ -85,6 +89,16 @@ export const SYSTEM_SETTINGS: SystemSettingDefinition[] = [
       "Default usage policy text printed on reservation receipts when no custom hint is set.",
     editable: { isActive: true, value: true },
     seed: { isActive: true, value: DEFAULT_RESERVATION_USAGE_POLICY },
+  },
+  {
+    code: SYSTEM_SETTING_CODE.SHOW_AVAILABILITY_CALENDAR,
+    label: "policy",
+    nameKey: "settingName00004",
+    descriptionKey: "settingDesc00004",
+    descriptionEn:
+      "When enabled, a date-availability calendar is shown on dress detail pages so customers can check if a dress is free before visiting the store.",
+    editable: { isActive: true },
+    seed: { isActive: true },
   },
 ];
 

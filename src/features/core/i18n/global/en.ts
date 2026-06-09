@@ -712,6 +712,9 @@ export default {
       "IANA timezone used for public dress availability and calendar-day checks.",
     settingDesc00003:
       "Default policy text printed on reservation receipts when no custom hint is set.",
+    settingName00004: "Show availability calendar",
+    settingDesc00004:
+      "When enabled, a date-availability calendar is shown on dress detail pages so customers can check if a dress is free before visiting the store.",
     settingStatePricesShown: "Prices shown",
     settingStatePricesHidden: "Prices hidden",
     settingsShowPricesState: "Show prices",

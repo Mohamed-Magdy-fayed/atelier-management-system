@@ -12,6 +12,7 @@ import { PublicDressCoverImage } from "@/features/public-catalog/components/publ
 import { PublicShell } from "@/features/public-catalog/components/public-shell";
 import {
   getPublicCatalogHidePrices,
+  getPublicCatalogShowAvailabilityCalendar,
   getPublicDressById,
 } from "@/features/public-catalog/server/queries";
 import { formatBranchHours } from "@/lib/branch-hours";
@@ -37,9 +38,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicDressDetailPage({ params }: Props) {
   const { dressId } = await params;
-  const [dress, hidePrices] = await Promise.all([
+  const [dress, hidePrices, showAvailabilityCalendar] = await Promise.all([
     getPublicDressById(dressId),
     getPublicCatalogHidePrices(),
+    getPublicCatalogShowAvailabilityCalendar(),
   ]);
   if (!dress) notFound();
 
@@ -235,10 +237,12 @@ export default async function PublicDressDetailPage({ params }: Props) {
               </div>
             </section>
 
-            <DressAvailabilityChecker
-              branchLabel={branchLabel}
-              dressId={dress.id}
-            />
+            {showAvailabilityCalendar ? (
+              <DressAvailabilityChecker
+                branchLabel={branchLabel}
+                dressId={dress.id}
+              />
+            ) : null}
           </div>
         </div>
       </main>
