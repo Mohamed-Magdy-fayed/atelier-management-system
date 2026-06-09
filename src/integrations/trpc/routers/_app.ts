@@ -8,6 +8,7 @@ import { LOCALE_COOKIE_NAME } from "@/features/core/i18n/lib";
 import { dashboardRouter } from "@/features/system/dashboard/server";
 import { baseProcedure, createTRPCRouter } from "../init";
 import { branchesRouter } from "./branches";
+import { customerPortalRouter } from "./customer-portal";
 import { dressesRouter } from "./dresses";
 import { paymentsRouter } from "./payments";
 import { rentalCustomersRouter } from "./rental-customers";
@@ -122,6 +123,7 @@ export const appRouter = createTRPCRouter({
       };
     }),
   branches: branchesRouter,
+  customerPortal: customerPortalRouter,
   dashboard: dashboardRouter,
   dresses: dressesRouter,
   payments: paymentsRouter,

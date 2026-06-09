@@ -61,6 +61,7 @@ export const ReservationsTable = pgTable(
     depositPaid: integer().notNull().default(0),
     totalPaid: integer().notNull().default(0),
     status: reservationStatusEnum().notNull().default("reserved"),
+    customerPhotoUrl: text(),
     notes: text(),
     createdBy,
     createdAt,

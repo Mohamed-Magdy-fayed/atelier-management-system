@@ -18,13 +18,29 @@ export type CustomerReservationRow = {
   reservationCode: string;
   dressTitle: string;
   dressCode: string;
+  dressImages: string[] | null;
+  dressSize: string | null;
+  dressColor: string | null;
+  dressDescription: string | null;
   branchNameEn: string;
   branchNameAr: string;
+  branchPhone: string | null;
+  branchAddressEn: string | null;
+  branchAddressAr: string | null;
+  branchMapUrl: string | null;
   occasionDate: Date;
+  receivingDateTime: Date;
   returnDateTime: Date;
   status: string;
   totalPrice: number;
+  insurance: number;
+  discount: number;
+  depositPaid: number;
   totalPaid: number;
+  customerName: string;
+  customerPhone: string | null;
+  notes: string | null;
+  customerPhotoUrl: string | null;
 };
 
 export type CustomerPortalStats = {
@@ -40,7 +56,7 @@ function phoneMatchCondition(phoneKey: string) {
   return sql`regexp_replace(${RentalCustomersTable.phone}, '\\D', '', 'g') LIKE ${`%${phoneKey}`}`;
 }
 
-async function getCustomerIdsForUser(userId: string, phoneKey: string) {
+export async function getCustomerIdsForUser(userId: string, phoneKey: string) {
   await linkRentalCustomersToUser(userId);
 
   const idSet = new Set<string>();
@@ -125,13 +141,29 @@ export async function getCustomerPortalData(userId: string) {
       reservationCode: ReservationsTable.reservationCode,
       dressTitle: DressesTable.title,
       dressCode: DressesTable.code,
+      dressImages: DressesTable.images,
+      dressSize: DressesTable.size,
+      dressColor: DressesTable.color,
+      dressDescription: DressesTable.description,
       branchNameEn: BranchesTable.nameEn,
       branchNameAr: BranchesTable.nameAr,
+      branchPhone: BranchesTable.phone,
+      branchAddressEn: BranchesTable.addressEn,
+      branchAddressAr: BranchesTable.addressAr,
+      branchMapUrl: BranchesTable.mapUrl,
       occasionDate: ReservationsTable.occasionDate,
+      receivingDateTime: ReservationsTable.receivingDateTime,
       returnDateTime: ReservationsTable.returnDateTime,
       status: ReservationsTable.status,
       totalPrice: ReservationsTable.totalPrice,
+      insurance: ReservationsTable.insurance,
+      discount: ReservationsTable.discount,
+      depositPaid: ReservationsTable.depositPaid,
       totalPaid: ReservationsTable.totalPaid,
+      customerName: ReservationsTable.customerName,
+      customerPhone: ReservationsTable.customerPhone,
+      notes: ReservationsTable.notes,
+      customerPhotoUrl: ReservationsTable.customerPhotoUrl,
     })
     .from(ReservationsTable)
     .innerJoin(DressesTable, eq(ReservationsTable.dressId, DressesTable.id))
@@ -151,4 +183,86 @@ export async function getCustomerPortalData(userId: string) {
     } satisfies CustomerPortalStats,
     reservations,
   };
+}
+
+export type ReservationReceiptData = {
+  id: string;
+  reservationCode: string;
+  status: string;
+  customerName: string;
+  customerPhone: string | null;
+  dressId: string;
+  dressTitle: string;
+  dressCode: string;
+  branchNameEn: string;
+  branchNameAr: string;
+  branchPhone: string | null;
+  branchAddressEn: string | null;
+  branchAddressAr: string | null;
+  receivingDateTime: Date;
+  occasionDate: Date;
+  returnDateTime: Date;
+  totalPrice: number;
+  insurance: number;
+  discount: number;
+  depositPaid: number;
+  totalPaid: number;
+  notes: string | null;
+};
+
+export async function getReservationReceipt(
+  userId: string,
+  reservationId: string,
+): Promise<ReservationReceiptData | null> {
+  const user = await db.query.UsersTable.findFirst({
+    columns: { phone: true },
+    where: eq(UsersTable.id, userId),
+  });
+
+  const phoneKey = normalizePhoneKey(user?.phone);
+  const customerIds = await getCustomerIdsForUser(userId, phoneKey);
+
+  if (customerIds.length === 0) return null;
+
+  const [row] = await db
+    .select({
+      id: ReservationsTable.id,
+      reservationCode: ReservationsTable.reservationCode,
+      status: ReservationsTable.status,
+      customerName: ReservationsTable.customerName,
+      customerPhone: ReservationsTable.customerPhone,
+      customerId: ReservationsTable.customerId,
+      dressId: ReservationsTable.dressId,
+      dressTitle: DressesTable.title,
+      dressCode: DressesTable.code,
+      branchNameEn: BranchesTable.nameEn,
+      branchNameAr: BranchesTable.nameAr,
+      branchPhone: BranchesTable.phone,
+      branchAddressEn: BranchesTable.addressEn,
+      branchAddressAr: BranchesTable.addressAr,
+      receivingDateTime: ReservationsTable.receivingDateTime,
+      occasionDate: ReservationsTable.occasionDate,
+      returnDateTime: ReservationsTable.returnDateTime,
+      totalPrice: ReservationsTable.totalPrice,
+      insurance: ReservationsTable.insurance,
+      discount: ReservationsTable.discount,
+      depositPaid: ReservationsTable.depositPaid,
+      totalPaid: ReservationsTable.totalPaid,
+      notes: ReservationsTable.notes,
+    })
+    .from(ReservationsTable)
+    .innerJoin(DressesTable, eq(ReservationsTable.dressId, DressesTable.id))
+    .innerJoin(BranchesTable, eq(ReservationsTable.branchId, BranchesTable.id))
+    .where(
+      and(
+        eq(ReservationsTable.id, reservationId),
+        isNull(ReservationsTable.deletedAt),
+      ),
+    )
+    .limit(1);
+
+  if (!row || !customerIds.includes(row.customerId)) return null;
+
+  const { customerId: _customerId, ...receipt } = row;
+  return receipt;
 }

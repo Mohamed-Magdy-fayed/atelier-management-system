@@ -39,13 +39,11 @@ export function SignUpForm() {
       onSubmit: signUpSchema,
     },
     onSubmit: ({ value }) => {
-      toast.promise(signUpAction(value), {
-        loading: t("authTranslations.signUp.submitting"),
-        success: (res) =>
-          !res.isError
-            ? t("authTranslations.signUp.welcome", { name: res.user.name })
-            : t("error", { error: res.message }),
-        error: (error) => t("error", { error: error.message }),
+      startTransition(async () => {
+        const result = await signUpAction(value);
+        if (result?.isError) {
+          toast.error(result.message);
+        }
       });
     },
   });
@@ -99,7 +97,10 @@ export function SignUpForm() {
         {t("authTranslations.signIn.continueWith")}
       </FieldSeparator>
 
-      <FieldSet className="grid gap-2" disabled={isPending || form.state.isSubmitting}>
+      <FieldSet
+        className="grid gap-2"
+        disabled={isPending || form.state.isSubmitting}
+      >
         <form.AppField name="name">
           {({ StringField }) => (
             <StringField label={t("authTranslations.signUp.nameLabel")} />
