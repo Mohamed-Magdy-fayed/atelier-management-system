@@ -64,6 +64,43 @@ export function buildDressColumns(opts: {
       meta: { label: String(t("systemPages.dressesPricePerDay")) },
     },
     {
+      accessorKey: "currentStatus",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={String(t("systemPages.dressCurrentStatus"))}
+        />
+      ),
+      cell: ({ row }) => {
+        const s = row.original.currentStatus;
+        const label = String(
+          t(
+            s === "atTailor"
+              ? "systemPages.dressCurrentStatusAtTailor"
+              : s === "atDryCleaner"
+                ? "systemPages.dressCurrentStatusAtDryCleaner"
+                : s === "underRepair"
+                  ? "systemPages.dressCurrentStatusUnderRepair"
+                  : "systemPages.dressCurrentStatusAvailable",
+          ),
+        );
+        return (
+          <Badge
+            variant={
+              s === "available"
+                ? "secondary"
+                : s === "underRepair"
+                  ? "destructive"
+                  : "outline"
+            }
+          >
+            {label}
+          </Badge>
+        );
+      },
+      meta: { label: String(t("systemPages.dressCurrentStatus")) },
+    },
+    {
       accessorKey: "isActive",
       header: ({ column }) => (
         <DataTableColumnHeader

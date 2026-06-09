@@ -7,6 +7,7 @@ import { baseProcedure, createTRPCRouter } from "../init";
 import { branchesRouter } from "./branches";
 import { customerPortalRouter } from "./customer-portal";
 import { dressesRouter } from "./dresses";
+import { expensesRouter } from "./expenses";
 import { paymentsRouter } from "./payments";
 import { rentalCustomersRouter } from "./rental-customers";
 import { reservationsRouter } from "./reservations";
@@ -54,6 +55,7 @@ export const appRouter = createTRPCRouter({
   customerPortal: customerPortalRouter,
   dashboard: dashboardRouter,
   dresses: dressesRouter,
+  expenses: expensesRouter,
   payments: paymentsRouter,
   rentalCustomers: rentalCustomersRouter,
   reservations: reservationsRouter,

@@ -7,6 +7,7 @@ import {
   deleteDress,
   setDressActive,
   updateDress,
+  updateDressCurrentStatus,
 } from "./mutations";
 import { exportDresses, getDressById, listDresses } from "./queries";
 import {
@@ -16,6 +17,7 @@ import {
   dressDeleteSchema,
   dressMutationSchema,
   dressSetActiveSchema,
+  dressUpdateCurrentStatusSchema,
   dressUpdateSchema,
   exportDressesInput,
   listDressesInput,
@@ -49,4 +51,7 @@ export const dressesRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(dressDeleteSchema)
     .mutation(async ({ ctx, input }) => deleteDress(ctx, input)),
+  updateStatus: protectedProcedure
+    .input(dressUpdateCurrentStatusSchema)
+    .mutation(async ({ ctx, input }) => updateDressCurrentStatus(ctx, input)),
 });

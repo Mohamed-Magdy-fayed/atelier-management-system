@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  pgEnum,
   pgTable,
   text,
   uuid,
@@ -19,6 +20,18 @@ import {
   updatedAt,
   updatedBy,
 } from "@/drizzle/schemas/helpers";
+
+export const dressCurrentStatusValues = [
+  "available",
+  "atTailor",
+  "atDryCleaner",
+  "underRepair",
+] as const;
+export type DressCurrentStatus = (typeof dressCurrentStatusValues)[number];
+export const dressCurrentStatusEnum = pgEnum(
+  "dress_current_status",
+  dressCurrentStatusValues,
+);
 
 export const DressesTable = pgTable(
   "dresses",
@@ -38,6 +51,7 @@ export const DressesTable = pgTable(
     insurance: integer().notNull(),
     timesRented: integer().notNull().default(0),
     isActive: boolean().notNull().default(true),
+    currentStatus: dressCurrentStatusEnum().notNull().default("available"),
     createdBy,
     createdAt,
     updatedBy,

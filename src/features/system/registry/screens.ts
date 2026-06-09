@@ -4,6 +4,7 @@ import {
   CalendarDays,
   CreditCard,
   LayoutDashboard,
+  Receipt,
   Settings,
   Shirt,
   UserCircle,
@@ -18,6 +19,7 @@ type NavTranslationKey =
   | "navDresses"
   | "navReservations"
   | "navPayments"
+  | "navExpenses"
   | "navSettings";
 type BreadcrumbTranslationKey =
   | "breadcrumbDashboard"
@@ -27,6 +29,7 @@ type BreadcrumbTranslationKey =
   | "breadcrumbDresses"
   | "breadcrumbReservations"
   | "breadcrumbPayments"
+  | "breadcrumbExpenses"
   | "breadcrumbSettings";
 
 type SystemScreenRecord = {
@@ -110,6 +113,16 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     protected: true,
     navTranslationKey: "navPayments",
     breadcrumbTranslationKey: "breadcrumbPayments",
+  },
+  {
+    key: "expenses",
+    href: "/expenses",
+    pathPrefixes: ["/expenses"],
+    Icon: Receipt,
+    showInNav: true,
+    protected: true,
+    navTranslationKey: "navExpenses",
+    breadcrumbTranslationKey: "breadcrumbExpenses",
   },
   {
     key: "settings",

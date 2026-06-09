@@ -12,6 +12,7 @@ export type DressGridRow = {
   insurance: number;
   timesRented: number;
   isActive: boolean;
+  currentStatus: "available" | "atTailor" | "atDryCleaner" | "underRepair";
   createdAt: Date;
   createdBy: string;
   updatedAt: Date | null;

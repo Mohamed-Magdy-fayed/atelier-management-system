@@ -3,6 +3,7 @@ import {
   Building2,
   CalendarDays,
   CreditCard,
+  Receipt,
   Settings,
   Shirt,
   UserCircle,
@@ -18,6 +19,7 @@ type EntityNavTranslationKey =
   | "navDresses"
   | "navReservations"
   | "navPayments"
+  | "navExpenses"
   | "navSettings";
 type EntityBreadcrumbTranslationKey =
   | "breadcrumbCustomers"
@@ -26,6 +28,7 @@ type EntityBreadcrumbTranslationKey =
   | "breadcrumbDresses"
   | "breadcrumbReservations"
   | "breadcrumbPayments"
+  | "breadcrumbExpenses"
   | "breadcrumbSettings";
 type EntityTitleKey =
   | "customersTitle"
@@ -34,6 +37,7 @@ type EntityTitleKey =
   | "dressesTitle"
   | "reservationsTitle"
   | "paymentsTitle"
+  | "expensesTitle"
   | "settingsTitle";
 type EntityLeadKey =
   | "customersLead"
@@ -42,6 +46,7 @@ type EntityLeadKey =
   | "dressesLead"
   | "reservationsLead"
   | "paymentsLead"
+  | "expensesLead"
   | "settingsLead";
 
 export type SystemEntityRegistryItem = {
@@ -206,6 +211,27 @@ export const SYSTEM_ENTITY_REGISTRY = [
     bulkActions: ["export"],
     showInDashboard: false,
     seedProfiles: ["demo"],
+  },
+  {
+    slug: "expenses",
+    route: "/expenses",
+    screenKey: "expenses",
+    icon: Receipt,
+    navLabelKey: "navExpenses",
+    breadcrumbLabelKey: "breadcrumbExpenses",
+    titleKey: "expensesTitle",
+    leadKey: "expensesLead",
+    branchScope: "branch-aware",
+    infoView: "audit-only",
+    supportsImport: false,
+    supportsExport: true,
+    supportsRowSelection: false,
+    supportsBulkActions: false,
+    filters: ["type", "date"],
+    rowActions: ["edit", "delete"],
+    bulkActions: [],
+    showInDashboard: false,
+    seedProfiles: [],
   },
   {
     slug: "settings",

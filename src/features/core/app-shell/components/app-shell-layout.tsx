@@ -13,6 +13,7 @@ import {
 import type { User } from "@/drizzle/schema";
 import { hasPermission } from "@/features/core/auth/core/permissions";
 import { AuthManagerHeaderTrigger } from "@/features/core/auth/nextjs/components/auth-manager-header-trigger";
+import { BranchManager } from "@/features/core/auth/nextjs/components/branch-manager";
 import { useTranslation } from "@/features/core/i18n/client";
 
 import type { SystemNavItem } from "../lib/nav";
@@ -91,6 +92,7 @@ export function AppShellLayout({
               ) : null}
             </ol>
           </nav>
+          <BranchManager variant="default" />
           <AuthManagerHeaderTrigger className="ms-1 shrink-0" />
         </header>
         <ScrollArea className="min-h-0 flex-1">

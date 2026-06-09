@@ -2,20 +2,20 @@ import { TRPCError } from "@trpc/server";
 import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 
 import { DressesTable } from "@/drizzle/schema";
-
+import {
+  assertDressIdsAccessible,
+  assertOperationalStaff,
+  assertUserCanAccessBranch,
+} from "@/features/system/shared/staff-access";
 import type {
   DressBulkArchiveInput,
   DressBulkSetActiveInput,
   DressDeleteInput,
   DressMutationInput,
   DressSetActiveInput,
+  DressUpdateCurrentStatusInput,
   DressUpdateInput,
 } from "./schemas";
-import {
-  assertDressIdsAccessible,
-  assertOperationalStaff,
-  assertUserCanAccessBranch,
-} from "@/features/system/shared/staff-access";
 
 import { getRequiredSession, type TRPCContext } from "./shared";
 
@@ -55,8 +55,7 @@ export async function createDress(ctx: TRPCContext, input: DressMutationInput) {
   const code = normalizeCode(input.code);
   await ensureUniqueActiveCode(ctx, code);
 
-  const imageUrls =
-    input.images?.map((u) => u.trim()).filter(Boolean) ?? [];
+  const imageUrls = input.images?.map((u) => u.trim()).filter(Boolean) ?? [];
 
   const [dress] = await ctx.db
     .insert(DressesTable)
@@ -97,10 +96,7 @@ export async function updateDress(ctx: TRPCContext, input: DressUpdateInput) {
 
   await assertUserCanAccessBranch(ctx, session, dress.branchId);
   await assertUserCanAccessBranch(ctx, session, input.branchId);
-  if (
-    session.user.role === "employee" &&
-    input.branchId !== dress.branchId
-  ) {
+  if (session.user.role === "employee" && input.branchId !== dress.branchId) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Employees cannot move dresses to another branch",
@@ -110,8 +106,7 @@ export async function updateDress(ctx: TRPCContext, input: DressUpdateInput) {
   const code = normalizeCode(input.code);
   await ensureUniqueActiveCode(ctx, code, input.id);
 
-  const imageUrls =
-    input.images?.map((u) => u.trim()).filter(Boolean) ?? [];
+  const imageUrls = input.images?.map((u) => u.trim()).filter(Boolean) ?? [];
 
   await ctx.db
     .update(DressesTable)
@@ -238,4 +233,33 @@ export async function bulkArchiveDresses(
     );
 
   return { deleted: true };
+}
+
+export async function updateDressCurrentStatus(
+  ctx: TRPCContext,
+  input: DressUpdateCurrentStatusInput,
+) {
+  const session = getRequiredSession(ctx);
+  assertOperationalStaff(session.user.role);
+
+  const dress = await ctx.db.query.DressesTable.findFirst({
+    columns: { id: true, branchId: true },
+    where: and(eq(DressesTable.id, input.id), isNull(DressesTable.deletedAt)),
+  });
+
+  if (!dress) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: ctx.t("systemPages.dressNotFound"),
+    });
+  }
+
+  await assertUserCanAccessBranch(ctx, session, dress.branchId);
+
+  await ctx.db
+    .update(DressesTable)
+    .set({ currentStatus: input.currentStatus, updatedBy: session.user.id })
+    .where(eq(DressesTable.id, input.id));
+
+  return { id: input.id };
 }

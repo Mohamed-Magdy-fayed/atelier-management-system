@@ -2,17 +2,17 @@ import { TRPCError } from "@trpc/server";
 import { and, count, eq, isNull } from "drizzle-orm";
 
 import { DressesTable } from "@/drizzle/schema";
+import {
+  assertOperationalStaff,
+  assertUserCanAccessBranch,
+  resolveListBranchId,
+} from "@/features/system/shared/staff-access";
 import { buildWhere, DRESS_EXPORT_ROW_LIMIT, sortExpr } from "./filters";
 import type {
   DressByIdInput,
   ExportDressesInput,
   ListDressesInput,
 } from "./schemas";
-import {
-  assertOperationalStaff,
-  assertUserCanAccessBranch,
-  resolveListBranchId,
-} from "@/features/system/shared/staff-access";
 
 import { getRequiredSession, type TRPCContext } from "./shared";
 import type { DressGridRow } from "./types";
@@ -31,6 +31,7 @@ const dressGridSelect = {
   insurance: DressesTable.insurance,
   timesRented: DressesTable.timesRented,
   isActive: DressesTable.isActive,
+  currentStatus: DressesTable.currentStatus,
   createdAt: DressesTable.createdAt,
   createdBy: DressesTable.createdBy,
   updatedAt: DressesTable.updatedAt,

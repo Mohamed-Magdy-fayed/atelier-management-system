@@ -62,6 +62,19 @@ export const dressBulkArchiveSchema = z.object({
   ids: z.array(z.string().uuid()).min(1),
 });
 
+export const dressUpdateCurrentStatusSchema = z.object({
+  id: z.string().uuid(),
+  currentStatus: z.enum([
+    "available",
+    "atTailor",
+    "atDryCleaner",
+    "underRepair",
+  ]),
+});
+
+export type DressUpdateCurrentStatusInput = z.infer<
+  typeof dressUpdateCurrentStatusSchema
+>;
 export type DressListFilterInput = z.infer<typeof dressListFilterInput>;
 export type ListDressesInput = z.infer<typeof listDressesInput>;
 export type ExportDressesInput = z.infer<typeof exportDressesInput>;

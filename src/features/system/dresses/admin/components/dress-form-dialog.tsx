@@ -10,7 +10,7 @@ import {
   XIcon,
 } from "lucide-react";
 import type { FormEvent } from "react";
-import { useCallback, useEffect, useId, useMemo } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -22,6 +22,16 @@ import {
   OverlayFormSubmitButton,
 } from "@/components/forms/overlay-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -55,6 +65,15 @@ import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
 
 import { DressImagesEditor } from "./dress-images-field";
 
+const DRESS_CURRENT_STATUSES = [
+  "available",
+  "atTailor",
+  "atDryCleaner",
+  "underRepair",
+] as const;
+
+type DressCurrentStatus = (typeof DRESS_CURRENT_STATUSES)[number];
+
 const dressFormSchema = z.object({
   code: z
     .string()
@@ -72,11 +91,7 @@ const dressFormSchema = z.object({
     .max(4000, translationKey("forms.validation.max4000"))
     .optional(),
   images: z
-    .array(
-      z
-        .string()
-        .max(2048, translationKey("forms.validation.imageUrlMaxLen")),
-    )
+    .array(z.string().max(2048, translationKey("forms.validation.imageUrlMaxLen")))
     .max(20, translationKey("forms.validation.imagesMaxItems")),
   size: z
     .string()
@@ -104,20 +119,29 @@ const dressFormSchema = z.object({
     .min(0, translationKey("forms.validation.numberIntMin0"))
     .max(10_000_000, translationKey("forms.validation.numberIntMaxLarge")),
   isActive: z.boolean(),
+  currentStatus: z.enum(DRESS_CURRENT_STATUSES).optional(),
 });
 
 type DressFormValues = z.infer<typeof dressFormSchema>;
+
+type StatusExpensePrefill = {
+  dressId: string;
+  dressCode: string;
+  type: "drycleaning" | "tailoring";
+};
 
 type DressFormDialogProps = {
   onOpenChange: (open: boolean) => void;
   open: boolean;
   dress?: DressGridRow | null;
+  onStatusNeedsExpense?: (prefill: StatusExpensePrefill) => void;
 };
 
 export function DressFormDialog({
   onOpenChange,
   open,
   dress,
+  onStatusNeedsExpense,
 }: DressFormDialogProps) {
   const { t } = useTranslation();
   const trpc = useTRPC();
@@ -131,6 +155,9 @@ export function DressFormDialog({
 
   const createMut = useMutation(trpc.dresses.create.mutationOptions());
   const updateMut = useMutation(trpc.dresses.update.mutationOptions());
+  const updateStatusMut = useMutation(trpc.dresses.updateStatus.mutationOptions());
+
+  const [pendingExpense, setPendingExpense] = useState<StatusExpensePrefill | null>(null);
 
   const defaultValues = useMemo<DressFormValues>(
     () => ({
@@ -144,6 +171,7 @@ export function DressFormDialog({
       depositAmount: dress?.depositAmount ?? 0,
       insurance: dress?.insurance ?? 0,
       isActive: dress?.isActive ?? true,
+      currentStatus: dress?.currentStatus ?? "available",
     }),
     [dress],
   );
@@ -172,32 +200,51 @@ export function DressFormDialog({
         isActive: value.isActive,
       };
 
-      const action: Promise<unknown> =
+      const mainAction: Promise<unknown> =
         isEdit && dress
           ? updateMut.mutateAsync({ id: dress.id, ...payload })
           : createMut.mutateAsync(payload);
 
       try {
         await toast
-          .promise(action, {
+          .promise(mainAction, {
             loading: String(t("common.saving")),
-            success: String(
-              t(
-                isEdit
-                  ? "systemPages.dressUpdated"
-                  : "systemPages.dressCreated",
-              ),
-            ),
+            success: String(t(isEdit ? "systemPages.dressUpdated" : "systemPages.dressCreated")),
             error: (err) =>
-              err instanceof Error
-                ? err.message
-                : String(t("systemPages.dressSaveFailed")),
+              err instanceof Error ? err.message : String(t("systemPages.dressSaveFailed")),
           })
           .unwrap();
-        await queryClient.invalidateQueries({
-          queryKey: trpc.dresses.pathKey(),
-        });
-        onOpenChange(false);
+
+        const newStatus = value.currentStatus as DressCurrentStatus | undefined;
+        const oldStatus = dress?.currentStatus;
+
+        if (isEdit && dress && newStatus && newStatus !== oldStatus) {
+          await updateStatusMut.mutateAsync({ id: dress.id, currentStatus: newStatus });
+        }
+
+        await queryClient.invalidateQueries({ queryKey: trpc.dresses.pathKey() });
+
+        if (
+          isEdit &&
+          dress &&
+          newStatus &&
+          newStatus !== oldStatus &&
+          (newStatus === "atTailor" || newStatus === "atDryCleaner")
+        ) {
+          const prefill: StatusExpensePrefill = {
+            dressId: dress.id,
+            dressCode: dress.code,
+            type: newStatus === "atTailor" ? "tailoring" : "drycleaning",
+          };
+          if (onStatusNeedsExpense) {
+            onOpenChange(false);
+            onStatusNeedsExpense(prefill);
+          } else {
+            setPendingExpense(prefill);
+          }
+        } else {
+          onOpenChange(false);
+        }
       } catch {
         // toast.promise already surfaced the failure.
       }
@@ -208,10 +255,9 @@ export function DressFormDialog({
     if (open) {
       form.reset(defaultValues);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, dress?.id]);
+  }, [open, defaultValues, form.reset]);
 
-  const pending = createMut.isPending || updateMut.isPending;
+  const pending = createMut.isPending || updateMut.isPending || updateStatusMut.isPending;
   const SubmitIcon = pending ? Loader2Icon : isEdit ? SaveIcon : PlusIcon;
   const formId = useId();
 
@@ -223,243 +269,279 @@ export function DressFormDialog({
     [form],
   );
 
+  const statusOptions = DRESS_CURRENT_STATUSES.map((s) => ({
+    value: s,
+    label: String(
+      t(
+        s === "available"
+          ? "systemPages.dressCurrentStatusAvailable"
+          : s === "atTailor"
+            ? "systemPages.dressCurrentStatusAtTailor"
+            : s === "atDryCleaner"
+              ? "systemPages.dressCurrentStatusAtDryCleaner"
+              : "systemPages.dressCurrentStatusUnderRepair",
+      ),
+    ),
+  }));
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-lg">
-        <DialogHeader className="shrink-0 px-4 pt-4">
-          <DialogTitle>
-            {String(
-              t(isEdit ? "systemPages.editDress" : "systemPages.addDress"),
-            )}
-          </DialogTitle>
-          <DialogDescription>
-            {String(
-              t(
-                isEdit
-                  ? "systemPages.editDressDescription"
-                  : "systemPages.addDressDescription",
-              ),
-            )}
-          </DialogDescription>
-        </DialogHeader>
-        <ScrollArea className="min-h-0 flex-1 px-4 py-4">
-          <OverlayFormBody
-            formId={formId}
-            className="space-y-4"
-            onSubmit={handleBodySubmit}
-          >
-            <FieldSet disabled={pending}>
-              <FieldGroup>
-                {needsActiveBranch ? (
-                  <Alert variant="default">
-                    <InfoIcon />
-                    <AlertTitle>
-                      {String(t("systemPages.dressBranchRequired"))}
-                    </AlertTitle>
-                    <AlertDescription>
-                      {String(t("systemPages.dressFormAllBranchesHint"))}
-                    </AlertDescription>
-                  </Alert>
-                ) : null}
-                <form.AppField name="code">
-                  {(field) => {
-                    const invalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <FormBase label={String(t("systemPages.dressesCode"))}>
-                        <InputGroup>
-                          <InputGroupInput
-                            data-slot="input-group-control"
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-lg">
+          <DialogHeader className="shrink-0 px-4 pt-4">
+            <DialogTitle>
+              {String(t(isEdit ? "systemPages.editDress" : "systemPages.addDress"))}
+            </DialogTitle>
+            <DialogDescription>
+              {String(t(isEdit ? "systemPages.editDressDescription" : "systemPages.addDressDescription"))}
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="min-h-0 flex-1 px-4 py-4">
+            <OverlayFormBody formId={formId} className="space-y-4" onSubmit={handleBodySubmit}>
+              <FieldSet disabled={pending}>
+                <FieldGroup>
+                  {needsActiveBranch ? (
+                    <Alert variant="default">
+                      <InfoIcon />
+                      <AlertTitle>{String(t("systemPages.dressBranchRequired"))}</AlertTitle>
+                      <AlertDescription>
+                        {String(t("systemPages.dressFormAllBranchesHint"))}
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
+                  <form.AppField name="code">
+                    {(field) => {
+                      const invalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                      return (
+                        <FormBase label={String(t("systemPages.dressesCode"))}>
+                          <InputGroup>
+                            <InputGroupInput
+                              data-slot="input-group-control"
+                              aria-invalid={invalid}
+                              autoComplete="off"
+                              autoFocus
+                              id={field.name}
+                              name={field.name}
+                              onBlur={field.handleBlur}
+                              onChange={(e) => field.handleChange(e.target.value)}
+                              placeholder={String(t("systemPages.dressesCodePlaceholder"))}
+                              value={field.state.value}
+                            />
+                            <InputGroupAddon align="inline-end">
+                              <Tooltip>
+                                <TooltipTrigger
+                                  render={
+                                    <InputGroupButton
+                                      aria-label={String(t("systemPages.dressesGenerateCodeAria"))}
+                                      disabled={pending}
+                                      size="icon-xs"
+                                      type="button"
+                                      variant="ghost"
+                                      onClick={() => field.setValue(generateDressCode())}
+                                    >
+                                      <DicesIcon className="size-3.5" />
+                                    </InputGroupButton>
+                                  }
+                                />
+                                <TooltipContent>
+                                  <p>{String(t("systemPages.dressesGenerateCode"))}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </InputGroupAddon>
+                          </InputGroup>
+                        </FormBase>
+                      );
+                    }}
+                  </form.AppField>
+                  <form.AppField name="title">
+                    {(field) => (
+                      <field.StringField
+                        label={String(t("systemPages.dressesTitleCol"))}
+                        placeholder={String(t("systemPages.dressesTitlePlaceholder"))}
+                      />
+                    )}
+                  </form.AppField>
+                  <form.AppField name="description">
+                    {(field) => {
+                      const invalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                      return (
+                        <FormBase label={String(t("systemPages.dressesDescription"))}>
+                          <Textarea
                             aria-invalid={invalid}
-                            autoComplete="off"
-                            autoFocus
                             id={field.name}
                             name={field.name}
                             onBlur={field.handleBlur}
                             onChange={(e) => field.handleChange(e.target.value)}
-                            placeholder={String(
-                              t("systemPages.dressesCodePlaceholder"),
-                            )}
-                            value={field.state.value}
+                            placeholder={String(t("systemPages.dressesDescriptionPlaceholder"))}
+                            rows={3}
+                            value={field.state.value ?? ""}
                           />
-                          <InputGroupAddon align="inline-end">
-                            <Tooltip>
-                              <TooltipTrigger
-                                render={
-                                  <InputGroupButton
-                                    aria-label={String(
-                                      t(
-                                        "systemPages.dressesGenerateCodeAria",
-                                      ),
-                                    )}
-                                    disabled={pending}
-                                    size="icon-xs"
-                                    type="button"
-                                    variant="ghost"
-                                    onClick={() =>
-                                      field.setValue(generateDressCode())
-                                    }
-                                  >
-                                    <DicesIcon className="size-3.5" />
-                                  </InputGroupButton>
-                                }
-                              />
-                              <TooltipContent>
-                                <p>
-                                  {String(
-                                    t("systemPages.dressesGenerateCode"),
-                                  )}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </InputGroupAddon>
-                        </InputGroup>
-                      </FormBase>
-                    );
-                  }}
-                </form.AppField>
-                <form.AppField name="title">
-                  {(field) => (
-                    <field.StringField
-                      label={String(t("systemPages.dressesTitleCol"))}
-                      placeholder={String(
-                        t("systemPages.dressesTitlePlaceholder"),
-                      )}
-                    />
-                  )}
-                </form.AppField>
-                <form.AppField name="description">
-                  {(field) => {
-                    const invalid =
-                      field.state.meta.isTouched && !field.state.meta.isValid;
-                    return (
-                      <FormBase
-                        label={String(t("systemPages.dressesDescription"))}
-                      >
-                        <Textarea
-                          aria-invalid={invalid}
-                          id={field.name}
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          placeholder={String(
-                            t("systemPages.dressesDescriptionPlaceholder"),
-                          )}
-                          rows={3}
-                          value={field.state.value ?? ""}
+                        </FormBase>
+                      );
+                    }}
+                  </form.AppField>
+                  <form.AppField name="images">
+                    {(field) => (
+                      <FormBase label={String(t("systemPages.dressesImages"))}>
+                        <DressImagesEditor
+                          disabled={pending}
+                          urls={field.state.value}
+                          onUrlsChange={field.handleChange}
                         />
                       </FormBase>
-                    );
-                  }}
-                </form.AppField>
-                <form.AppField name="images">
-                  {(field) => (
-                    <FormBase label={String(t("systemPages.dressesImages"))}>
-                      <DressImagesEditor
-                        disabled={pending}
-                        urls={field.state.value}
-                        onUrlsChange={field.handleChange}
+                    )}
+                  </form.AppField>
+                  <Separator />
+                  <form.AppField name="size">
+                    {(field) => (
+                      <field.StringField
+                        label={String(t("systemPages.dressesSize"))}
+                        placeholder={String(t("systemPages.dressesSize"))}
                       />
-                    </FormBase>
-                  )}
-                </form.AppField>
-                <Separator />
-                <form.AppField name="size">
-                  {(field) => (
-                    <field.StringField
-                      label={String(t("systemPages.dressesSize"))}
-                      placeholder={String(t("systemPages.dressesSize"))}
-                    />
-                  )}
-                </form.AppField>
-                <form.AppField name="color">
-                  {(field) => (
-                    <field.StringField
-                      label={String(t("systemPages.dressesColor"))}
-                      placeholder={String(t("systemPages.dressesColor"))}
-                    />
-                  )}
-                </form.AppField>
-                <form.AppField name="pricePerDay">
-                  {(field) => (
-                    <field.NumberField
-                      label={String(t("systemPages.dressesPricePerDay"))}
-                    />
-                  )}
-                </form.AppField>
-                <form.AppField name="depositAmount">
-                  {(field) => (
-                    <field.NumberField
-                      label={String(t("systemPages.dressesDeposit"))}
-                    />
-                  )}
-                </form.AppField>
-                <form.AppField name="insurance">
-                  {(field) => (
-                    <field.NumberField
-                      label={String(t("systemPages.dressesInsurance"))}
-                    />
-                  )}
-                </form.AppField>
-                <form.AppField name="isActive">
-                  {(field) => (
-                    <field.BooleanField
-                      label={String(t("systemPages.dressesActiveLabel"))}
-                    />
-                  )}
-                </form.AppField>
-              </FieldGroup>
-            </FieldSet>
-          </OverlayFormBody>
-        </ScrollArea>
-        <DialogFooter className="shrink-0 border-t bg-muted px-4 py-4 sm:flex-row sm:justify-end">
-          <OverlayFormFooterActions>
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              onClick={() => onOpenChange(false)}
-              disabled={pending}
+                    )}
+                  </form.AppField>
+                  <form.AppField name="color">
+                    {(field) => (
+                      <field.StringField
+                        label={String(t("systemPages.dressesColor"))}
+                        placeholder={String(t("systemPages.dressesColor"))}
+                      />
+                    )}
+                  </form.AppField>
+                  <form.AppField name="pricePerDay">
+                    {(field) => (
+                      <field.NumberField label={String(t("systemPages.dressesPricePerDay"))} />
+                    )}
+                  </form.AppField>
+                  <form.AppField name="depositAmount">
+                    {(field) => (
+                      <field.NumberField label={String(t("systemPages.dressesDeposit"))} />
+                    )}
+                  </form.AppField>
+                  <form.AppField name="insurance">
+                    {(field) => (
+                      <field.NumberField label={String(t("systemPages.dressesInsurance"))} />
+                    )}
+                  </form.AppField>
+                  <form.AppField name="isActive">
+                    {(field) => (
+                      <field.BooleanField label={String(t("systemPages.dressesActiveLabel"))} />
+                    )}
+                  </form.AppField>
+                  {isEdit ? (
+                    <>
+                      <Separator />
+                      <form.AppField name="currentStatus">
+                        {(field) => (
+                          <field.SelectField
+                            label={String(t("systemPages.dressCurrentStatus"))}
+                            options={statusOptions}
+                          />
+                        )}
+                      </form.AppField>
+                    </>
+                  ) : null}
+                </FieldGroup>
+              </FieldSet>
+            </OverlayFormBody>
+          </ScrollArea>
+          <DialogFooter className="shrink-0 border-t bg-muted px-4 py-4 sm:flex-row sm:justify-end">
+            <OverlayFormFooterActions>
+              <Button
+                type="button"
+                variant="outline"
+                size="default"
+                onClick={() => onOpenChange(false)}
+                disabled={pending}
+              >
+                <XIcon className="size-3.5" />
+                {t("common.cancel")}
+              </Button>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <span className="inline-flex min-w-0 flex-1">
+                      <OverlayFormSubmitButton
+                        aria-describedby={needsActiveBranch ? "dress-form-branch-hint" : undefined}
+                        className="w-full"
+                        disabled={pending || needsActiveBranch}
+                        formId={formId}
+                        size="default"
+                      >
+                        <SubmitIcon className={pending ? "size-3.5 animate-spin" : "size-3.5"} />
+                        {pending
+                          ? String(t("common.saving"))
+                          : isEdit
+                            ? String(t("common.save"))
+                            : String(t("common.create"))}
+                      </OverlayFormSubmitButton>
+                    </span>
+                  }
+                />
+                {needsActiveBranch ? (
+                  <TooltipContent id="dress-form-branch-hint" side="top">
+                    {String(t("systemPages.dressBranchRequired"))}
+                  </TooltipContent>
+                ) : null}
+              </Tooltip>
+            </OverlayFormFooterActions>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={!!pendingExpense}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingExpense(null);
+            onOpenChange(false);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {String(t("systemPages.dressCreateExpensePrompt"))}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {String(
+                t("systemPages.dressCreateExpenseDescription", {
+                  type: pendingExpense
+                    ? String(
+                        t(
+                          pendingExpense.type === "tailoring"
+                            ? "systemPages.expenseTypeTailoring"
+                            : "systemPages.expenseTypeDrycleaning",
+                        ),
+                      )
+                    : "",
+                  dress: pendingExpense?.dressCode ?? "",
+                }),
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingExpense(null);
+                onOpenChange(false);
+              }}
             >
-              <XIcon className="size-3.5" />
-              {t("common.cancel")}
-            </Button>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <span className="inline-flex min-w-0 flex-1">
-                    <OverlayFormSubmitButton
-                      aria-describedby={
-                        needsActiveBranch ? "dress-form-branch-hint" : undefined
-                      }
-                      className="w-full"
-                      disabled={pending || needsActiveBranch}
-                      formId={formId}
-                      size="default"
-                    >
-                      <SubmitIcon
-                        className={
-                          pending ? "size-3.5 animate-spin" : "size-3.5"
-                        }
-                      />
-                      {pending
-                        ? String(t("common.saving"))
-                        : isEdit
-                          ? String(t("common.save"))
-                          : String(t("common.create"))}
-                    </OverlayFormSubmitButton>
-                  </span>
-                }
-              />
-              {needsActiveBranch ? (
-                <TooltipContent id="dress-form-branch-hint" side="top">
-                  {String(t("systemPages.dressBranchRequired"))}
-                </TooltipContent>
-              ) : null}
-            </Tooltip>
-          </OverlayFormFooterActions>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+              {String(t("common.cancel"))}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!pendingExpense) return;
+                onStatusNeedsExpense?.(pendingExpense);
+                setPendingExpense(null);
+                onOpenChange(false);
+              }}
+            >
+              {String(t("common.yes"))}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
