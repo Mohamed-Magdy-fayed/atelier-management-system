@@ -400,6 +400,21 @@ export default {
       recentCustomersEmpty: "لا يوجد عملاء حديثون.",
       lastReservation: "آخر حجز",
       noReservations: "لا توجد حجوزات",
+      summaryMonthlyExpenses: "مصروفات هذا الشهر",
+      summaryNetProfit: "صافي الربح هذا الشهر",
+      rangeExpenses: "المصروفات",
+      rangeNetProfit: "صافي الربح",
+      dressStatusAvailable: "متاح",
+      dressStatusAtTailor: "عند الخياط",
+      dressStatusAtDryCleaner: "في التنظيف الجاف",
+      dressStatusUnderRepair: "قيد الإصلاح",
+      dressUtilization: "نسبة الإشغال: {value}٪",
+      upcomingOccasionsTitle: "مناسبات قادمة",
+      upcomingOccasionsDescription:
+        "مناسبات خلال الأيام السبعة القادمة لحجوزات نشطة.",
+      upcomingOccasionsEmpty:
+        "لا توجد مناسبات مجدولة في الأيام السبعة القادمة.",
+      occasionDate: "تاريخ المناسبة",
     },
     dashboardBranchesTitle: "الفروع النشطة",
     dashboardBranchesDescription: "الفروع المتاحة حاليًا للتشغيل وتوزيع الفرق.",
@@ -694,6 +709,9 @@ export default {
     settingName00004: "إظهار تقويم التوفر",
     settingDesc00004:
       "عند التفعيل، يظهر تقويم للتحقق من توفر الفستان في صفحة تفاصيل الفستان حتى يتمكن العملاء من معرفة ما إذا كان الفستان متاحًا قبل زيارة المحل.",
+    settingName00005: "رقم واتساب",
+    settingDesc00005:
+      "رقم الهاتف المستخدم لزر واتساب في صفحة تفاصيل الفستان وصفحة الفروع العامة. يحلّ محل رقم الفرع عند تعيينه (مثال: 01xxxxxxxxx).",
     settingStatePricesShown: "الأسعار ظاهرة",
     settingStatePricesHidden: "الأسعار مخفية",
     settingsShowPricesState: "إظهار الأسعار",

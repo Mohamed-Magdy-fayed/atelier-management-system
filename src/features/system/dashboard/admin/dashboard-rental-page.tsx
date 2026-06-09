@@ -6,12 +6,15 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   CalendarCheck2,
+  CalendarDays,
   CalendarPlus,
   ChartSpline,
   CreditCard,
   PiggyBank,
   Receipt,
   Shirt,
+  TrendingDown,
+  TrendingUp,
   UserPlus2,
   Users2,
   Wallet,
@@ -237,6 +240,20 @@ export function DashboardRentalPage() {
           highlight: summary.upcomingBalanceDue > 0,
           destructiveBadge: summary.overdueReturns > 0,
         },
+        {
+          id: "monthly-expenses",
+          title: dr("summaryMonthlyExpenses"),
+          value: fmtMoney(summary.monthlyExpenses),
+          icon: TrendingDown,
+          change: summary.monthlyExpensesChange,
+        },
+        {
+          id: "net-profit",
+          title: dr("summaryNetProfit"),
+          value: fmtMoney(summary.monthlyNetProfit),
+          icon: TrendingUp,
+          highlight: summary.monthlyNetProfit < 0,
+        },
       ]
     : [];
 
@@ -333,7 +350,7 @@ export function DashboardRentalPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
         {isPending && summaryCards.length === 0
           ? Array.from({ length: 6 }).map((_, idx) => (
               <Card key={idx} className="animate-pulse">
@@ -429,7 +446,7 @@ export function DashboardRentalPage() {
             />
           </CardHeader>
           <CardContent className="space-y-4 pt-6">
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-5">
               <div className="rounded-xl border bg-muted/40 p-4">
                 <Receipt className="mb-2 size-4 text-muted-foreground" />
                 <div className="text-sm text-muted-foreground">
@@ -438,6 +455,39 @@ export function DashboardRentalPage() {
                 <div className="text-2xl font-semibold">
                   {rangeStats
                     ? fmtMoney(rangeStats.totalRevenue)
+                    : isPending
+                      ? "—"
+                      : fmtMoney(0)}
+                </div>
+              </div>
+              <div className="rounded-xl border bg-muted/40 p-4">
+                <TrendingDown className="mb-2 size-4 text-muted-foreground" />
+                <div className="text-sm text-muted-foreground">
+                  {dr("rangeExpenses")}
+                </div>
+                <div className="text-2xl font-semibold">
+                  {rangeStats
+                    ? fmtMoney(rangeStats.totalExpenses)
+                    : isPending
+                      ? "—"
+                      : fmtMoney(0)}
+                </div>
+              </div>
+              <div
+                className={cn(
+                  "rounded-xl border p-4",
+                  rangeStats && rangeStats.netProfit < 0
+                    ? "bg-destructive/5 border-destructive/30"
+                    : "bg-muted/40",
+                )}
+              >
+                <TrendingUp className="mb-2 size-4 text-muted-foreground" />
+                <div className="text-sm text-muted-foreground">
+                  {dr("rangeNetProfit")}
+                </div>
+                <div className="text-2xl font-semibold">
+                  {rangeStats
+                    ? fmtMoney(rangeStats.netProfit)
                     : isPending
                       ? "—"
                       : fmtMoney(0)}
@@ -659,10 +709,33 @@ export function DashboardRentalPage() {
             <CardDescription>{dr("dressReturnsDescription")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-2">
               <Badge variant="secondary">
                 {dr("dressReturnsOutNow")}: {data?.dressesOutCount ?? 0}
               </Badge>
+              {summary?.dressUtilizationRate != null && (
+                <Badge variant="outline">
+                  {dr("dressUtilization", {
+                    value: summary.dressUtilizationRate.toFixed(0),
+                  })}
+                </Badge>
+              )}
+              {(summary?.dressesAtTailor ?? 0) > 0 && (
+                <Badge variant="outline">
+                  {dr("dressStatusAtTailor")}: {summary?.dressesAtTailor}
+                </Badge>
+              )}
+              {(summary?.dressesAtDryCleaner ?? 0) > 0 && (
+                <Badge variant="outline">
+                  {dr("dressStatusAtDryCleaner")}:{" "}
+                  {summary?.dressesAtDryCleaner}
+                </Badge>
+              )}
+              {(summary?.dressesUnderRepair ?? 0) > 0 && (
+                <Badge variant="destructive">
+                  {dr("dressStatusUnderRepair")}: {summary?.dressesUnderRepair}
+                </Badge>
+              )}
             </div>
             <div className="font-medium text-sm">
               {dr("dressReturnsDueToday")}
@@ -745,6 +818,72 @@ export function DashboardRentalPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="overflow-x-auto">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="size-4 text-muted-foreground" />
+            <CardTitle className="text-base font-semibold">
+              {dr("upcomingOccasionsTitle")}
+            </CardTitle>
+          </div>
+          <CardDescription>
+            {dr("upcomingOccasionsDescription")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {data?.upcomingOccasions && data.upcomingOccasions.length > 0 ? (
+            <div className="overflow-hidden rounded-md border">
+              <Table className="text-xs">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="px-2">
+                      {String(t("systemPages.reservationsCode"))}
+                    </TableHead>
+                    <TableHead className="px-2">
+                      {String(t("systemPages.reservationsDress"))}
+                    </TableHead>
+                    <TableHead className="px-2">
+                      {String(t("systemPages.reservationsCustomerName"))}
+                    </TableHead>
+                    <TableHead className="px-2">{dr("occasionDate")}</TableHead>
+                    <TableHead className="px-2">
+                      {String(t("systemPages.reservationsStatus"))}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.upcomingOccasions.map((occasion) => (
+                    <TableRow key={occasion.id}>
+                      <TableCell className="font-medium">
+                        {occasion.reservationCode}
+                      </TableCell>
+                      <TableCell>{occasion.dressTitle}</TableCell>
+                      <TableCell>{occasion.customerName}</TableCell>
+                      <TableCell>
+                        {formatDate(
+                          occasion.occasionDate,
+                          { month: "short", day: "numeric" },
+                          locale,
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{occasion.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <Muted className="rounded-lg border border-dashed p-6 text-sm">
+              {isPending
+                ? String(t("common.loading"))
+                : dr("upcomingOccasionsEmpty")}
+            </Muted>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -4,6 +4,9 @@ export type DashboardSummary = {
   totalRevenue: number;
   monthlyRevenue: number;
   monthlyRevenueChange: number | null;
+  monthlyExpenses: number;
+  monthlyExpensesChange: number | null;
+  monthlyNetProfit: number;
   totalReservations: number;
   reservationsThisWeek: number;
   reservationsToday: number;
@@ -14,6 +17,11 @@ export type DashboardSummary = {
   overdueReturns: number;
   upcomingBalanceDue: number;
   activeDresses: number;
+  dressesAvailable: number;
+  dressesAtTailor: number;
+  dressesAtDryCleaner: number;
+  dressesUnderRepair: number;
+  dressUtilizationRate: number | null;
   activeCustomers: number;
   customerCount: number;
   employeeCount: number;
@@ -24,6 +32,8 @@ export type DashboardRangeStats = {
   from: string;
   to: string;
   totalRevenue: number;
+  totalExpenses: number;
+  netProfit: number;
   reservationsCount: number;
   newCustomers: number;
   averageReservationValue: number | null;
@@ -77,6 +87,15 @@ export type DashboardRecentCustomer = {
   lastReservationAt: string | null;
 };
 
+export type DashboardUpcomingOccasion = {
+  id: string;
+  reservationCode: string;
+  customerName: string;
+  dressTitle: string;
+  occasionDate: string;
+  status: ReservationStatus;
+};
+
 export type DashboardData = {
   summary: DashboardSummary;
   rangeStats: DashboardRangeStats;
@@ -87,4 +106,5 @@ export type DashboardData = {
   dueTodayReservations: DashboardDueTodayReservation[];
   dressesOutCount: number;
   recentCustomers: DashboardRecentCustomer[];
+  upcomingOccasions: DashboardUpcomingOccasion[];
 };

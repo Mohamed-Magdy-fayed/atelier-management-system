@@ -7,7 +7,10 @@ import {
 } from "@/components/ui/card";
 import { Lead, Muted } from "@/components/ui/typography";
 import { getLocaleCookie, getT } from "@/features/core/i18n/server";
-import { listPublicBranches } from "@/features/public-catalog/server/queries";
+import {
+  getPublicCatalogWhatsAppNumber,
+  listPublicBranches,
+} from "@/features/public-catalog/server/queries";
 import { formatBranchHours } from "@/lib/branch-hours";
 import { toWhatsAppUrl } from "@/lib/phone";
 import { cn } from "@/lib/utils";
@@ -15,7 +18,10 @@ import { cn } from "@/lib/utils";
 export default async function PublicLocationsPage() {
   const { t } = await getT();
   const locale = await getLocaleCookie();
-  const branches = await listPublicBranches();
+  const [branches, systemWhatsAppNumber] = await Promise.all([
+    listPublicBranches(),
+    getPublicCatalogWhatsAppNumber(),
+  ]);
 
   return (
     <main className="border-t border-border/60 bg-background">
@@ -37,7 +43,7 @@ export default async function PublicLocationsPage() {
                 : (b.addressEn ?? b.addressAr);
             const hours = formatBranchHours(b.opensAt, b.closesAt, locale);
             const mapHref = b.mapUrl?.trim();
-            const whatsappHref = toWhatsAppUrl(b.phone);
+            const whatsappHref = toWhatsAppUrl(systemWhatsAppNumber ?? b.phone);
 
             return (
               <Card className="h-full border-border/80 shadow-sm" key={b.id}>

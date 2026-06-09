@@ -13,6 +13,7 @@ export const SYSTEM_SETTING_CODE = {
   BUSINESS_TIMEZONE: "00002",
   RESERVATION_USAGE_POLICY: "00003",
   SHOW_AVAILABILITY_CALENDAR: "00004",
+  WHATSAPP_NUMBER: "00005",
 } as const;
 
 export type SystemSettingCode =
@@ -23,6 +24,7 @@ export const SYSTEM_SETTING_CODES: SystemSettingCode[] = [
   SYSTEM_SETTING_CODE.BUSINESS_TIMEZONE,
   SYSTEM_SETTING_CODE.RESERVATION_USAGE_POLICY,
   SYSTEM_SETTING_CODE.SHOW_AVAILABILITY_CALENDAR,
+  SYSTEM_SETTING_CODE.WHATSAPP_NUMBER,
 ];
 
 const LEGACY_SETTING_CODES = {
@@ -38,13 +40,15 @@ export type SystemSettingDefinition = {
     | "settingName00001"
     | "settingName00002"
     | "settingName00003"
-    | "settingName00004";
+    | "settingName00004"
+    | "settingName00005";
   /** i18n key under `systemPages` */
   descriptionKey:
     | "settingDesc00001"
     | "settingDesc00002"
     | "settingDesc00003"
-    | "settingDesc00004";
+    | "settingDesc00004"
+    | "settingDesc00005";
   /** English fallback stored in DB on seed (not user-editable). */
   descriptionEn: string;
   editable: {
@@ -99,6 +103,16 @@ export const SYSTEM_SETTINGS: SystemSettingDefinition[] = [
       "When enabled, a date-availability calendar is shown on dress detail pages so customers can check if a dress is free before visiting the store.",
     editable: { isActive: true },
     seed: { isActive: true },
+  },
+  {
+    code: SYSTEM_SETTING_CODE.WHATSAPP_NUMBER,
+    label: "integration",
+    nameKey: "settingName00005",
+    descriptionKey: "settingDesc00005",
+    descriptionEn:
+      "Phone number used for the WhatsApp contact button on public dress detail and locations pages. Overrides the branch-level phone. Store in local format (e.g. 01xxxxxxxxx).",
+    editable: { isActive: true, value: true },
+    seed: { isActive: true, value: null },
   },
 ];
 

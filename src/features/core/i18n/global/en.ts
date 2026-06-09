@@ -412,6 +412,20 @@ export default {
       recentCustomersEmpty: "No recent customers found.",
       lastReservation: "Last reservation",
       noReservations: "No reservations",
+      summaryMonthlyExpenses: "Expenses this month",
+      summaryNetProfit: "Net profit this month",
+      rangeExpenses: "Expenses",
+      rangeNetProfit: "Net profit",
+      dressStatusAvailable: "Available",
+      dressStatusAtTailor: "At tailor",
+      dressStatusAtDryCleaner: "At dry cleaner",
+      dressStatusUnderRepair: "Under repair",
+      dressUtilization: "Utilization: {value}%",
+      upcomingOccasionsTitle: "Upcoming occasions",
+      upcomingOccasionsDescription:
+        "Events in the next 7 days with active reservations.",
+      upcomingOccasionsEmpty: "No events scheduled in the next 7 days.",
+      occasionDate: "Occasion",
     },
     dashboardBranchesTitle: "Active branches",
     dashboardBranchesDescription:
@@ -715,6 +729,9 @@ export default {
     settingName00004: "Show availability calendar",
     settingDesc00004:
       "When enabled, a date-availability calendar is shown on dress detail pages so customers can check if a dress is free before visiting the store.",
+    settingName00005: "WhatsApp number",
+    settingDesc00005:
+      "Phone number used for the WhatsApp button on public dress detail and locations pages. Overrides the branch-level phone when set (e.g. 01xxxxxxxxx).",
     settingStatePricesShown: "Prices shown",
     settingStatePricesHidden: "Prices hidden",
     settingsShowPricesState: "Show prices",

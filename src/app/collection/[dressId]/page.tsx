@@ -13,6 +13,7 @@ import { PublicShell } from "@/features/public-catalog/components/public-shell";
 import {
   getPublicCatalogHidePrices,
   getPublicCatalogShowAvailabilityCalendar,
+  getPublicCatalogWhatsAppNumber,
   getPublicDressById,
 } from "@/features/public-catalog/server/queries";
 import { formatBranchHours } from "@/lib/branch-hours";
@@ -38,11 +39,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicDressDetailPage({ params }: Props) {
   const { dressId } = await params;
-  const [dress, hidePrices, showAvailabilityCalendar] = await Promise.all([
-    getPublicDressById(dressId),
-    getPublicCatalogHidePrices(),
-    getPublicCatalogShowAvailabilityCalendar(),
-  ]);
+  const [dress, hidePrices, showAvailabilityCalendar, systemWhatsAppNumber] =
+    await Promise.all([
+      getPublicDressById(dressId),
+      getPublicCatalogHidePrices(),
+      getPublicCatalogShowAvailabilityCalendar(),
+      getPublicCatalogWhatsAppNumber(),
+    ]);
   if (!dress) notFound();
 
   const { t } = await getT();
@@ -65,7 +68,7 @@ export default async function PublicDressDetailPage({ params }: Props) {
   const color = dress.color?.trim() || undefined;
   const gallery = dress.images?.slice(1) ?? [];
   const mapHref = dress.branchMapUrl?.trim();
-  const whatsappHref = toWhatsAppUrl(dress.branchPhone);
+  const whatsappHref = toWhatsAppUrl(systemWhatsAppNumber ?? dress.branchPhone);
 
   return (
     <PublicShell>

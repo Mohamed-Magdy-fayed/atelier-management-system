@@ -66,6 +66,16 @@ export async function getPublicCatalogHidePrices(): Promise<boolean> {
   return !(await getPublicCatalogShowPrices());
 }
 
+/** Phone number for the WhatsApp button on public pages, or null if unset/inactive. */
+export async function getPublicCatalogWhatsAppNumber(): Promise<string | null> {
+  const row = await db.query.SettingsTable.findFirst({
+    columns: { isActive: true, value: true },
+    where: eq(SettingsTable.code, SYSTEM_SETTING_CODE.WHATSAPP_NUMBER),
+  });
+  if (!row || row.isActive !== true) return null;
+  return row.value?.trim() || null;
+}
+
 /** When true, the date-availability calendar is shown on dress detail pages. */
 export async function getPublicCatalogShowAvailabilityCalendar(): Promise<boolean> {
   const row = await db.query.SettingsTable.findFirst({

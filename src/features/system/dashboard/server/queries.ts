@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import {
   and,
   asc,
@@ -7,6 +8,7 @@ import {
   eq,
   gt,
   gte,
+  inArray,
   isNull,
   lt,
   lte,
@@ -14,16 +16,15 @@ import {
   sql,
   sum,
 } from "drizzle-orm";
-
 import {
   BranchMembershipsTable,
   DressesTable,
+  ExpensesTable,
   PaymentsTable,
   RentalCustomersTable,
   ReservationsTable,
   UsersTable,
 } from "@/drizzle/schema";
-import { TRPCError } from "@trpc/server";
 
 import {
   assertOperationalStaff,
@@ -72,6 +73,24 @@ export async function getDashboardData(
   const todayEndIso = dates.todayEnd.toISOString();
   const upcomingWindowEndIso = dates.upcomingWindowEnd.toISOString();
 
+  // DATE-only strings for expenses.date column (Postgres DATE type)
+  const currentMonthStartDate = dates.currentMonthStart
+    .toISOString()
+    .slice(0, 10);
+  const currentMonthEndDate = dates.currentMonthEnd.toISOString().slice(0, 10);
+  const previousMonthStartDate = dates.previousMonthStart
+    .toISOString()
+    .slice(0, 10);
+  const previousMonthEndDate = dates.previousMonthEnd
+    .toISOString()
+    .slice(0, 10);
+  const rangeStartDate = rangeStart.toISOString().slice(0, 10);
+  const rangeEndDate = rangeEnd.toISOString().slice(0, 10);
+
+  // Upcoming occasions window: next 7 days
+  const occasionWindowEnd = new Date(dates.todayStart);
+  occasionWindowEnd.setDate(occasionWindowEnd.getDate() + 7);
+
   const reservationsBaseWhere = and(
     isNull(ReservationsTable.deletedAt),
     branchId ? eq(ReservationsTable.branchId, branchId) : undefined,
@@ -103,6 +122,10 @@ export async function getDashboardData(
     dressesOutResult,
     dueTodayRaw,
     recentCustomersRaw,
+    monthlyExpensesRow,
+    rangeExpensesRow,
+    dressStatusRaw,
+    upcomingOccasionsRaw,
   ] = await Promise.all([
     ctx.db
       .select({
@@ -357,6 +380,61 @@ export async function getDashboardData(
       orderBy: [desc(RentalCustomersTable.reservationsCount)],
       limit: 6,
     }),
+
+    ctx.db
+      .select({
+        monthlyExpenses: sql<number>`COALESCE(SUM(CASE WHEN ${ExpensesTable.date} >= ${currentMonthStartDate} AND ${ExpensesTable.date} <= ${currentMonthEndDate} THEN ${ExpensesTable.amount} ELSE 0 END), 0)`,
+        previousMonthExpenses: sql<number>`COALESCE(SUM(CASE WHEN ${ExpensesTable.date} >= ${previousMonthStartDate} AND ${ExpensesTable.date} <= ${previousMonthEndDate} THEN ${ExpensesTable.amount} ELSE 0 END), 0)`,
+      })
+      .from(ExpensesTable)
+      .where(branchId ? eq(ExpensesTable.branchId, branchId) : undefined),
+
+    ctx.db
+      .select({ totalExpenses: sum(ExpensesTable.amount) })
+      .from(ExpensesTable)
+      .where(
+        and(
+          gte(ExpensesTable.date, rangeStartDate),
+          lte(ExpensesTable.date, rangeEndDate),
+          branchId ? eq(ExpensesTable.branchId, branchId) : undefined,
+        ),
+      ),
+
+    branchId
+      ? ctx.db
+          .select({
+            currentStatus: DressesTable.currentStatus,
+            statusCount: count(),
+          })
+          .from(DressesTable)
+          .where(
+            and(
+              eq(DressesTable.branchId, branchId),
+              isNull(DressesTable.deletedAt),
+            ),
+          )
+          .groupBy(DressesTable.currentStatus)
+      : ctx.db
+          .select({
+            currentStatus: DressesTable.currentStatus,
+            statusCount: count(),
+          })
+          .from(DressesTable)
+          .where(isNull(DressesTable.deletedAt))
+          .groupBy(DressesTable.currentStatus),
+
+    ctx.db.query.ReservationsTable.findMany({
+      where: and(
+        gte(ReservationsTable.occasionDate, dates.todayStart),
+        lte(ReservationsTable.occasionDate, occasionWindowEnd),
+        inArray(ReservationsTable.status, ["reserved", "pickedUp"]),
+        isNull(ReservationsTable.deletedAt),
+        branchId ? eq(ReservationsTable.branchId, branchId) : undefined,
+      ),
+      orderBy: [asc(ReservationsTable.occasionDate)],
+      with: { dress: true },
+      limit: 6,
+    }),
   ]);
 
   const reservationStats = reservationsAggregateRow[0] ?? {};
@@ -400,6 +478,30 @@ export async function getDashboardData(
       ? rangeTotalRevenue / rangeReservationsCount
       : null;
 
+  const monthlyExpenses = Number(monthlyExpensesRow[0]?.monthlyExpenses ?? 0);
+  const previousMonthExpenses = Number(
+    monthlyExpensesRow[0]?.previousMonthExpenses ?? 0,
+  );
+  const monthlyNetProfit = monthlyRevenue - monthlyExpenses;
+  const monthlyExpensesChange =
+    previousMonthExpenses > 0
+      ? ((monthlyExpenses - previousMonthExpenses) / previousMonthExpenses) *
+        100
+      : monthlyExpenses > 0
+        ? 100
+        : null;
+
+  const rangeTotalExpenses = Number(rangeExpensesRow[0]?.totalExpenses ?? 0);
+  const rangeNetProfit = rangeTotalRevenue - rangeTotalExpenses;
+
+  const dressStatusMap = Object.fromEntries(
+    dressStatusRaw.map((row) => [row.currentStatus, Number(row.statusCount)]),
+  );
+  const activeDresses = Number(dressesAggregateRow[0]?.activeDresses ?? 0);
+  const dressesOutCount = Number(dressesOutResult[0]?.count ?? 0);
+  const dressUtilizationRate =
+    activeDresses > 0 ? (dressesOutCount / activeDresses) * 100 : null;
+
   const outstandingReservations = outstandingReservationsRaw.map(
     (reservation) => {
       const totalDue =
@@ -426,6 +528,9 @@ export async function getDashboardData(
       totalRevenue,
       monthlyRevenue,
       monthlyRevenueChange,
+      monthlyExpenses,
+      monthlyExpensesChange,
+      monthlyNetProfit,
       totalReservations: Number(reservationStats.totalReservations ?? 0),
       reservationsThisWeek,
       reservationsToday: Number(reservationStats.reservationsToday ?? 0),
@@ -437,7 +542,12 @@ export async function getDashboardData(
       upcomingPickups: Number(reservationStats.upcomingPickups ?? 0),
       overdueReturns: Number(reservationStats.overdueReturns ?? 0),
       upcomingBalanceDue: Number(reservationStats.upcomingBalanceDue ?? 0),
-      activeDresses: Number(dressesAggregateRow[0]?.activeDresses ?? 0),
+      activeDresses,
+      dressesAvailable: dressStatusMap.available ?? 0,
+      dressesAtTailor: dressStatusMap.atTailor ?? 0,
+      dressesAtDryCleaner: dressStatusMap.atDryCleaner ?? 0,
+      dressesUnderRepair: dressStatusMap.underRepair ?? 0,
+      dressUtilizationRate,
       activeCustomers: Number(customerAggregateRow[0]?.activeCustomers ?? 0),
       customerCount: Number(customerAggregateRow[0]?.customerCount ?? 0),
       employeeCount: Number(employeeCountRow[0]?.employeeCount ?? 0),
@@ -447,6 +557,8 @@ export async function getDashboardData(
       from: rangeStart.toISOString(),
       to: rangeEnd.toISOString(),
       totalRevenue: rangeTotalRevenue,
+      totalExpenses: rangeTotalExpenses,
+      netProfit: rangeNetProfit,
       reservationsCount: rangeReservationsCount,
       newCustomers: rangeNewCustomers,
       averageReservationValue,
@@ -474,7 +586,7 @@ export async function getDashboardData(
       (acc, row) => acc + row.remaining,
       0,
     ),
-    dressesOutCount: Number(dressesOutResult[0]?.count ?? 0),
+    dressesOutCount,
     dueTodayReservations: dueTodayRaw.map((reservation) => ({
       id: String(reservation.id),
       reservationCode: reservation.reservationCode,
@@ -491,6 +603,14 @@ export async function getDashboardData(
       lastReservationAt: customer.lastReservationAt
         ? new Date(customer.lastReservationAt).toISOString()
         : null,
+    })),
+    upcomingOccasions: upcomingOccasionsRaw.map((reservation) => ({
+      id: String(reservation.id),
+      reservationCode: reservation.reservationCode,
+      customerName: reservation.customerName,
+      dressTitle: reservation.dress?.title ?? "—",
+      occasionDate: new Date(reservation.occasionDate).toISOString(),
+      status: reservation.status,
     })),
   };
 }
