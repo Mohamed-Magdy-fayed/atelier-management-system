@@ -1,28 +1,22 @@
-﻿"use client";
+"use client";
 
 import {
   HomeIcon,
+  LayoutDashboardIcon,
   LayoutGridIcon,
   MapPinIcon,
-  MenuIcon,
+  UserIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { mobileTabBarShellClassName } from "@/components/general/mobile-tab-bar";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { AuthManagerSheetPanel } from "@/features/core/auth/nextjs/components/auth-manager/auth-manager-sheet-panel";
+import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { useTranslation } from "@/features/core/i18n/client";
+import {
+  getPublicAccountDestination,
+  isPublicAccountPathActive,
+} from "@/features/public-catalog/lib/public-account-destination";
 import {
   getPublicTabIndex,
   PUBLIC_MOBILE_TABS,
@@ -44,14 +38,28 @@ const TAB_LABEL_KEYS = {
 export function PublicMobileTabBar() {
   const pathname = usePathname() ?? "/";
   const { t } = useTranslation();
+  const { isAuthenticated, session } = useAuth();
   const activeIndex = getPublicTabIndex(pathname);
+
+  const accountDestination = isAuthenticated
+    ? getPublicAccountDestination(session.user)
+    : null;
+  const AccountIcon =
+    accountDestination?.href === "/dashboard" ? LayoutDashboardIcon : UserIcon;
 
   return (
     <nav
       aria-label={String(t("landing.mobileTabBarLabel"))}
       className={mobileTabBarShellClassName}
     >
-      <div className="mx-auto grid h-[3.75rem] max-w-lg grid-cols-4">
+      <div
+        className={cn(
+          "mx-auto h-[3.75rem]",
+          isAuthenticated
+            ? "grid max-w-lg grid-cols-4"
+            : "grid max-w-[calc(3/4*32rem)] grid-cols-3",
+        )}
+      >
         {PUBLIC_MOBILE_TABS.map((tab, index) => {
           const Icon = TAB_ICONS[tab.key];
           const active = activeIndex === index;
@@ -73,41 +81,22 @@ export function PublicMobileTabBar() {
             </Link>
           );
         })}
-        <Sheet>
-          <SheetTrigger
-            render={
-              <button
-                type="button"
-                className={cn(
-                  "flex min-h-14 w-full flex-col items-center justify-center gap-0.5 px-1 py-2 text-[0.625rem] font-medium text-muted-foreground transition-colors",
-                  "hover:text-foreground active:bg-muted/60",
-                )}
-              >
-                <MenuIcon className="size-[1.35rem] shrink-0" aria-hidden />
-                <span className="line-clamp-2 text-center leading-tight">
-                  {String(t("landing.tabMore"))}
-                </span>
-              </button>
-            }
-          />
-          <SheetContent className="gap-0" side="bottom" showCloseButton>
-            <SheetHeader className="border-b border-border pb-4 text-start">
-              <SheetTitle>{String(t("landing.tabMore"))}</SheetTitle>
-              <SheetDescription>
-                {String(t("landing.moreSheetDescription"))}
-              </SheetDescription>
-            </SheetHeader>
-            <ScrollArea className="max-h-[min(75dvh,32rem)] p-4 pb-6">
-              <AuthManagerSheetPanel />
-              <SheetClose
-                className="mt-4"
-                render={<Button className="w-full" variant="outline" />}
-              >
-                {String(t("common.close"))}
-              </SheetClose>
-            </ScrollArea>
-          </SheetContent>
-        </Sheet>
+        {accountDestination && (
+          <Link
+            className={cn(
+              "flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[0.625rem] font-medium transition-colors",
+              isPublicAccountPathActive(pathname, accountDestination.href)
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground active:bg-muted/60",
+            )}
+            href={accountDestination.href}
+          >
+            <AccountIcon className="size-[1.35rem] shrink-0" aria-hidden />
+            <span className="line-clamp-2 text-center leading-tight">
+              {String(t(accountDestination.labelKey))}
+            </span>
+          </Link>
+        )}
       </div>
     </nav>
   );

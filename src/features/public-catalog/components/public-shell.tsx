@@ -6,7 +6,6 @@ import { getT } from "@/features/core/i18n/server";
 
 import { PublicDesktopNav } from "./public-desktop-nav";
 import { PublicMobileTabBar } from "./public-mobile-tab-bar";
-import { PublicSignedInLink } from "./public-signed-in-link";
 
 export async function PublicShell({ children }: { children: React.ReactNode }) {
   const { t } = await getT();
@@ -28,8 +27,7 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
             </Muted>
           </Link>
           <PublicDesktopNav className="flex-1 justify-center" />
-          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-            <PublicSignedInLink />
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2 ms-auto">
             <AuthManagerHeaderTrigger className="shrink-0" />
           </div>
         </div>

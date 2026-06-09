@@ -60,9 +60,6 @@ export function AppShellLayout({
     : "";
 
   return (
-    // h-svh + overflow-hidden pins the wrapper to a single viewport so the
-    // body never scrolls. All vertical scrolling happens inside the inset's
-    // ScrollArea below.
     <SidebarProvider
       defaultOpen={defaultSidebarOpen}
       className="h-svh overflow-hidden"
@@ -94,7 +91,7 @@ export function AppShellLayout({
               ) : null}
             </ol>
           </nav>
-          <AuthManagerHeaderTrigger className="ms-1 shrink-0 md:hidden" />
+          <AuthManagerHeaderTrigger className="ms-1 shrink-0" />
         </header>
         <ScrollArea className="min-h-0 flex-1">
           <div className="p-3 sm:p-4 md:p-6">{children}</div>

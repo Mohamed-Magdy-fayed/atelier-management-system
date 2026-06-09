@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  LayoutDashboardIcon,
   ListTreeIcon,
   LockKeyhole,
   LogOut,
@@ -9,10 +8,8 @@ import {
   ShieldBanIcon,
   UserIcon,
 } from "lucide-react";
-import Link from "next/link";
 import type { ReactElement } from "react";
 
-import { ButtonGroup } from "@/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,11 +19,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Status, StatusIndicator } from "@/components/ui/status";
-import { ThemeToggle } from "@/features/core/color-theme/client";
-import { LanguageToggle, useTranslation } from "@/features/core/i18n/client";
+import { useTranslation } from "@/features/core/i18n/client";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-import type { PublicAccountLabelKey } from "@/features/public-catalog/lib/public-account-destination";
 
 import type { AuthManagerDialog } from "./types";
 
@@ -34,7 +28,6 @@ type AuthManagerDropdownProps = {
   hasEmail: boolean;
   hasPassword: boolean;
   isEmailVerified: boolean;
-  accountPage: { href: string; labelKey: PublicAccountLabelKey };
   onOpenDialog: (dialog: AuthManagerDialog) => void;
   onSignOut: () => void;
   trigger: ReactElement;
@@ -44,15 +37,12 @@ export function AuthManagerDropdown({
   hasEmail,
   hasPassword,
   isEmailVerified,
-  accountPage,
   onOpenDialog,
   onSignOut,
   trigger,
 }: AuthManagerDropdownProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
-  const AccountIcon =
-    accountPage.href === "/dashboard" ? LayoutDashboardIcon : UserIcon;
 
   return (
     <DropdownMenu>
@@ -64,10 +54,6 @@ export function AuthManagerDropdown({
         sideOffset={4}
       >
         <DropdownMenuGroup>
-          <DropdownMenuItem render={<Link href={accountPage.href} />}>
-            <AccountIcon />
-            {String(t(accountPage.labelKey))}
-          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => onOpenDialog("profile")}>
             <UserIcon />
             {t("authTranslations.profile.title")}
@@ -99,13 +85,6 @@ export function AuthManagerDropdown({
             <LockKeyhole />
             {t("authTranslations.passkeys.manage")}
           </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <ButtonGroup className="w-full *:flex-1">
-            <ThemeToggle />
-            <LanguageToggle />
-          </ButtonGroup>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onSignOut} variant="destructive">

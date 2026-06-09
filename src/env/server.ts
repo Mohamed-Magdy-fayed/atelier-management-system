@@ -30,6 +30,11 @@ export const env = createEnv({
     SMTP_FROM_EMAIL: z.email().optional(),
     SMTP_FROM_NAME: z.string().min(1).optional(),
 
+    FIREBASE_PROJECT_ID: z.string().min(1),
+    FIREBASE_CLIENT_EMAIL: z.string().min(1),
+    FIREBASE_PRIVATE_KEY: z.string().min(1),
+    FIREBASE_STORAGE_BUCKET: z.string().min(1),
+
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
