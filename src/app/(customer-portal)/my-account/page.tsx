@@ -1,6 +1,6 @@
 import { AlertCircleIcon, CalendarIcon, MapPinIcon } from "lucide-react";
 import Link from "next/link";
-
+import { DressViewDialog } from "@/components/dress-view-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -16,7 +16,6 @@ import { getAuth } from "@/features/core/auth/nextjs/actions";
 import { getLocaleCookie, getT } from "@/features/core/i18n/server";
 import { CustomerAccountActions } from "@/features/customer-portal/components/customer-account-actions";
 import { CustomerPhotoUpload } from "@/features/customer-portal/components/customer-photo-upload";
-import { DressPreviewSheet } from "@/features/customer-portal/components/dress-preview-sheet";
 import { DressQrShare } from "@/features/customer-portal/components/dress-qr-share";
 import { ReservationReceiptSheet } from "@/features/customer-portal/components/reservation-receipt-sheet";
 import { getCustomerPortalData } from "@/features/customer-portal/server/queries";
@@ -377,17 +376,21 @@ export default async function MyAccountPage() {
                       />
                     </CardContent>
                     <CardFooter className="flex flex-wrap gap-2 pt-0">
-                      <DressPreviewSheet
-                        colorLabel={t("publicCatalog.color")}
-                        dressCode={row.dressCode}
-                        dressColor={row.dressColor}
-                        dressDescription={row.dressDescription}
-                        dressImages={row.dressImages}
-                        dressSize={row.dressSize}
-                        dressTitle={row.dressTitle}
-                        noImageLabel={t("publicCatalog.noImage")}
-                        sizeLabel={t("publicCatalog.size")}
-                        triggerLabel={t("customerPortal.viewDress")}
+                      <DressViewDialog
+                        dressId={row.dressId}
+                        showAdminDetails={false}
+                        triggerLabel={String(t("customerPortal.viewDress"))}
+                        staticData={{
+                          title: row.dressTitle,
+                          code: row.dressCode,
+                          images: row.dressImages,
+                          size: row.dressSize,
+                          color: row.dressColor,
+                          description: row.dressDescription,
+                          pricePerDay: row.dressPricePerDay,
+                          depositAmount: row.dressDepositAmount,
+                          insurance: row.dressInsurance,
+                        }}
                       />
                       <ReservationReceiptSheet
                         branchAddress={branchAddress}

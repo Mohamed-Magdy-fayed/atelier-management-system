@@ -22,6 +22,9 @@ export type CustomerReservationRow = {
   dressSize: string | null;
   dressColor: string | null;
   dressDescription: string | null;
+  dressPricePerDay: number;
+  dressDepositAmount: number;
+  dressInsurance: number;
   branchNameEn: string;
   branchNameAr: string;
   branchPhone: string | null;
@@ -145,6 +148,9 @@ export async function getCustomerPortalData(userId: string) {
       dressSize: DressesTable.size,
       dressColor: DressesTable.color,
       dressDescription: DressesTable.description,
+      dressPricePerDay: DressesTable.pricePerDay,
+      dressDepositAmount: DressesTable.depositAmount,
+      dressInsurance: DressesTable.insurance,
       branchNameEn: BranchesTable.nameEn,
       branchNameAr: BranchesTable.nameAr,
       branchPhone: BranchesTable.phone,
