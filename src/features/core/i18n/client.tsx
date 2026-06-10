@@ -14,6 +14,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Swap, SwapOff, SwapOn } from "@/components/ui/swap";
 import { mainTranslations } from "@/features/core/i18n/global";
 import { setLocaleCookie } from "@/features/core/i18n/server";
+import { cn } from "@/lib/utils";
 import { createI18n, type LanguageMessages, LOCALE_COOKIE_NAME } from "./lib";
 
 const TranslationContext = createContext({
@@ -88,12 +89,15 @@ export function useTranslation<
   };
 }
 
-export function LanguageToggle() {
+export function LanguageToggle({ className }: { className?: string }) {
   const { locale, setLocale } = useTranslation();
 
   return (
     <Swap
-      className={buttonVariants({ variant: "ghost", size: "icon" })}
+      className={cn(
+        buttonVariants({ variant: "ghost", size: "icon" }),
+        className,
+      )}
       animation="flip"
       onSwappedChange={(val) => setLocale(val ? "en" : "ar")}
       swapped={locale === "en"}

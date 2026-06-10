@@ -11,6 +11,7 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { Swap, SwapOff, SwapOn } from "@/components/ui/swap";
 import { setThemeCookie, type Theme } from "@/features/core/color-theme/server";
+import { cn } from "@/lib/utils";
 
 type ThemeContextVal = { theme: Theme; setTheme: (data: Theme) => void };
 type Props = PropsWithChildren<{ theme: Theme }>;
@@ -38,12 +39,15 @@ export function useTheme() {
   return val;
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
 
   return (
     <Swap
-      className={buttonVariants({ variant: "ghost", size: "icon" })}
+      className={cn(
+        buttonVariants({ variant: "ghost", size: "icon" }),
+        className,
+      )}
       animation="rotate"
       onSwappedChange={(val) => setTheme(val ? "dark" : "light")}
       swapped={theme === "dark"}

@@ -19,9 +19,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Status, StatusIndicator } from "@/components/ui/status";
-import { useTranslation } from "@/features/core/i18n/client";
+import { ThemeToggle } from "@/features/core/color-theme/client";
+import { LanguageToggle, useTranslation } from "@/features/core/i18n/client";
 import { useIsMobile } from "@/hooks/use-mobile";
-
 import type { AuthManagerDialog } from "./types";
 
 type AuthManagerDropdownProps = {
@@ -85,6 +85,11 @@ export function AuthManagerDropdown({
             <LockKeyhole />
             {t("authTranslations.passkeys.manage")}
           </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup className="flex items-center gap-2 *:flex-1">
+          <ThemeToggle className="group/dropdown-menu-item focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground **:transition-none" />
+          <LanguageToggle className="group/dropdown-menu-item focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground **:transition-none" />
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onSignOut} variant="destructive">
