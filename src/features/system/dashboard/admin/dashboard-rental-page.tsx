@@ -8,10 +8,8 @@ import {
   CalendarCheck2,
   CalendarDays,
   CalendarPlus,
-  ChartSpline,
   CreditCard,
   PiggyBank,
-  Receipt,
   Shirt,
   TrendingDown,
   TrendingUp,
@@ -77,6 +75,45 @@ function formatPercentage(value: number) {
   return `${value > 0 ? "+" : value < 0 ? "-" : ""}${Math.abs(value).toFixed(1)}%`;
 }
 
+function DeltaBadge({
+  current,
+  previous,
+}: {
+  current: number;
+  previous: number;
+}) {
+  if (previous === 0 && current === 0) return null;
+  const pct =
+    previous > 0
+      ? ((current - previous) / previous) * 100
+      : current > 0
+        ? 100
+        : null;
+  if (pct === null) return null;
+  const up = pct > 0;
+  const neutral = pct === 0;
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-0.5 text-xs font-medium",
+        neutral
+          ? "text-muted-foreground"
+          : up
+            ? "text-emerald-600"
+            : "text-destructive",
+      )}
+    >
+      {!neutral &&
+        (up ? (
+          <ArrowUpRight className="size-3" />
+        ) : (
+          <ArrowDownRight className="size-3" />
+        ))}
+      <span>{formatPercentage(pct)}</span>
+    </div>
+  );
+}
+
 export function DashboardRentalPage() {
   const { t, locale } = useTranslation();
   const trpc = useTRPC();
@@ -134,7 +171,7 @@ export function DashboardRentalPage() {
       },
       {
         id: "last90",
-        label: dr("rangeLast3Months"),
+        label: String(t("systemPages.dashboardRental.rangeLast3Months")),
         getRange: () => ({
           from: startOfDay(subDays(now, 89)),
           to: endOfDay(now),
@@ -167,6 +204,21 @@ export function DashboardRentalPage() {
   );
   const fmtMoney = (n: number) => formatCurrency(n, locale);
 
+  const expenseTypeLabels: Record<string, string> = {
+    drycleaning: String(t("systemPages.expenseTypeDrycleaning")),
+    tailoring: String(t("systemPages.expenseTypeTailoring")),
+    dressAcquisition: String(t("systemPages.expenseTypeDressAcquisition")),
+    salary: String(t("systemPages.expenseTypeSalary")),
+    custom: String(t("systemPages.expenseTypeCustom")),
+  };
+
+  const paymentMethodLabels: Record<string, string> = {
+    cash: String(t("systemPages.paymentMethodCash")),
+    instapay: String(t("systemPages.paymentMethodInstapay")),
+    visa: String(t("systemPages.paymentMethodVisa")),
+    mobileWallet: String(t("systemPages.paymentMethodMobileWallet")),
+  };
+
   if (error) {
     return (
       <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-6">
@@ -186,73 +238,82 @@ export function DashboardRentalPage() {
   const summary = data?.summary;
   const rangeStats = data?.rangeStats;
 
-  const summaryCards = summary
+  const primaryKpiCards = [
+    {
+      id: "range-revenue",
+      title: dr("rangeRevenue"),
+      value: rangeStats ? fmtMoney(rangeStats.totalRevenue) : "—",
+      icon: PiggyBank,
+      current: rangeStats?.totalRevenue ?? 0,
+      previous: rangeStats?.prevRevenue ?? 0,
+    },
+    {
+      id: "range-net-profit",
+      title: dr("rangeNetProfit"),
+      value: rangeStats ? fmtMoney(rangeStats.netProfit) : "—",
+      icon: TrendingUp,
+      current: rangeStats?.netProfit ?? 0,
+      previous: rangeStats
+        ? rangeStats.prevRevenue - rangeStats.prevExpenses
+        : 0,
+      highlight: (rangeStats?.netProfit ?? 0) < 0,
+    },
+    {
+      id: "range-expenses",
+      title: dr("rangeExpenses"),
+      value: rangeStats ? fmtMoney(rangeStats.totalExpenses) : "—",
+      icon: TrendingDown,
+      current: rangeStats?.totalExpenses ?? 0,
+      previous: rangeStats?.prevExpenses ?? 0,
+    },
+    {
+      id: "range-reservations",
+      title: dr("rangeReservations"),
+      value: rangeStats
+        ? numberFormatter.format(rangeStats.reservationsCount)
+        : "—",
+      icon: CalendarCheck2,
+      current: rangeStats?.reservationsCount ?? 0,
+      previous: rangeStats?.prevReservations ?? 0,
+    },
+  ];
+
+  const liveStats = summary
     ? [
         {
-          id: "total-revenue",
-          title: dr("summaryTotalRevenue"),
-          value: fmtMoney(summary.totalRevenue),
-          icon: PiggyBank,
-          supporting: dr("summaryTotalReservations", {
-            count: summary.totalReservations,
-          }),
+          label: dr("liveDressesAvailable"),
+          value: summary.dressesAvailable,
+          variant: "default" as const,
         },
         {
-          id: "monthly-revenue",
-          title: dr("summaryRevenueThisMonth"),
-          value: fmtMoney(summary.monthlyRevenue),
-          icon: Wallet,
-          change: summary.monthlyRevenueChange,
+          label: dr("liveDressesAtTailor"),
+          value: summary.dressesAtTailor,
+          variant: "outline" as const,
         },
         {
-          id: "weekly-reservations",
-          title: dr("summaryReservationsThisWeek"),
-          value: numberFormatter.format(summary.reservationsThisWeek),
-          icon: ChartSpline,
-          badge: `${dr("summaryReservationsToday")}: ${summary.reservationsToday}`,
+          label: dr("liveDressesAtDryCleaner"),
+          value: summary.dressesAtDryCleaner,
+          variant: "outline" as const,
         },
         {
-          id: "active-reservations",
-          title: dr("summaryActiveReservations"),
-          value: numberFormatter.format(summary.activeReservations),
-          icon: CalendarCheck2,
-          badge: dr("summaryUpcomingPickups", {
-            count: summary.upcomingPickups,
-          }),
+          label: dr("liveDressesUnderRepair"),
+          value: summary.dressesUnderRepair,
+          destructive: summary.dressesUnderRepair > 0,
         },
         {
-          id: "customers",
-          title: dr("summaryCustomers"),
-          value: numberFormatter.format(summary.customerCount),
-          icon: Users2,
-          badge: dr("summaryActiveCustomers", {
-            count: summary.activeCustomers,
-          }),
+          label: dr("liveActiveReservations"),
+          value: summary.activeReservations,
+          variant: "secondary" as const,
         },
         {
-          id: "outstanding",
-          title: dr("summaryUpcomingBalanceDue"),
-          value: fmtMoney(summary.upcomingBalanceDue),
-          icon: AlertTriangle,
-          badge: dr("summaryOverdueReturns", {
-            count: summary.overdueReturns,
-          }),
-          highlight: summary.upcomingBalanceDue > 0,
-          destructiveBadge: summary.overdueReturns > 0,
+          label: dr("liveOverdueReturns"),
+          value: summary.overdueReturns,
+          destructive: summary.overdueReturns > 0,
         },
         {
-          id: "monthly-expenses",
-          title: dr("summaryMonthlyExpenses"),
-          value: fmtMoney(summary.monthlyExpenses),
-          icon: TrendingDown,
-          change: summary.monthlyExpensesChange,
-        },
-        {
-          id: "net-profit",
-          title: dr("summaryNetProfit"),
-          value: fmtMoney(summary.monthlyNetProfit),
-          icon: TrendingUp,
-          highlight: summary.monthlyNetProfit < 0,
+          label: dr("liveUpcomingPickups"),
+          value: summary.upcomingPickups,
+          variant: "secondary" as const,
         },
       ]
     : [];
@@ -309,266 +370,228 @@ export function DashboardRentalPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-6">
-      <div className="space-y-1">
-        <H2>{String(t("systemPages.dashboardTitle"))}</H2>
-        <Muted>{String(t("systemPages.dashboardLead"))}</Muted>
+      {/* Page header — title + date range picker */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <H2>{String(t("systemPages.dashboardTitle"))}</H2>
+          <Muted>{String(t("systemPages.dashboardLead"))}</Muted>
+        </div>
+        <SelectDateField
+          className="w-full shrink-0 sm:w-auto sm:min-w-[220px]"
+          mode="range"
+          numberOfMonths={1}
+          rangePresets={rangePresets}
+          title={dr("rangeDateRange")}
+          value={draftRange}
+          setValue={(value) => {
+            if (!value || Array.isArray(value) || value instanceof Date) {
+              return;
+            }
+            setDraftRange(value);
+            syncSearchParams(value);
+          }}
+        />
       </div>
 
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base font-semibold">
-            {dr("quickActionsTitle")}
-          </CardTitle>
-          <CardDescription>{dr("quickActionsDescription")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-flow-row gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
-            {isPending && quickActions.length === 0
-              ? Array.from({ length: 5 }).map((_, idx) => (
-                  <div
-                    key={idx}
-                    className="h-10 animate-pulse rounded-md border bg-muted"
-                  />
-                ))
-              : quickActions.map((action) => (
-                  <LinkButton
-                    key={action.id}
-                    href={action.href}
-                    variant="outline"
-                    className="flex h-auto min-h-10 flex-1 items-center justify-between gap-3 py-2"
-                  >
-                    <div className="flex items-center gap-3">
-                      <action.icon className="size-4 text-primary" />
-                      <span className="text-sm font-semibold leading-none">
-                        {action.title}
-                      </span>
+      {/* Primary KPIs — all date-range driven */}
+      <section className="space-y-3">
+        <div className="space-y-0.5">
+          <p className="text-sm font-semibold">{dr("primaryKpisTitle")}</p>
+          <Muted className="text-xs">{dr("primaryKpisDescription")}</Muted>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {isPending && !rangeStats
+            ? (["r1", "r2", "r3", "r4"] as const).map((k) => (
+                <Card key={k} className="animate-pulse">
+                  <CardHeader className="pb-2">
+                    <div className="h-3 w-24 rounded bg-muted" />
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="h-7 w-28 rounded bg-muted" />
+                  </CardContent>
+                </Card>
+              ))
+            : primaryKpiCards.map((card) => (
+                <Card
+                  key={card.id}
+                  className={cn(
+                    "transition hover:shadow-md",
+                    card.highlight && "border-destructive/40 bg-destructive/5",
+                  )}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        {card.title}
+                      </CardTitle>
+                      <card.icon className="size-4 shrink-0 text-muted-foreground" />
                     </div>
-                    <Badge variant="secondary">{action.badge}</Badge>
-                  </LinkButton>
-                ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-        {isPending && summaryCards.length === 0
-          ? Array.from({ length: 6 }).map((_, idx) => (
-              <Card key={idx} className="animate-pulse">
-                <CardHeader className="pb-2">
-                  <div className="h-3 w-24 rounded bg-muted" />
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="h-6 w-28 rounded bg-muted" />
-                </CardContent>
-              </Card>
-            ))
-          : summaryCards.map((card) => (
-              <Card
-                key={card.id}
-                className={cn(
-                  "relative overflow-hidden transition hover:shadow-md",
-                  card.highlight && "border-destructive/40 bg-destructive/5",
-                )}
-              >
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      {card.title}
-                    </CardTitle>
-                    <card.icon className="size-4 shrink-0 text-muted-foreground" />
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="text-2xl font-semibold tracking-tight">
-                    {card.value}
-                  </div>
-                  {card.change != null && (
-                    <div className="flex items-center gap-1 text-xs font-medium">
-                      {card.change > 0 && (
-                        <ArrowUpRight className="size-3 text-emerald-500" />
-                      )}
-                      {card.change < 0 && (
-                        <ArrowDownRight className="size-3 text-destructive" />
-                      )}
-                      <span
-                        className={cn(
-                          card.change > 0
-                            ? "text-emerald-600"
-                            : card.change < 0
-                              ? "text-destructive"
-                              : "text-muted-foreground",
-                        )}
-                      >
-                        {formatPercentage(card.change)}
-                      </span>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="text-2xl font-semibold tracking-tight">
+                      {card.value}
                     </div>
-                  )}
-                  {card.supporting && (
-                    <CardDescription>{card.supporting}</CardDescription>
-                  )}
-                  {card.badge && (
-                    <Badge
-                      variant={
-                        card.destructiveBadge ? "destructive" : "secondary"
-                      }
-                    >
-                      {card.badge}
-                    </Badge>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-      </div>
+                    <DeltaBadge
+                      current={card.current}
+                      previous={card.previous}
+                    />
+                    <Muted className="text-xs">{dr("rangeVsPrevPeriod")}</Muted>
+                  </CardContent>
+                </Card>
+              ))}
+        </div>
+      </section>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="h-full lg:col-span-2">
-          <CardHeader className="flex flex-col gap-4 border-b py-5 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
-            <div className="space-y-1">
-              <CardTitle className="text-base font-semibold">
-                {dr("rangeTitle")}
+      {/* Secondary KPIs */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {/* New customers */}
+        <Card className="transition hover:shadow-md">
+          <CardHeader className="pb-2">
+            <div className="flex items-start justify-between gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {dr("rangeNewCustomers")}
               </CardTitle>
-              <CardDescription>{dr("rangeDescription")}</CardDescription>
+              <UserPlus2 className="size-4 shrink-0 text-muted-foreground" />
             </div>
-            <SelectDateField
-              className="w-min shrink-0"
-              mode="range"
-              numberOfMonths={1}
-              rangePresets={rangePresets}
-              title={dr("rangeDateRange")}
-              value={draftRange}
-              setValue={(value) => {
-                if (!value || Array.isArray(value) || value instanceof Date) {
-                  return;
-                }
-                setDraftRange(value);
-                syncSearchParams(value);
-              }}
-            />
           </CardHeader>
-          <CardContent className="space-y-4 pt-6">
-            <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-5">
-              <div className="rounded-xl border bg-muted/40 p-4">
-                <Receipt className="mb-2 size-4 text-muted-foreground" />
-                <div className="text-sm text-muted-foreground">
-                  {dr("rangeRevenue")}
-                </div>
-                <div className="text-2xl font-semibold">
-                  {rangeStats
-                    ? fmtMoney(rangeStats.totalRevenue)
-                    : isPending
-                      ? "—"
-                      : fmtMoney(0)}
-                </div>
-              </div>
-              <div className="rounded-xl border bg-muted/40 p-4">
-                <TrendingDown className="mb-2 size-4 text-muted-foreground" />
-                <div className="text-sm text-muted-foreground">
-                  {dr("rangeExpenses")}
-                </div>
-                <div className="text-2xl font-semibold">
-                  {rangeStats
-                    ? fmtMoney(rangeStats.totalExpenses)
-                    : isPending
-                      ? "—"
-                      : fmtMoney(0)}
-                </div>
-              </div>
-              <div
-                className={cn(
-                  "rounded-xl border p-4",
-                  rangeStats && rangeStats.netProfit < 0
-                    ? "bg-destructive/5 border-destructive/30"
-                    : "bg-muted/40",
-                )}
-              >
-                <TrendingUp className="mb-2 size-4 text-muted-foreground" />
-                <div className="text-sm text-muted-foreground">
-                  {dr("rangeNetProfit")}
-                </div>
-                <div className="text-2xl font-semibold">
-                  {rangeStats
-                    ? fmtMoney(rangeStats.netProfit)
-                    : isPending
-                      ? "—"
-                      : fmtMoney(0)}
-                </div>
-              </div>
-              <div className="rounded-xl border bg-muted/40 p-4">
-                <CalendarCheck2 className="mb-2 size-4 text-muted-foreground" />
-                <div className="text-sm text-muted-foreground">
-                  {dr("rangeReservations")}
-                </div>
-                <div className="text-2xl font-semibold">
-                  {rangeStats
-                    ? numberFormatter.format(rangeStats.reservationsCount)
-                    : "—"}
-                </div>
-              </div>
-              <div className="rounded-xl border bg-muted/40 p-4">
-                <Users2 className="mb-2 size-4 text-muted-foreground" />
-                <div className="text-sm text-muted-foreground">
-                  {dr("rangeNewCustomers")}
-                </div>
-                <div className="text-2xl font-semibold">
-                  {rangeStats
-                    ? numberFormatter.format(rangeStats.newCustomers)
-                    : "—"}
-                </div>
-                <Muted className="mt-2 block text-xs">
-                  {rangeStats?.averageReservationValue != null
-                    ? dr("rangeAvgReservation", {
-                        value: fmtMoney(rangeStats.averageReservationValue),
-                      })
-                    : dr("rangeNotEnoughData")}
-                </Muted>
-              </div>
+          <CardContent className="space-y-2">
+            <div className="text-2xl font-semibold tracking-tight">
+              {rangeStats
+                ? numberFormatter.format(rangeStats.newCustomers)
+                : isPending
+                  ? "—"
+                  : "0"}
+            </div>
+            {rangeStats && (
+              <DeltaBadge
+                current={rangeStats.newCustomers}
+                previous={rangeStats.prevNewCustomers}
+              />
+            )}
+            <Muted className="text-xs">{dr("rangeVsPrevPeriod")}</Muted>
+          </CardContent>
+        </Card>
+
+        {/* Avg order value */}
+        <Card className="transition hover:shadow-md">
+          <CardHeader className="pb-2">
+            <div className="flex items-start justify-between gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {dr("rangeAvgOrder")}
+              </CardTitle>
+              <Wallet className="size-4 shrink-0 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="text-2xl font-semibold tracking-tight">
+              {rangeStats?.averageReservationValue != null
+                ? fmtMoney(rangeStats.averageReservationValue)
+                : isPending
+                  ? "—"
+                  : dr("rangeNotEnoughData")}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="h-full">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">
-              {dr("topDressesTitle")}
+        {/* Cancellation rate */}
+        <Card className="transition hover:shadow-md">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {dr("rangeCancellationRate")}
             </CardTitle>
-            <CardDescription>{dr("topDressesDescription")}</CardDescription>
           </CardHeader>
-          <CardContent>
-            {data?.topDresses && data.topDresses.length > 0 ? (
-              <div className="space-y-3">
-                {data.topDresses.map((dress) => (
-                  <div
-                    key={dress.id}
-                    className="flex items-center justify-between gap-2 rounded-lg border p-3"
-                  >
-                    <div>
-                      <div className="font-medium text-sm">{dress.title}</div>
-                      <Muted className="text-xs">
-                        {dr("topDressesCode")}: {dress.code}
-                      </Muted>
-                    </div>
-                    <div className="text-end text-sm">
-                      <div>{fmtMoney(dress.revenue)}</div>
-                      <Muted className="text-xs">
-                        {dr("topDressesRentals")}: {dress.rentals}
-                      </Muted>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <Muted className="rounded-lg border border-dashed p-6 text-sm">
-                {isPending
-                  ? String(t("common.loading"))
-                  : dr("topDressesEmpty")}
-              </Muted>
+          <CardContent className="space-y-2">
+            <div className="text-2xl font-semibold tracking-tight">
+              {rangeStats?.cancellationRate != null
+                ? `${rangeStats.cancellationRate.toFixed(1)}%`
+                : isPending
+                  ? "—"
+                  : "0%"}
+            </div>
+            {(rangeStats?.cancellations ?? 0) > 0 && (
+              <Badge variant="secondary">
+                {dr("rangeCancellations", {
+                  count: rangeStats?.cancellations ?? 0,
+                })}
+              </Badge>
             )}
           </CardContent>
         </Card>
+
+        {/* Outstanding balance — live metric */}
+        <Card
+          className={cn(
+            "transition hover:shadow-md",
+            (data?.totalOutstanding ?? 0) > 0 &&
+              "border-destructive/40 bg-destructive/5",
+          )}
+        >
+          <CardHeader className="pb-2">
+            <div className="flex items-start justify-between gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {dr("rangeOutstandingBalance")}
+              </CardTitle>
+              <AlertTriangle className="size-4 shrink-0 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div
+              className={cn(
+                "text-2xl font-semibold tracking-tight",
+                (data?.totalOutstanding ?? 0) > 0 && "text-destructive",
+              )}
+            >
+              {data ? fmtMoney(data.totalOutstanding) : "—"}
+            </div>
+            <Badge variant="outline">{dr("liveLabel")}</Badge>
+          </CardContent>
+        </Card>
       </div>
 
+      {/* Live operational status */}
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-block size-2 animate-pulse rounded-full bg-emerald-500" />
+          <p className="text-sm font-semibold">{dr("liveOperationalTitle")}</p>
+          <Muted className="text-xs">{dr("liveOperationalDescription")}</Muted>
+        </div>
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
+          {isPending && liveStats.length === 0
+            ? (["l1", "l2", "l3", "l4", "l5", "l6", "l7"] as const).map((k) => (
+                <Card key={k} className="animate-pulse">
+                  <CardContent className="pt-4">
+                    <div className="h-6 w-10 rounded bg-muted" />
+                    <div className="mt-2 h-3 w-16 rounded bg-muted" />
+                  </CardContent>
+                </Card>
+              ))
+            : liveStats.map((stat) => (
+                <Card
+                  key={stat.label}
+                  className={cn(
+                    stat.destructive &&
+                      "border-destructive/40 bg-destructive/5",
+                  )}
+                >
+                  <CardContent className="pt-4">
+                    <div
+                      className={cn(
+                        "text-xl font-bold",
+                        stat.destructive && "text-destructive",
+                      )}
+                    >
+                      {numberFormatter.format(stat.value)}
+                    </div>
+                    <Muted className="mt-1 block text-xs">{stat.label}</Muted>
+                  </CardContent>
+                </Card>
+              ))}
+        </div>
+      </section>
+
+      {/* Upcoming reservations + Outstanding payments */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="h-full overflow-x-auto">
+        <Card className="overflow-x-auto">
           <CardHeader className="pb-4">
             <CardTitle className="text-base font-semibold">
               {dr("upcomingTitle")}
@@ -633,7 +656,7 @@ export function DashboardRentalPage() {
           </CardContent>
         </Card>
 
-        <Card className="h-full overflow-x-auto">
+        <Card className="overflow-x-auto">
           <CardHeader className="pb-4">
             <CardTitle className="text-base font-semibold">
               {dr("outstandingTitle")}
@@ -700,6 +723,195 @@ export function DashboardRentalPage() {
         </Card>
       </div>
 
+      {/* Top dresses (range) + Upcoming occasions */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">
+              {dr("topDressesRangeTitle")}
+            </CardTitle>
+            <CardDescription>
+              {dr("topDressesRangeDescription")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {data?.topDresses && data.topDresses.length > 0 ? (
+              <div className="space-y-3">
+                {data.topDresses.map((dress) => (
+                  <div
+                    key={dress.id}
+                    className="flex items-center justify-between gap-2 rounded-lg border p-3"
+                  >
+                    <div>
+                      <div className="text-sm font-medium">{dress.title}</div>
+                      <Muted className="text-xs">
+                        {dr("topDressesCode")}: {dress.code}
+                      </Muted>
+                    </div>
+                    <div className="text-end text-sm">
+                      <div>{fmtMoney(dress.revenue)}</div>
+                      <Muted className="text-xs">
+                        {dr("topDressesRentals")}: {dress.rentals}
+                      </Muted>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Muted className="rounded-lg border border-dashed p-6 text-sm">
+                {isPending
+                  ? String(t("common.loading"))
+                  : dr("topDressesEmpty")}
+              </Muted>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-x-auto">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="size-4 text-muted-foreground" />
+              <CardTitle className="text-base font-semibold">
+                {dr("upcomingOccasionsTitle")}
+              </CardTitle>
+            </div>
+            <CardDescription>
+              {dr("upcomingOccasionsDescription")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {data?.upcomingOccasions && data.upcomingOccasions.length > 0 ? (
+              <div className="overflow-hidden rounded-md border">
+                <Table className="text-xs">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="px-2">
+                        {String(t("systemPages.reservationsCode"))}
+                      </TableHead>
+                      <TableHead className="px-2">
+                        {String(t("systemPages.reservationsDress"))}
+                      </TableHead>
+                      <TableHead className="px-2">
+                        {String(t("systemPages.reservationsCustomerName"))}
+                      </TableHead>
+                      <TableHead className="px-2">
+                        {dr("occasionDate")}
+                      </TableHead>
+                      <TableHead className="px-2">
+                        {String(t("systemPages.reservationsStatus"))}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.upcomingOccasions.map((occasion) => (
+                      <TableRow key={occasion.id}>
+                        <TableCell className="font-medium">
+                          {occasion.reservationCode}
+                        </TableCell>
+                        <TableCell>{occasion.dressTitle}</TableCell>
+                        <TableCell>{occasion.customerName}</TableCell>
+                        <TableCell>
+                          {formatDate(
+                            occasion.occasionDate,
+                            { month: "short", day: "numeric" },
+                            locale,
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{occasion.status}</Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <Muted className="rounded-lg border border-dashed p-6 text-sm">
+                {isPending
+                  ? String(t("common.loading"))
+                  : dr("upcomingOccasionsEmpty")}
+              </Muted>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Expense breakdown + Payment method breakdown */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">
+              {dr("expenseBreakdownTitle")}
+            </CardTitle>
+            <CardDescription>
+              {dr("expenseBreakdownDescription")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {rangeStats?.expensesByType &&
+            rangeStats.expensesByType.length > 0 ? (
+              <div className="space-y-2">
+                {rangeStats.expensesByType.map((item) => (
+                  <div
+                    key={item.type}
+                    className="flex items-center justify-between gap-2 rounded-lg border p-2.5 text-sm"
+                  >
+                    <Badge variant="outline">
+                      {expenseTypeLabels[item.type] ?? item.type}
+                    </Badge>
+                    <span className="font-semibold">
+                      {fmtMoney(item.amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Muted className="rounded-lg border border-dashed p-6 text-sm">
+                {isPending
+                  ? String(t("common.loading"))
+                  : dr("expenseBreakdownEmpty")}
+              </Muted>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">
+              {dr("paymentMethodTitle")}
+            </CardTitle>
+            <CardDescription>{dr("paymentMethodDescription")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {rangeStats?.paymentsByMethod &&
+            rangeStats.paymentsByMethod.length > 0 ? (
+              <div className="space-y-2">
+                {rangeStats.paymentsByMethod.map((item) => (
+                  <div
+                    key={item.method}
+                    className="flex items-center justify-between gap-2 rounded-lg border p-2.5 text-sm"
+                  >
+                    <Badge variant="outline">
+                      {paymentMethodLabels[item.method] ?? item.method}
+                    </Badge>
+                    <span className="font-semibold">
+                      {fmtMoney(item.amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Muted className="rounded-lg border border-dashed p-6 text-sm">
+                {isPending
+                  ? String(t("common.loading"))
+                  : dr("paymentMethodEmpty")}
+              </Muted>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Returns due today + Top customers */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -709,35 +921,7 @@ export function DashboardRentalPage() {
             <CardDescription>{dr("dressReturnsDescription")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">
-                {dr("dressReturnsOutNow")}: {data?.dressesOutCount ?? 0}
-              </Badge>
-              {summary?.dressUtilizationRate != null && (
-                <Badge variant="outline">
-                  {dr("dressUtilization", {
-                    value: summary.dressUtilizationRate.toFixed(0),
-                  })}
-                </Badge>
-              )}
-              {(summary?.dressesAtTailor ?? 0) > 0 && (
-                <Badge variant="outline">
-                  {dr("dressStatusAtTailor")}: {summary?.dressesAtTailor}
-                </Badge>
-              )}
-              {(summary?.dressesAtDryCleaner ?? 0) > 0 && (
-                <Badge variant="outline">
-                  {dr("dressStatusAtDryCleaner")}:{" "}
-                  {summary?.dressesAtDryCleaner}
-                </Badge>
-              )}
-              {(summary?.dressesUnderRepair ?? 0) > 0 && (
-                <Badge variant="destructive">
-                  {dr("dressStatusUnderRepair")}: {summary?.dressesUnderRepair}
-                </Badge>
-              )}
-            </div>
-            <div className="font-medium text-sm">
+            <div className="text-sm font-medium">
               {dr("dressReturnsDueToday")}
             </div>
             {data?.dueTodayReservations &&
@@ -819,69 +1003,40 @@ export function DashboardRentalPage() {
         </Card>
       </div>
 
-      <Card className="overflow-x-auto">
+      {/* Quick actions — at the bottom */}
+      <Card>
         <CardHeader className="pb-4">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="size-4 text-muted-foreground" />
-            <CardTitle className="text-base font-semibold">
-              {dr("upcomingOccasionsTitle")}
-            </CardTitle>
-          </div>
-          <CardDescription>
-            {dr("upcomingOccasionsDescription")}
-          </CardDescription>
+          <CardTitle className="text-base font-semibold">
+            {dr("quickActionsTitle")}
+          </CardTitle>
+          <CardDescription>{dr("quickActionsDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
-          {data?.upcomingOccasions && data.upcomingOccasions.length > 0 ? (
-            <div className="overflow-hidden rounded-md border">
-              <Table className="text-xs">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="px-2">
-                      {String(t("systemPages.reservationsCode"))}
-                    </TableHead>
-                    <TableHead className="px-2">
-                      {String(t("systemPages.reservationsDress"))}
-                    </TableHead>
-                    <TableHead className="px-2">
-                      {String(t("systemPages.reservationsCustomerName"))}
-                    </TableHead>
-                    <TableHead className="px-2">{dr("occasionDate")}</TableHead>
-                    <TableHead className="px-2">
-                      {String(t("systemPages.reservationsStatus"))}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.upcomingOccasions.map((occasion) => (
-                    <TableRow key={occasion.id}>
-                      <TableCell className="font-medium">
-                        {occasion.reservationCode}
-                      </TableCell>
-                      <TableCell>{occasion.dressTitle}</TableCell>
-                      <TableCell>{occasion.customerName}</TableCell>
-                      <TableCell>
-                        {formatDate(
-                          occasion.occasionDate,
-                          { month: "short", day: "numeric" },
-                          locale,
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{occasion.status}</Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <Muted className="rounded-lg border border-dashed p-6 text-sm">
-              {isPending
-                ? String(t("common.loading"))
-                : dr("upcomingOccasionsEmpty")}
-            </Muted>
-          )}
+          <div className="grid grid-flow-row gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+            {isPending && quickActions.length === 0
+              ? (["q1", "q2", "q3", "q4", "q5"] as const).map((k) => (
+                  <div
+                    key={k}
+                    className="h-10 animate-pulse rounded-md border bg-muted"
+                  />
+                ))
+              : quickActions.map((action) => (
+                  <LinkButton
+                    key={action.id}
+                    href={action.href}
+                    variant="outline"
+                    className="flex h-auto min-h-10 flex-1 items-center justify-between gap-3 py-2"
+                  >
+                    <div className="flex items-center gap-3">
+                      <action.icon className="size-4 text-primary" />
+                      <span className="text-sm font-semibold leading-none">
+                        {action.title}
+                      </span>
+                    </div>
+                    <Badge variant="secondary">{action.badge}</Badge>
+                  </LinkButton>
+                ))}
+          </div>
         </CardContent>
       </Card>
     </div>

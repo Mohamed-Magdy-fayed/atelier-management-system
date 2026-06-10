@@ -37,6 +37,14 @@ export type DashboardRangeStats = {
   reservationsCount: number;
   newCustomers: number;
   averageReservationValue: number | null;
+  prevRevenue: number;
+  prevExpenses: number;
+  prevReservations: number;
+  prevNewCustomers: number;
+  cancellations: number;
+  cancellationRate: number | null;
+  expensesByType: Array<{ type: string; amount: number }>;
+  paymentsByMethod: Array<{ method: string; amount: number }>;
 };
 
 export type DashboardUpcomingReservation = {

@@ -60,6 +60,12 @@ export async function getDashboardData(
   const dates = buildDashboardDateContext();
   const { rangeStart, rangeEnd } = parseDashboardRange(input, dates);
 
+  const rangeDurationMs = rangeEnd.getTime() - rangeStart.getTime();
+  const prevRangeEnd = new Date(rangeStart.getTime() - 1);
+  const prevRangeStart = new Date(rangeStart.getTime() - rangeDurationMs);
+  const prevRangeStartDate = prevRangeStart.toISOString().slice(0, 10);
+  const prevRangeEndDate = prevRangeEnd.toISOString().slice(0, 10);
+
   const currentMonthStartIso = dates.currentMonthStart.toISOString();
   const currentMonthEndIso = dates.currentMonthEnd.toISOString();
   const previousMonthStartIso = dates.previousMonthStart.toISOString();
@@ -126,6 +132,12 @@ export async function getDashboardData(
     rangeExpensesRow,
     dressStatusRaw,
     upcomingOccasionsRaw,
+    prevRangeRevenueRow,
+    prevRangeExpensesRow,
+    prevReservationsCancelRow,
+    prevRangeNewCustRow,
+    rangeExpensesByTypeRaw,
+    rangePaymentsByMethodRaw,
   ] = await Promise.all([
     ctx.db
       .select({
@@ -301,6 +313,8 @@ export async function getDashboardData(
         and(
           eq(DressesTable.id, ReservationsTable.dressId),
           isNull(ReservationsTable.deletedAt),
+          not(eq(ReservationsTable.status, "cancelled")),
+          between(ReservationsTable.receivingDateTime, rangeStart, rangeEnd),
         ),
       )
       .where(branchId ? eq(DressesTable.branchId, branchId) : undefined)
@@ -435,6 +449,112 @@ export async function getDashboardData(
       with: { dress: true },
       limit: 6,
     }),
+
+    // Previous-period revenue
+    branchId
+      ? ctx.db
+          .select({ totalRevenue: sum(PaymentsTable.amount) })
+          .from(PaymentsTable)
+          .where(
+            and(
+              between(PaymentsTable.createdAt, prevRangeStart, prevRangeEnd),
+              eq(PaymentsTable.branchId, branchId),
+              not(eq(PaymentsTable.type, "insurance")),
+            ),
+          )
+      : ctx.db
+          .select({ totalRevenue: sum(PaymentsTable.amount) })
+          .from(PaymentsTable)
+          .where(
+            and(
+              between(PaymentsTable.createdAt, prevRangeStart, prevRangeEnd),
+              not(eq(PaymentsTable.type, "insurance")),
+            ),
+          ),
+
+    // Previous-period expenses
+    ctx.db
+      .select({ totalExpenses: sum(ExpensesTable.amount) })
+      .from(ExpensesTable)
+      .where(
+        and(
+          gte(ExpensesTable.date, prevRangeStartDate),
+          lte(ExpensesTable.date, prevRangeEndDate),
+          branchId ? eq(ExpensesTable.branchId, branchId) : undefined,
+        ),
+      ),
+
+    // Previous-period reservations + current-range cancellations (one round-trip)
+    ctx.db
+      .select({
+        prevReservations: sql<number>`COALESCE(SUM(CASE WHEN ${ReservationsTable.createdAt} >= ${prevRangeStart.toISOString()} AND ${ReservationsTable.createdAt} <= ${prevRangeEnd.toISOString()} AND ${ReservationsTable.status} <> 'cancelled' THEN 1 ELSE 0 END), 0)`,
+        cancellations: sql<number>`COALESCE(SUM(CASE WHEN ${ReservationsTable.createdAt} >= ${rangeStart.toISOString()} AND ${ReservationsTable.createdAt} <= ${rangeEnd.toISOString()} AND ${ReservationsTable.status} = 'cancelled' THEN 1 ELSE 0 END), 0)`,
+      })
+      .from(ReservationsTable)
+      .where(
+        and(
+          isNull(ReservationsTable.deletedAt),
+          branchId ? eq(ReservationsTable.branchId, branchId) : undefined,
+        ),
+      ),
+
+    // Previous-period new customers
+    branchId
+      ? ctx.db
+          .select({ newCustomers: count() })
+          .from(RentalCustomersTable)
+          .where(
+            and(
+              between(
+                RentalCustomersTable.createdAt,
+                prevRangeStart,
+                prevRangeEnd,
+              ),
+              eq(RentalCustomersTable.branchId, branchId),
+            ),
+          )
+      : ctx.db
+          .select({ newCustomers: count() })
+          .from(RentalCustomersTable)
+          .where(
+            between(
+              RentalCustomersTable.createdAt,
+              prevRangeStart,
+              prevRangeEnd,
+            ),
+          ),
+
+    // Expense breakdown by type for selected range
+    ctx.db
+      .select({
+        type: ExpensesTable.type,
+        amount: sql<number>`COALESCE(SUM(${ExpensesTable.amount}), 0)`,
+      })
+      .from(ExpensesTable)
+      .where(
+        and(
+          gte(ExpensesTable.date, rangeStartDate),
+          lte(ExpensesTable.date, rangeEndDate),
+          branchId ? eq(ExpensesTable.branchId, branchId) : undefined,
+        ),
+      )
+      .groupBy(ExpensesTable.type),
+
+    // Payment method breakdown for selected range
+    ctx.db
+      .select({
+        method: PaymentsTable.method,
+        amount: sql<number>`COALESCE(SUM(${PaymentsTable.amount}), 0)`,
+      })
+      .from(PaymentsTable)
+      .where(
+        and(
+          between(PaymentsTable.createdAt, rangeStart, rangeEnd),
+          not(eq(PaymentsTable.type, "insurance")),
+          branchId ? eq(PaymentsTable.branchId, branchId) : undefined,
+        ),
+      )
+      .groupBy(PaymentsTable.method),
   ]);
 
   const reservationStats = reservationsAggregateRow[0] ?? {};
@@ -493,6 +613,19 @@ export async function getDashboardData(
 
   const rangeTotalExpenses = Number(rangeExpensesRow[0]?.totalExpenses ?? 0);
   const rangeNetProfit = rangeTotalRevenue - rangeTotalExpenses;
+
+  const prevRevenue = Number(prevRangeRevenueRow[0]?.totalRevenue ?? 0);
+  const prevExpenses = Number(prevRangeExpensesRow[0]?.totalExpenses ?? 0);
+  const prevReservations = Number(
+    prevReservationsCancelRow[0]?.prevReservations ?? 0,
+  );
+  const prevNewCustomers = Number(prevRangeNewCustRow[0]?.newCustomers ?? 0);
+  const cancellations = Number(
+    prevReservationsCancelRow[0]?.cancellations ?? 0,
+  );
+  const totalForRate = rangeReservationsCount + cancellations;
+  const cancellationRate =
+    totalForRate > 0 ? (cancellations / totalForRate) * 100 : null;
 
   const dressStatusMap = Object.fromEntries(
     dressStatusRaw.map((row) => [row.currentStatus, Number(row.statusCount)]),
@@ -562,6 +695,20 @@ export async function getDashboardData(
       reservationsCount: rangeReservationsCount,
       newCustomers: rangeNewCustomers,
       averageReservationValue,
+      prevRevenue,
+      prevExpenses,
+      prevReservations,
+      prevNewCustomers,
+      cancellations,
+      cancellationRate,
+      expensesByType: rangeExpensesByTypeRaw.map((r) => ({
+        type: r.type,
+        amount: Number(r.amount),
+      })),
+      paymentsByMethod: rangePaymentsByMethodRaw.map((r) => ({
+        method: r.method,
+        amount: Number(r.amount),
+      })),
     },
     topDresses: topDressesRaw.map((row) => ({
       id: String(row.id),
