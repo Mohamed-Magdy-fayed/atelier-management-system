@@ -2,8 +2,8 @@ import { LinkButton } from "@/components/general/link-button";
 import { Lead, Muted } from "@/components/ui/typography";
 import { getLocaleCookie, getT } from "@/features/core/i18n/server";
 import { PublicCatalogFilters } from "@/features/public-catalog/components/public-catalog-filters";
-import { normalizePublicDressSort } from "@/features/public-catalog/lib/public-dress-sort";
 import { PublicDressCard } from "@/features/public-catalog/components/public-dress-card";
+import { normalizePublicDressSort } from "@/features/public-catalog/lib/public-dress-sort";
 import {
   getPublicCatalogHidePrices,
   listPublicBranches,

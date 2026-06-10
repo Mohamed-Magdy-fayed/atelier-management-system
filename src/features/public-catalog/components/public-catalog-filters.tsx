@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -17,7 +18,6 @@ import {
   normalizePublicDressSort,
   type PublicDressSort,
 } from "@/features/public-catalog/lib/public-dress-sort";
-
 import type { PublicBranchOption } from "./public-branch-select";
 
 const DEFAULT_SORT: PublicDressSort = "popularity";
@@ -115,8 +115,7 @@ export function PublicCatalogFilters({
         <label className="sr-only" htmlFor="pub-search">
           {labels.searchPlaceholder}
         </label>
-        <input
-          className="border-border bg-background h-10 rounded-md border px-3 text-sm outline-none ring-ring/40 focus-visible:ring-2"
+        <Input
           id="pub-search"
           onChange={(e) => setQuery(e.target.value)}
           placeholder={labels.searchPlaceholder}
