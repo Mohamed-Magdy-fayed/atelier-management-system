@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
 import { useTranslation } from "@/features/core/i18n/client";
 import {
@@ -21,5 +22,13 @@ export function PublicSignedInLink({ className }: { className?: string }) {
   const { href, labelKey } = getPublicAccountDestination(session.user);
   const active = isPublicAccountPathActive(pathname, href);
 
-  return <Link href={href}>{t(labelKey)}</Link>;
+  return (
+    <Button
+      className={cn(className)}
+      render={<Link href={href} />}
+      variant={active ? "secondary" : "default"}
+    >
+      {t(labelKey)}
+    </Button>
+  );
 }
