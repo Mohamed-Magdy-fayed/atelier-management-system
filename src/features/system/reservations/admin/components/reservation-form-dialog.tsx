@@ -32,6 +32,7 @@ import { reservationStatuses } from "@/drizzle/schemas/system/reservations-table
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { translationKey } from "@/features/core/i18n/global";
 import { useTranslation } from "@/features/core/i18n/client";
+import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { DressPickerField } from "@/features/system/dresses/admin/components/dress-picker-field";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ReservationGridRow } from "@/integrations/trpc/routers/reservations";
@@ -188,6 +189,7 @@ export function ReservationFormDialog({
   const { t, locale } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const invalidateDashboard = useInvalidateDashboard();
   const branchState = useBranch();
   const isEdit = reservation != null;
   const [createStep, setCreateStep] = useState(1);
@@ -337,6 +339,7 @@ export function ReservationFormDialog({
         await queryClient.invalidateQueries({
           queryKey: trpc.reservations.pathKey(),
         });
+        await invalidateDashboard();
         onOpenChange(false);
       } catch {
         // toast handles
@@ -384,6 +387,7 @@ export function ReservationFormDialog({
         await queryClient.invalidateQueries({
           queryKey: trpc.reservations.pathKey(),
         });
+        await invalidateDashboard();
         onOpenChange(false);
       } catch {
         // toast handles

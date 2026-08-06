@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/features/core/i18n/client";
+import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ExpenseGridRow } from "@/integrations/trpc/routers/expenses";
 
@@ -32,6 +33,7 @@ export function ExpenseDeleteDialog({
   const { t } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const invalidateDashboard = useInvalidateDashboard();
   const deleteMut = useMutation(trpc.expenses.delete.mutationOptions());
 
   if (!expense) return null;
@@ -47,6 +49,7 @@ export function ExpenseDeleteDialog({
         })
         .unwrap();
       await queryClient.invalidateQueries({ queryKey: trpc.expenses.pathKey() });
+      await invalidateDashboard();
       onOpenChange(false);
     } catch {
       // toast surfaced error

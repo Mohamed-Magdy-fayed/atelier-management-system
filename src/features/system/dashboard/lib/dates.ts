@@ -89,6 +89,21 @@ export function buildDashboardDateContext(
   };
 }
 
+/**
+ * `YYYY-MM-DD` in the server's local calendar.
+ *
+ * `toISOString().slice(0, 10)` renders the UTC calendar day, which rolls the
+ * date back by one on any server east of UTC (Cairo is UTC+2/+3). The
+ * `expenses.date` column is a Postgres DATE, so it must be compared against a
+ * local-calendar string or the window lands a day early.
+ */
+export function toLocalDateString(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function parseDashboardRange(
   params: { from?: string; to?: string } | undefined,
   ctx: DashboardDateContext,

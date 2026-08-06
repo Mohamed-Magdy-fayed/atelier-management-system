@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useTranslation } from "@/features/core/i18n/client";
+import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
 
@@ -33,6 +34,7 @@ export function DressDeleteDialog({
   const { t } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const invalidateDashboard = useInvalidateDashboard();
   const deleteMut = useMutation(trpc.dresses.delete.mutationOptions());
 
   async function handleDelete() {
@@ -53,6 +55,7 @@ export function DressDeleteDialog({
       await queryClient.invalidateQueries({
         queryKey: trpc.dresses.pathKey(),
       });
+      await invalidateDashboard();
       onDeleted();
       onOpenChange(false);
     } catch {

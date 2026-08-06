@@ -111,6 +111,8 @@ export type DashboardData = {
   upcomingReservations: DashboardUpcomingReservation[];
   outstandingReservations: DashboardOutstandingReservation[];
   totalOutstanding: number;
+  /** Reservations behind `totalOutstanding` — the list above is capped at 6. */
+  totalOutstandingCount: number;
   dueTodayReservations: DashboardDueTodayReservation[];
   dressesOutCount: number;
   recentCustomers: DashboardRecentCustomer[];
