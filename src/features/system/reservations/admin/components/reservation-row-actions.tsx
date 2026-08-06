@@ -30,6 +30,7 @@ import {
 import type { ReservationStatus } from "@/drizzle/schemas/system/reservations-table";
 import { reservationStatuses } from "@/drizzle/schemas/system/reservations-table";
 import { useTranslation } from "@/features/core/i18n/client";
+import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ReservationGridRow } from "@/integrations/trpc/routers/reservations";
 
@@ -60,6 +61,7 @@ export function ReservationRowActions({ row }: ReservationRowActionsProps) {
   const { t } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const invalidateDashboard = useInvalidateDashboard();
 
   const [infoOpen, setInfoOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
@@ -90,6 +92,7 @@ export function ReservationRowActions({ row }: ReservationRowActionsProps) {
       await queryClient.invalidateQueries({
         queryKey: trpc.reservations.pathKey(),
       });
+      await invalidateDashboard();
     } catch {
       // surfaced by toast
     }

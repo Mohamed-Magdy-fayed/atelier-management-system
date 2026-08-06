@@ -18,7 +18,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import type { DateRange } from "react-day-picker";
 
 import { LinkButton } from "@/components/general/link-button";
@@ -42,6 +42,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { H2, Muted } from "@/components/ui/typography";
+import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useActiveBranchId } from "@/features/core/auth/nextjs/hooks/use-active-branch-id";
 import { useTranslation } from "@/features/core/i18n/client";
 import {
@@ -65,11 +66,6 @@ function buildRangeParams(range: DateRange | undefined) {
     to: range?.to ? formatLocalIso(endOfDay(range.to)) : undefined,
   } as const;
 }
-
-const defaultRange: DateRange = {
-  from: startOfDay(subDays(new Date(), 29)),
-  to: endOfDay(new Date()),
-};
 
 function formatPercentage(value: number) {
   return `${value > 0 ? "+" : value < 0 ? "-" : ""}${Math.abs(value).toFixed(1)}%`;
@@ -118,6 +114,7 @@ export function DashboardRentalPage() {
   const { t, locale } = useTranslation();
   const trpc = useTRPC();
   const branchId = useActiveBranchId();
+  const branchState = useBranch();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -132,6 +129,19 @@ export function DashboardRentalPage() {
 
   const from = searchParams.get("from") ?? undefined;
   const to = searchParams.get("to") ?? undefined;
+
+  // Every figure below is scoped to one branch unless the admin picked "all
+  // branches". Without this label the numbers look like company-wide totals.
+  const activeBranch = branchState?.hasActiveOrg
+    ? branchState.activeBranch
+    : undefined;
+  const branchScopeLabel = activeBranch
+    ? locale === "ar"
+      ? activeBranch.nameAr
+      : activeBranch.nameEn
+    : branchState?.canViewAllBranches
+      ? String(t("authTranslations.branch.switcher.allBranches"))
+      : dr("scopeNoBranch");
 
   const { data, isPending, error, refetch } = useQuery(
     trpc.dashboard.getData.queryOptions({ branchId, from, to }),
@@ -180,7 +190,24 @@ export function DashboardRentalPage() {
     ];
   }, [t]);
 
-  const [draftRange, setDraftRange] = useState<DateRange>(defaultRange);
+  // The URL is the single source of truth for the range: the server query reads
+  // `from`/`to` from it, so the picker must too, or a reload shows a range that
+  // does not match the figures. Defaults mirror `parseDashboardRange`.
+  const selectedRange = useMemo((): DateRange => {
+    const parsedFrom = from ? new Date(from) : null;
+    const parsedTo = to ? new Date(to) : null;
+    const now = new Date();
+    return {
+      from:
+        parsedFrom && !Number.isNaN(parsedFrom.getTime())
+          ? startOfDay(parsedFrom)
+          : startOfDay(subDays(now, 29)),
+      to:
+        parsedTo && !Number.isNaN(parsedTo.getTime())
+          ? endOfDay(parsedTo)
+          : endOfDay(now),
+    };
+  }, [from, to]);
 
   const syncSearchParams = useCallback(
     (nextRange: DateRange | undefined) => {
@@ -382,12 +409,11 @@ export function DashboardRentalPage() {
           numberOfMonths={1}
           rangePresets={rangePresets}
           title={dr("rangeDateRange")}
-          value={draftRange}
+          value={selectedRange}
           setValue={(value) => {
             if (!value || Array.isArray(value) || value instanceof Date) {
               return;
             }
-            setDraftRange(value);
             syncSearchParams(value);
           }}
         />
@@ -397,7 +423,10 @@ export function DashboardRentalPage() {
       <section className="space-y-3">
         <div className="space-y-0.5">
           <p className="text-sm font-semibold">{dr("primaryKpisTitle")}</p>
-          <Muted className="text-xs">{dr("primaryKpisDescription")}</Muted>
+          <Muted className="text-xs">
+            {dr("primaryKpisDescription")}{" "}
+            {dr("scopeHint", { branch: branchScopeLabel })}
+          </Muted>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {isPending && !rangeStats
@@ -544,6 +573,13 @@ export function DashboardRentalPage() {
               {data ? fmtMoney(data.totalOutstanding) : "—"}
             </div>
             <Badge variant="outline">{dr("liveLabel")}</Badge>
+            {(data?.totalOutstandingCount ?? 0) > 0 && (
+              <Muted className="text-xs">
+                {dr("outstandingAcross", {
+                  count: data?.totalOutstandingCount ?? 0,
+                })}
+              </Muted>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -667,9 +703,20 @@ export function DashboardRentalPage() {
             {data?.outstandingReservations &&
             data.outstandingReservations.length > 0 ? (
               <div className="space-y-3">
-                <Badge variant="secondary">
-                  {dr("outstandingTotal")}: {fmtMoney(data.totalOutstanding)}
-                </Badge>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="secondary">
+                    {dr("outstandingTotal")}: {fmtMoney(data.totalOutstanding)}
+                  </Badge>
+                  {data.totalOutstandingCount >
+                    data.outstandingReservations.length && (
+                    <Muted className="text-xs">
+                      {dr("outstandingShowing", {
+                        shown: data.outstandingReservations.length,
+                        total: data.totalOutstandingCount,
+                      })}
+                    </Muted>
+                  )}
+                </div>
                 <div className="overflow-hidden rounded-md border">
                   <Table className="text-xs">
                     <TableHeader>

@@ -59,6 +59,7 @@ import {
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
 import { translationKey } from "@/features/core/i18n/global";
+import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { generateDressCode } from "@/features/system/dresses/lib/generate-dress-code";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
@@ -146,6 +147,7 @@ export function DressFormDialog({
   const { t } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const invalidateDashboard = useInvalidateDashboard();
   const branchState = useBranch();
   const isEdit = dress != null;
   const branchId =
@@ -223,6 +225,7 @@ export function DressFormDialog({
         }
 
         await queryClient.invalidateQueries({ queryKey: trpc.dresses.pathKey() });
+        await invalidateDashboard();
 
         if (
           isEdit &&

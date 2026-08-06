@@ -27,6 +27,7 @@ import { FieldGroup, FieldSet } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
 import { paymentMethods } from "@/drizzle/schemas/system/payments-table";
 import { useTranslation } from "@/features/core/i18n/client";
+import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { reservationOutstanding } from "@/features/system/reservations/utils";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ReservationGridRow } from "@/integrations/trpc/routers/reservations";
@@ -54,6 +55,7 @@ export function ReservationPaymentDialog({
   const { t, locale } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const invalidateDashboard = useInvalidateDashboard();
   const formId = useId();
   const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
 
@@ -118,6 +120,7 @@ export function ReservationPaymentDialog({
         await queryClient.invalidateQueries({
           queryKey: trpc.reservations.pathKey(),
         });
+        await invalidateDashboard();
         onOpenChange(false);
       } catch {
         // surfaced by toast

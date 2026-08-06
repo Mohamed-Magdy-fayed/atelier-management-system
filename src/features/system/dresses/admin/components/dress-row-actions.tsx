@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/features/core/i18n/client";
+import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
 
@@ -38,6 +39,7 @@ export function DressRowActions({ row, setRowAction }: DressRowActionsProps) {
   const { t } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const invalidateDashboard = useInvalidateDashboard();
   const setActiveMut = useMutation(trpc.dresses.setActive.mutationOptions());
 
   async function toggleActive(isActive: boolean) {
@@ -62,6 +64,7 @@ export function DressRowActions({ row, setRowAction }: DressRowActionsProps) {
       await queryClient.invalidateQueries({
         queryKey: trpc.dresses.pathKey(),
       });
+      await invalidateDashboard();
     } catch {
       // toast.promise already surfaced the failure.
     }

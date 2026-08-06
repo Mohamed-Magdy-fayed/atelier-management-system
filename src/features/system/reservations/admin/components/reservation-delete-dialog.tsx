@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useTranslation } from "@/features/core/i18n/client";
+import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ReservationGridRow } from "@/integrations/trpc/routers/reservations";
 
@@ -33,6 +34,7 @@ export function ReservationDeleteDialog({
   const { t } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const invalidateDashboard = useInvalidateDashboard();
   const deleteMut = useMutation(trpc.reservations.delete.mutationOptions());
 
   async function handleDelete() {
@@ -53,6 +55,7 @@ export function ReservationDeleteDialog({
       await queryClient.invalidateQueries({
         queryKey: trpc.reservations.pathKey(),
       });
+      await invalidateDashboard();
       onDeleted();
       onOpenChange(false);
     } catch {

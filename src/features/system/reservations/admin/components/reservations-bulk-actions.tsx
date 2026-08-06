@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/tooltip";
 import { reservationStatuses } from "@/drizzle/schemas/system/reservations-table";
 import { useTranslation } from "@/features/core/i18n/client";
+import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ReservationGridRow } from "@/integrations/trpc/routers/reservations";
 
@@ -58,6 +59,7 @@ export function ReservationsBulkActions({
   const { t } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const invalidateDashboard = useInvalidateDashboard();
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const bulkStatusMut = useMutation(
@@ -84,12 +86,21 @@ export function ReservationsBulkActions({
         await queryClient.invalidateQueries({
           queryKey: trpc.reservations.pathKey(),
         });
+        await invalidateDashboard();
         table.resetRowSelection();
       } catch {
         // toast handles error
       }
     },
-    [bulkStatusMut, ids, queryClient, t, table, trpc.reservations],
+    [
+      bulkStatusMut,
+      ids,
+      queryClient,
+      t,
+      table,
+      trpc.reservations,
+      invalidateDashboard,
+    ],
   );
 
   const bulkDelete = useCallback(async () => {
@@ -105,12 +116,21 @@ export function ReservationsBulkActions({
       await queryClient.invalidateQueries({
         queryKey: trpc.reservations.pathKey(),
       });
+      await invalidateDashboard();
       table.resetRowSelection();
       setDeleteOpen(false);
     } catch {
       // toast handles error
     }
-  }, [bulkDeleteMut, ids, queryClient, t, table, trpc.reservations]);
+  }, [
+    bulkDeleteMut,
+    ids,
+    queryClient,
+    t,
+    table,
+    trpc.reservations,
+    invalidateDashboard,
+  ]);
 
   return (
     <>
@@ -125,7 +145,9 @@ export function ReservationsBulkActions({
                     variant="ghost"
                     size="icon"
                     disabled={pending || !ids.length}
-                    aria-label={String(t("systemPages.reservationsUpdatedStatus"))}
+                    aria-label={String(
+                      t("systemPages.reservationsUpdatedStatus"),
+                    )}
                   >
                     <CheckCircle2Icon className="size-3.5" />
                   </Button>

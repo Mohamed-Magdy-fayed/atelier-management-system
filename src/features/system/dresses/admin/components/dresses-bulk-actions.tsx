@@ -17,6 +17,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useTranslation } from "@/features/core/i18n/client";
+import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
 
@@ -28,6 +29,7 @@ export function DressesBulkActions({ table }: { table: Table<DressGridRow> }) {
   const { t } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const invalidateDashboard = useInvalidateDashboard();
   const setActiveMut = useMutation(
     trpc.dresses.bulkSetActive.mutationOptions(),
   );
@@ -46,6 +48,7 @@ export function DressesBulkActions({ table }: { table: Table<DressGridRow> }) {
         })
         .unwrap();
       await queryClient.invalidateQueries({ queryKey: trpc.dresses.pathKey() });
+      await invalidateDashboard();
       table.resetRowSelection();
     } catch {
       // toast.promise already surfaced the failure.
@@ -65,6 +68,7 @@ export function DressesBulkActions({ table }: { table: Table<DressGridRow> }) {
         })
         .unwrap();
       await queryClient.invalidateQueries({ queryKey: trpc.dresses.pathKey() });
+      await invalidateDashboard();
       table.resetRowSelection();
     } catch {
       // toast.promise already surfaced the failure.

@@ -46,6 +46,7 @@ import { expenseTypes } from "@/drizzle/schemas/system/expenses-table";
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
 import { translationKey } from "@/features/core/i18n/global";
+import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { DressPickerField } from "@/features/system/dresses/admin/components/dress-picker-field";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ExpenseGridRow } from "@/integrations/trpc/routers/expenses";
@@ -110,6 +111,7 @@ export function ExpenseFormDialog({
   const { t } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const invalidateDashboard = useInvalidateDashboard();
   const branchState = useBranch();
   const branchId = branchState?.hasActiveOrg
     ? branchState.activeBranch.id
@@ -212,6 +214,7 @@ export function ExpenseFormDialog({
         await queryClient.invalidateQueries({
           queryKey: trpc.expenses.pathKey(),
         });
+        await invalidateDashboard();
 
         // Saved — the draft is spent, so the next open starts from defaults.
         resetForRef.current = null;
@@ -474,6 +477,7 @@ export function ExpenseFormDialog({
                   await queryClient.invalidateQueries({
                     queryKey: trpc.dresses.pathKey(),
                   });
+                  await invalidateDashboard();
                 } catch {
                   toast.error(String(t("systemPages.dressStatusChangeFailed")));
                 } finally {
