@@ -1,5 +1,4 @@
 ﻿import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Muted } from "@/components/ui/typography";
 import { AuthManagerHeaderTrigger } from "@/features/core/auth/nextjs/components/auth-manager-header-trigger";
 import { getT } from "@/features/core/i18n/server";
@@ -28,9 +27,7 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
           </Link>
           <PublicDesktopNav className="flex-1 justify-center" />
           <div className="flex shrink-0 items-center gap-1 sm:gap-2 ms-auto">
-            <Button className="hidden md:inline-flex">
-              <PublicSignedInLink />
-            </Button>
+            <PublicSignedInLink className="hidden md:inline-flex" />
             <AuthManagerHeaderTrigger className="shrink-0" />
           </div>
         </div>
