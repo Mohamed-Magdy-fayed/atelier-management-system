@@ -32,6 +32,7 @@ import { reservationStatuses } from "@/drizzle/schemas/system/reservations-table
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { translationKey } from "@/features/core/i18n/global";
 import { useTranslation } from "@/features/core/i18n/client";
+import { DressPickerField } from "@/features/system/dresses/admin/components/dress-picker-field";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ReservationGridRow } from "@/integrations/trpc/routers/reservations";
 import { formatCurrency } from "@/lib/format";
@@ -42,7 +43,6 @@ import {
   syncReceivingReturnFromOccasion,
 } from "../../lib/reservation-datetime-defaults";
 import { isOccasionDayBlocked } from "../../lib/occasion-day-availability";
-import { ReservationDressPickerField } from "./reservation-dress-picker-field";
 import { ReservationReceiptPreview } from "./reservation-receipt-preview";
 
 const reservationStatusSchema = z.enum(reservationStatuses);
@@ -650,11 +650,10 @@ export function ReservationFormDialog({
           <p className="font-medium text-sm">{reservation?.reservationCode}</p>
         </div>
         <editForm.AppField name="dressId">
-          {(field) => (
-            <ReservationDressPickerField
+          {() => (
+            <DressPickerField
               label={String(t("systemPages.reservationsDress"))}
               options={dressOptions}
-              placeholder={String(t("systemPages.reservationsSearchDress"))}
             />
           )}
         </editForm.AppField>
@@ -759,11 +758,10 @@ export function ReservationFormDialog({
             </p>
           ) : null}
           <createForm.AppField name="dressId">
-            {(field) => (
-              <ReservationDressPickerField
+            {() => (
+              <DressPickerField
                 label={String(t("systemPages.reservationsDress"))}
                 options={dressOptions}
-                placeholder={String(t("systemPages.reservationsSearchDress"))}
               />
             )}
           </createForm.AppField>

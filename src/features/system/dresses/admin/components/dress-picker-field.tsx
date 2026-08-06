@@ -13,30 +13,34 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-import {
-  InputGroupAddon,
-  InputGroupButton,
-} from "@/components/ui/input-group";
+import { InputGroupAddon, InputGroupButton } from "@/components/ui/input-group";
 import { useTranslation } from "@/features/core/i18n/client";
 import { DressViewDialog } from "@/features/system/dresses/admin/components/dress-view-dialog";
 
-type DressOption = {
+export type DressOption = {
   value: string;
   label: string;
 };
 
-type ReservationDressPickerFieldProps = FormFieldProps & {
+type DressPickerFieldProps = FormFieldProps & {
   options: DressOption[];
   placeholder?: string;
   disabled?: boolean;
+  /** Show a clear button — for forms where the dress is optional. */
+  clearable?: boolean;
 };
 
-export function ReservationDressPickerField({
+/**
+ * Searchable dress selector with an inline preview dialog. Shared by every
+ * form that picks a dress so the interaction stays identical across the app.
+ */
+export function DressPickerField({
   options,
   placeholder,
   disabled = false,
+  clearable = false,
   ...props
-}: ReservationDressPickerFieldProps) {
+}: DressPickerFieldProps) {
   const field = useFieldContext<string>();
   const { t } = useTranslation();
 
@@ -66,8 +70,8 @@ export function ReservationDressPickerField({
       >
         <ComboboxInput
           className="w-full"
-          placeholder={placeholder}
-          showClear={false}
+          placeholder={placeholder ?? String(t("systemPages.searchDress"))}
+          showClear={clearable}
         >
           <InputGroupAddon align="inline-end">
             <DressViewDialog
@@ -75,7 +79,7 @@ export function ReservationDressPickerField({
               dressLabel={selected?.label}
               trigger={
                 <InputGroupButton
-                  aria-label={String(t("systemPages.reservationsViewDress"))}
+                  aria-label={String(t("systemPages.viewDress"))}
                   disabled={!field.state.value}
                   size="icon-xs"
                   type="button"

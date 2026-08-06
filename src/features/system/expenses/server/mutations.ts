@@ -65,7 +65,7 @@ export async function updateExpense(
       amount: input.amount,
       dressId: input.dressId ?? null,
       employeeId: input.employeeId ?? null,
-      description: input.description,
+      description: input.description ?? "",
       note: input.note ?? null,
       date: input.date,
       updatedBy: session.user.id,

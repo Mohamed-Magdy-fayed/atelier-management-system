@@ -1,4 +1,4 @@
-import { and, count, eq, isNull, sum } from "drizzle-orm";
+import { and, count, eq, exists, isNull, sql, sum } from "drizzle-orm";
 
 import {
   BranchMembershipsTable,
@@ -110,19 +110,28 @@ export async function getExpenseFormData(
     .where(dressesWhere)
     .orderBy(DressesTable.code);
 
-  const employeesWhere = branchId
-    ? eq(BranchMembershipsTable.branchId, branchId)
-    : undefined;
+  // A correlated EXISTS keeps one row per user without DISTINCT ON, which
+  // Postgres would require to match the leading ORDER BY expression.
+  const hasMembership = exists(
+    ctx.db
+      .select({ one: sql`1` })
+      .from(BranchMembershipsTable)
+      .where(
+        and(
+          eq(BranchMembershipsTable.userId, UsersTable.id),
+          branchId ? eq(BranchMembershipsTable.branchId, branchId) : undefined,
+        ),
+      ),
+  );
 
   const employees = await ctx.db
-    .selectDistinctOn([UsersTable.id], {
+    .select({
       id: UsersTable.id,
       name: UsersTable.name,
       email: UsersTable.email,
     })
     .from(UsersTable)
-    .innerJoin(BranchMembershipsTable, eq(BranchMembershipsTable.userId, UsersTable.id))
-    .where(and(eq(UsersTable.role, "employee"), isNull(UsersTable.deletedAt), employeesWhere))
+    .where(and(eq(UsersTable.role, "employee"), isNull(UsersTable.deletedAt), hasMembership))
     .orderBy(UsersTable.name);
 
   return { dresses, employees };

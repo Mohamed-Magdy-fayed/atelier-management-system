@@ -15,6 +15,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useTranslation } from "@/features/core/i18n/client";
 import type { DateRangePreset } from "@/lib/date-range";
+import { toDate } from "@/lib/date-value";
 import { cn } from "@/lib/utils";
 
 export type DateSelection = Date | Date[] | DateRange | undefined;
@@ -25,7 +26,8 @@ type InlineRangePreset = {
 };
 
 interface SelectDateFieldProps {
-  value?: DateSelection;
+  /** Accepts loose values (date-only strings, timestamps) and coerces them. */
+  value?: DateSelection | string | number | null;
   setValue: (value: DateSelection) => void;
   placeholder?: string;
   mode?: "single" | "multiple" | "range";
@@ -56,7 +58,41 @@ function areRangesEqual(a?: DateRange, b?: DateRange) {
   return fromEqual && toEqual;
 }
 
+/**
+ * Coerce a caller-provided selection into real `Date` objects. Form state can
+ * hold date-only strings, so the raw value is not trustworthy as a `Date`.
+ */
+function normalizeSelection(
+  value: unknown,
+  mode: "single" | "multiple" | "range",
+): DateSelection {
+  if (value === undefined || value === null) {
+    return mode === "multiple" ? [] : undefined;
+  }
+
+  if (mode === "range") {
+    if (isDateRange(value)) {
+      const from = toDate(value.from);
+      const to = toDate(value.to);
+      return from || to ? { from, to } : undefined;
+    }
+    const single = toDate(value);
+    return single ? { from: single, to: undefined } : undefined;
+  }
+
+  if (mode === "multiple") {
+    const list = Array.isArray(value) ? value : [value];
+    return list
+      .map((item) => toDate(item))
+      .filter((item): item is Date => item !== undefined);
+  }
+
+  return toDate(value);
+}
+
 function formatDate(date: Date, locale: string = "en-US"): string {
+  if (Number.isNaN(date.getTime())) return "";
+
   return new Intl.DateTimeFormat(locale, {
     year: "numeric",
     month: "short",
@@ -85,7 +121,7 @@ function formatMultipleDates(dates: Date[], locale: string = "en-US"): string {
 }
 
 export function SelectDateField({
-  value,
+  value: rawValue,
   setValue,
   placeholder,
   mode = "single",
@@ -100,6 +136,11 @@ export function SelectDateField({
   const [isOpen, setIsOpen] = useState(false);
   const { locale, dir, t } = useTranslation();
   const rdpLocale = locale === "ar" ? ar : enUS;
+
+  const value = useMemo(
+    () => normalizeSelection(rawValue, mode),
+    [rawValue, mode],
+  );
 
   const presets = useMemo((): InlineRangePreset[] => {
     if (presetsProp?.length) return presetsProp;
@@ -133,8 +174,7 @@ export function SelectDateField({
       return Boolean(range?.from || range?.to);
     }
     if (mode === "multiple") {
-      const dates = value as Date[];
-      return dates.length > 0;
+      return Array.isArray(value) && value.length > 0;
     }
     return Boolean(value);
   }, [mode, value]);

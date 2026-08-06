@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode, useMemo } from "react";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -12,8 +13,6 @@ import {
 } from "@/components/ui/sidebar";
 import type { User } from "@/drizzle/schema";
 import { hasPermission } from "@/features/core/auth/core/permissions";
-import { AuthManagerHeaderTrigger } from "@/features/core/auth/nextjs/components/auth-manager-header-trigger";
-import { BranchManager } from "@/features/core/auth/nextjs/components/branch-manager";
 import { useTranslation } from "@/features/core/i18n/client";
 
 import type { SystemNavItem } from "../lib/nav";
@@ -92,8 +91,6 @@ export function AppShellLayout({
               ) : null}
             </ol>
           </nav>
-          <BranchManager variant="default" />
-          <AuthManagerHeaderTrigger className="ms-1 shrink-0" />
         </header>
         <ScrollArea className="min-h-0 flex-1">
           <div className="p-3 sm:p-4 md:p-6">{children}</div>
