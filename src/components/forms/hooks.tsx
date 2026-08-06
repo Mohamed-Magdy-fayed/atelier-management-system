@@ -70,21 +70,22 @@ const useAppForm: typeof useAppFormBase = (opts) => {
           return fieldMeta?.errors ?? [];
         }),
       );
-      if (errors.length > 0) {
-        const message = errors
-          .map((e) => {
-            const raw = extractValidationErrorMessage(e);
-            return raw
-              ? translateFormErrorMessage((key) => String(t(key as never)), raw, {
-                  locale,
-                  fallbackLocale: "en",
-                })
-              : undefined;
-          })
-          .filter(Boolean)
-          .join("\n");
-        if (message) toast.error(message);
-      }
+      const message = errors
+        .map((e) => {
+          const raw = extractValidationErrorMessage(e);
+          return raw
+            ? translateFormErrorMessage((key) => String(t(key as never)), raw, {
+                locale,
+                fallbackLocale: "en",
+              })
+            : undefined;
+        })
+        .filter(Boolean)
+        .join("\n");
+      // This runs only on an invalid submit, so it must always say something —
+      // otherwise a form-level issue, or one with no readable message, looks
+      // to the user like the save button simply did nothing.
+      toast.error(message || String(t("forms.invalidSubmission")));
     },
   });
 };

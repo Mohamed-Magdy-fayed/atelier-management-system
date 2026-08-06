@@ -4,7 +4,6 @@ export * from "./reservation-info-modal";
 export * from "./reservation-payment-dialog";
 export * from "./reservation-receipt-dialog";
 export * from "./reservation-receipt-preview";
-export * from "./reservation-dress-picker-field";
 export * from "./reservation-row-actions";
 export * from "./reservations-bulk-actions";
 export * from "./reservations-grid-filters";

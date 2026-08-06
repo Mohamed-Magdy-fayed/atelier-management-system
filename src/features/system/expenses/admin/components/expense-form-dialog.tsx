@@ -4,7 +4,14 @@ import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2Icon, SaveIcon, XIcon } from "lucide-react";
 import type { FormEvent } from "react";
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -39,6 +46,7 @@ import { expenseTypes } from "@/drizzle/schemas/system/expenses-table";
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
 import { translationKey } from "@/features/core/i18n/global";
+import { DressPickerField } from "@/features/system/dresses/admin/components/dress-picker-field";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ExpenseGridRow } from "@/integrations/trpc/routers/expenses";
 
@@ -62,7 +70,6 @@ const expenseFormSchema = z.object({
   description: z
     .string()
     .trim()
-    .min(1, translationKey("forms.validation.required"))
     .max(500, translationKey("forms.validation.max255")),
   note: z
     .string()
@@ -151,11 +158,18 @@ export function ExpenseFormDialog({
 
   const effectiveBranchId = expense?.branchId ?? branchId;
 
+  // What the form is currently editing: a specific expense, or a new draft.
+  const formIdentity = expense?.id ?? "new";
+  const resetForRef = useRef<string | null>(null);
+
   const form = useAppForm({
     defaultValues,
     validators: { onSubmit: expenseFormSchema },
     onSubmit: async ({ value }) => {
-      if (!effectiveBranchId) return;
+      if (!effectiveBranchId) {
+        toast.error(String(t("systemPages.expenseBranchRequired")));
+        return;
+      }
 
       const payload = {
         branchId: effectiveBranchId,
@@ -199,6 +213,9 @@ export function ExpenseFormDialog({
           queryKey: trpc.expenses.pathKey(),
         });
 
+        // Saved — the draft is spent, so the next open starts from defaults.
+        resetForRef.current = null;
+
         const newStatus = statusForExpenseType(value.type);
         if (!isEdit && newStatus && payload.dressId) {
           const statusLabel = String(
@@ -225,10 +242,14 @@ export function ExpenseFormDialog({
   const selectedType = useStore(form.store, (s) => s.values.type);
 
   useEffect(() => {
-    if (open) {
-      form.reset(defaultValues);
-    }
-  }, [open, defaultValues, form.reset]);
+    if (!open) return;
+    // Reopening the same target keeps whatever was already typed, so stepping
+    // out of the dialog (to switch branch, look something up) is not
+    // destructive. A successful save clears the ref to start the next one fresh.
+    if (resetForRef.current === formIdentity) return;
+    resetForRef.current = formIdentity;
+    form.reset(defaultValues);
+  }, [open, formIdentity, defaultValues, form.reset]);
 
   const pending = createMut.isPending || updateMut.isPending;
   const formId = useId();
@@ -262,7 +283,7 @@ export function ExpenseFormDialog({
     () =>
       (formData?.dresses ?? []).map((d) => ({
         value: d.id,
-        label: `${d.code} — ${d.title}`,
+        label: `${d.title} (${d.code})`,
       })),
     [formData?.dresses],
   );
@@ -336,10 +357,11 @@ export function ExpenseFormDialog({
                   </form.AppField>
                   {showDressField ? (
                     <form.AppField name="dressId">
-                      {(field) => (
-                        <field.SelectField
+                      {() => (
+                        <DressPickerField
+                          clearable
                           label={String(t("systemPages.expensesDress"))}
-                          options={[{ value: "", label: "—" }, ...dressOptions]}
+                          options={dressOptions}
                         />
                       )}
                     </form.AppField>

@@ -8,7 +8,7 @@ export const expenseListFilterInput = z.object({
   columnFilters: z
     .array(z.object({ id: z.string(), value: z.unknown() }))
     .default([]),
-  branchId: z.string().uuid().optional(),
+  branchId: z.uuid().optional(),
 });
 
 export const listExpensesInput = z.object({
@@ -21,26 +21,26 @@ export const listExpensesInput = z.object({
 });
 
 export const createExpenseInput = z.object({
-  branchId: z.string().uuid(),
+  branchId: z.uuid(),
   type: z.enum(expenseTypes),
   amount: z.number().int().positive(),
-  dressId: z.string().uuid().optional(),
-  employeeId: z.string().uuid().optional(),
-  description: z.string().min(1).max(500),
+  dressId: z.uuid().optional(),
+  employeeId: z.uuid().optional(),
+  description: z.string().max(500),
   note: z.string().max(1000).optional(),
   date: z.string().date(),
 });
 
 export const updateExpenseInput = createExpenseInput.extend({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 export const deleteExpenseInput = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 export const expenseFormDataInput = z.object({
-  branchId: z.string().uuid().optional(),
+  branchId: z.uuid().optional(),
 });
 
 export type ExpenseFormDataInput = z.infer<typeof expenseFormDataInput>;
