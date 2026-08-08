@@ -499,14 +499,16 @@ export const migrationSteps: MigrationStep[] = [
       // `reservations`/`payments` resolve their customer through the same key
       // (see resolveTargetCustomerIdsByLegacyId) rather than the legacy id, so
       // dropping a duplicate id here does not orphan them.
+      //
+      // Legacy `reservationsCount`/`lastReservationAt` are intentionally not
+      // carried over: the target derives both from the migrated reservations, so
+      // importing the legacy totals would only create a second, drifting answer.
       const legacyRows = await legacy<
         {
           id: string;
           name: string;
           phone: string;
-          reservationsCount: number;
           note: string | null;
-          lastReservationAt: Date | null;
           createdAt: Date;
         }[]
       >`SELECT * FROM customers ORDER BY "createdAt" ASC, id ASC`;
@@ -521,15 +523,7 @@ export const migrationSteps: MigrationStep[] = [
           continue;
         }
         duplicates += 1;
-        existing.reservationsCount += row.reservationsCount;
         existing.note = existing.note ?? row.note;
-        if (
-          row.lastReservationAt &&
-          (!existing.lastReservationAt ||
-            row.lastReservationAt > existing.lastReservationAt)
-        ) {
-          existing.lastReservationAt = row.lastReservationAt;
-        }
       }
 
       logStep(
@@ -541,23 +535,18 @@ export const migrationSteps: MigrationStep[] = [
         for (const row of merged.values()) {
           await target`
             INSERT INTO rental_customers (
-              id, name, phone, "reservationsCount", note,
-              "lastReservationAt", "createdAt"
+              id, name, phone, note, "createdAt"
             )
             VALUES (
               ${row.id}::uuid,
               ${row.name},
               ${row.phone},
-              ${row.reservationsCount},
               ${sqlNullable(row.note)},
-              ${sqlNullable(row.lastReservationAt)},
               ${row.createdAt}
             )
             ON CONFLICT (phone) DO UPDATE SET
               name = EXCLUDED.name,
-              "reservationsCount" = EXCLUDED."reservationsCount",
-              note = EXCLUDED.note,
-              "lastReservationAt" = EXCLUDED."lastReservationAt"
+              note = EXCLUDED.note
           `;
         }
       }

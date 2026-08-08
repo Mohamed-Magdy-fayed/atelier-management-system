@@ -21,6 +21,14 @@ import type { RentalCustomerListFilterInput } from "./schemas";
 
 export const RENTAL_CUSTOMER_EXPORT_ROW_LIMIT = 50_000;
 
+/**
+ * Derived reservation count for a customer row. Requires the caller to join
+ * `reservations` and group by the customer — see `reservationsCountJoin` in
+ * ./queries.ts. Shared with `sortExpr` so the sort and the displayed value can
+ * never disagree.
+ */
+export const RESERVATIONS_COUNT_EXPR = sql<number>`COUNT(${ReservationsTable.id})::int`;
+
 function parseRangeBoundary(raw: string, mode: "start" | "end"): Date {
   const trimmed = raw.trim();
   if (trimmed.includes("T")) return new Date(trimmed);
@@ -106,7 +114,7 @@ export function sortExpr(sorting: { id: string; desc: boolean }[]) {
     case "phone":
       return direction(RentalCustomersTable.phone);
     case "reservationsCount":
-      return direction(RentalCustomersTable.reservationsCount);
+      return direction(RESERVATIONS_COUNT_EXPR);
     case "createdAt":
       return direction(RentalCustomersTable.createdAt);
     case "name":
