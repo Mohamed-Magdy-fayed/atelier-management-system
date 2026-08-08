@@ -436,10 +436,13 @@ export const migrationSteps: MigrationStep[] = [
           const legacyUpdatedBy = pickLegacy<string | null>(raw, "updatedBy");
           const legacyDeletedBy = pickLegacy<string | null>(raw, "deletedBy");
 
+          // `timesRented` is deliberately not carried over: the target derives
+          // the rental count from the migrated reservations, so a legacy total
+          // would only be a second, conflicting answer.
           await target`
             INSERT INTO dresses (
               id, "branchId", code, title, description, images, size, color,
-              "pricePerDay", "depositAmount", insurance, "timesRented", "isActive",
+              "pricePerDay", "depositAmount", insurance, "isActive",
               "createdBy", "createdAt", "updatedBy", "updatedAt", "deletedBy", "deletedAt"
             )
             VALUES (
@@ -454,7 +457,6 @@ export const migrationSteps: MigrationStep[] = [
               ${pickLegacy<number>(raw, "pricePerDay") ?? 0},
               ${pickLegacy<number>(raw, "depositAmount") ?? 0},
               ${pickLegacy<number>(raw, "insurance") ?? 0},
-              ${pickLegacy<number | null>(raw, "timesRented") ?? 0},
               ${pickLegacy<boolean | null>(raw, "isActive") ?? true},
               ${createdBy},
               ${pickLegacy<Date>(raw, "createdAt") ?? new Date()},

@@ -9,9 +9,10 @@ import {
   lte,
   or,
   type SQL,
+  sql,
 } from "drizzle-orm";
 
-import { DressesTable } from "@/drizzle/schema";
+import { DressesTable, ReservationsTable } from "@/drizzle/schema";
 import {
   isDateRangeValue,
   isNumberRangeValue,
@@ -22,6 +23,13 @@ import {
 import type { DressListFilterInput } from "./schemas";
 
 export const DRESS_EXPORT_ROW_LIMIT = 50_000;
+
+/**
+ * How many times a dress has actually been rented, derived from reservations.
+ * Requires the caller to join `reservations` on `rentalsCountJoin` and group by
+ * the dress. Cancelled bookings never became a rental, so they do not count.
+ */
+export const DRESS_RENTALS_COUNT_EXPR = sql<number>`COUNT(${ReservationsTable.id})::int`;
 
 function parseRangeBoundary(raw: string, mode: "start" | "end"): Date {
   const trimmed = raw.trim();
