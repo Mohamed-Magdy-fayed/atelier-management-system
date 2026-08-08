@@ -2,9 +2,28 @@ import path from "node:path";
 
 import { config as loadEnv } from "dotenv";
 
-loadEnv({
-  path: process.env.DOTENV_CONFIG_PATH ?? path.resolve(process.cwd(), ".env"),
-});
+/**
+ * Match the env precedence Next.js uses, so a seed run targets whatever
+ * database the dev server is reading.
+ *
+ * Loading only `.env` meant `npm run seed` wrote to whatever `.env` points at
+ * while the app read `.env.local` — on this repo those are the production Neon
+ * database and a local Postgres respectively, so a "local" seed silently hit
+ * production and never showed up on localhost.
+ *
+ * dotenv does not overwrite a variable that is already set, so the first file
+ * loaded wins: `.env.local` ahead of `.env` gives it precedence. A missing file
+ * is a no-op. Set DOTENV_CONFIG_PATH to target one file explicitly — that is
+ * the intended way to seed production (`DOTENV_CONFIG_PATH=.env.prod`).
+ */
+const explicitEnvPath = process.env.DOTENV_CONFIG_PATH;
+if (explicitEnvPath) {
+  loadEnv({ path: explicitEnvPath });
+} else {
+  for (const file of [".env.local", ".env"]) {
+    loadEnv({ path: path.resolve(process.cwd(), file) });
+  }
+}
 
 const commands = {
   settings: {
