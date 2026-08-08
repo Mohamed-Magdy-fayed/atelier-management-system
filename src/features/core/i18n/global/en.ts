@@ -682,7 +682,7 @@ export default {
     reservationInvalidDress: "Select a valid active dress for this branch.",
     reservationDressSlotOverlap:
       "These pickup and return times overlap another active reservation for this dress.",
-    reservationInvalidCustomer: "Customer not found for this branch.",
+    reservationInvalidCustomer: "Customer not found.",
     reservationPaymentExceedsBalance: "Payment exceeds the remaining balance.",
     reservationEditReservedOnly: "Only reserved bookings can be edited.",
     reservationDeleteAdminOnly: "Only admins can delete reservations.",

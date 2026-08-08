@@ -123,6 +123,30 @@ export async function getDashboardData(
     branchId ? eq(ReservationsTable.branchId, branchId) : undefined,
   );
 
+  /**
+   * Customers acquired in a range: those whose first reservation *at this scope*
+   * falls inside it. Customer rows are tenant-wide and have no branch of their
+   * own, so acquisition can only be read off the reservations they generated —
+   * which also makes the branch and all-branches views use one definition.
+   */
+  const newCustomersQuery = (from: Date, to: Date) =>
+    ctx.db
+      .select({ newCustomers: sql<number>`COUNT(*)` })
+      .from(
+        ctx.db
+          .select({
+            customerId: ReservationsTable.customerId,
+            firstReservationAt: sql`MIN(${ReservationsTable.createdAt})`.as(
+              "first_reservation_at",
+            ),
+          })
+          .from(ReservationsTable)
+          .where(reservationsBaseWhere)
+          .groupBy(ReservationsTable.customerId)
+          .as("customer_first_reservation"),
+      )
+      .where(sql`first_reservation_at BETWEEN ${from} AND ${to}`);
+
   const paymentReservationJoin = eq(
     PaymentsTable.reservationId,
     ReservationsTable.id,
@@ -233,15 +257,17 @@ export async function getDashboardData(
         ),
       ),
 
+    // Customers are tenant-wide, so a branch's customers are the distinct
+    // customers it took reservations for, not rows it owns. Both figures are
+    // derived from reservations so the branch and all-branches views share one
+    // definition.
     ctx.db
       .select({
-        activeCustomers: sql<number>`COALESCE(SUM(CASE WHEN ${RentalCustomersTable.lastReservationAt} IS NOT NULL AND ${RentalCustomersTable.lastReservationAt} >= ${currentMonthStartIso} AND ${RentalCustomersTable.lastReservationAt} <= ${currentMonthEndIso} THEN 1 ELSE 0 END), 0)`,
-        customerCount: sql<number>`COUNT(*)`,
+        activeCustomers: sql<number>`COUNT(DISTINCT CASE WHEN ${ReservationsTable.createdAt} >= ${currentMonthStartIso} AND ${ReservationsTable.createdAt} <= ${currentMonthEndIso} THEN ${ReservationsTable.customerId} END)`,
+        customerCount: sql<number>`COUNT(DISTINCT ${ReservationsTable.customerId})`,
       })
-      .from(RentalCustomersTable)
-      .where(
-        branchId ? eq(RentalCustomersTable.branchId, branchId) : undefined,
-      ),
+      .from(ReservationsTable)
+      .where(reservationsBaseWhere),
 
     // Not collapsed: the branch arm needs an extra join to resolve membership.
     branchId
@@ -297,15 +323,7 @@ export async function getDashboardData(
         ),
       ),
 
-    ctx.db
-      .select({ newCustomers: count() })
-      .from(RentalCustomersTable)
-      .where(
-        and(
-          between(RentalCustomersTable.createdAt, rangeStart, rangeEnd),
-          branchId ? eq(RentalCustomersTable.branchId, branchId) : undefined,
-        ),
-      ),
+    newCustomersQuery(rangeStart, rangeEnd),
 
     ctx.db
       .select({
@@ -401,11 +419,31 @@ export async function getDashboardData(
       limit: 8,
     }),
 
-    ctx.db.query.RentalCustomersTable.findMany({
-      where: branchId ? eq(RentalCustomersTable.branchId, branchId) : undefined,
-      orderBy: [desc(RentalCustomersTable.reservationsCount)],
-      limit: 6,
-    }),
+    // Aggregated from reservations rather than read off
+    // `rental_customers.reservationsCount`: customers are tenant-wide, so the
+    // stored counter is a tenant-wide total and cannot answer "top customers of
+    // this branch".
+    ctx.db
+      .select({
+        id: RentalCustomersTable.id,
+        name: RentalCustomersTable.name,
+        phone: RentalCustomersTable.phone,
+        reservationsCount: sql<number>`COUNT(${ReservationsTable.id})`,
+        lastReservationAt: sql<Date | null>`MAX(${ReservationsTable.createdAt})`,
+      })
+      .from(RentalCustomersTable)
+      .innerJoin(
+        ReservationsTable,
+        eq(ReservationsTable.customerId, RentalCustomersTable.id),
+      )
+      .where(reservationsBaseWhere)
+      .groupBy(
+        RentalCustomersTable.id,
+        RentalCustomersTable.name,
+        RentalCustomersTable.phone,
+      )
+      .orderBy(desc(sql`COUNT(${ReservationsTable.id})`))
+      .limit(6),
 
     ctx.db
       .select({
@@ -492,15 +530,7 @@ export async function getDashboardData(
       ),
 
     // Previous-period new customers
-    ctx.db
-      .select({ newCustomers: count() })
-      .from(RentalCustomersTable)
-      .where(
-        and(
-          between(RentalCustomersTable.createdAt, prevRangeStart, prevRangeEnd),
-          branchId ? eq(RentalCustomersTable.branchId, branchId) : undefined,
-        ),
-      ),
+    newCustomersQuery(prevRangeStart, prevRangeEnd),
 
     // Expense breakdown by type for selected range
     ctx.db

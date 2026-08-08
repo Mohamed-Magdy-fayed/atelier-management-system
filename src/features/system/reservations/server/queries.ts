@@ -5,7 +5,11 @@ import {
   DressesTable,
   ReservationsTable,
 } from "@/drizzle/schema";
-
+import {
+  assertOperationalStaff,
+  assertUserCanAccessBranch,
+  resolveListBranchId,
+} from "@/features/system/shared/staff-access";
 import { buildWhere, RESERVATION_EXPORT_ROW_LIMIT, sortExpr } from "./filters";
 import type {
   DressOccasionBlockedRangesInput,
@@ -14,11 +18,6 @@ import type {
   ReservationByIdInput,
   ReservationFormDataInput,
 } from "./schemas";
-import {
-  assertOperationalStaff,
-  assertUserCanAccessBranch,
-  resolveListBranchId,
-} from "@/features/system/shared/staff-access";
 
 import { getRequiredSession, type TRPCContext } from "./shared";
 import type { ReservationDetailRow, ReservationGridRow } from "./types";
@@ -209,10 +208,9 @@ export async function getReservationFormData(
   }
 
   const [customers, dresses] = await Promise.all([
+    // Customers are tenant-wide: any branch can book any customer, so this list
+    // is deliberately not branch-scoped even when the dress list is.
     ctx.db.query.RentalCustomersTable.findMany({
-      where: scopedBranchId
-        ? (customers, { eq }) => eq(customers.branchId, scopedBranchId)
-        : undefined,
       orderBy: (customers, { asc }) => [asc(customers.name)],
       columns: {
         id: true,
@@ -252,7 +250,10 @@ export async function getDressOccasionBlockedRanges(
   assertOperationalStaff(session.user.role);
 
   const dress = await ctx.db.query.DressesTable.findFirst({
-    where: and(eq(DressesTable.id, input.dressId), isNull(DressesTable.deletedAt)),
+    where: and(
+      eq(DressesTable.id, input.dressId),
+      isNull(DressesTable.deletedAt),
+    ),
     columns: { branchId: true },
   });
 

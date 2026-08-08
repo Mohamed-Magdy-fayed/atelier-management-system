@@ -1,6 +1,16 @@
-import { and, asc, desc, eq, gte, ilike, lte, or, type SQL } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  gte,
+  ilike,
+  lte,
+  or,
+  type SQL,
+  sql,
+} from "drizzle-orm";
 
-import { RentalCustomersTable } from "@/drizzle/schema";
+import { RentalCustomersTable, ReservationsTable } from "@/drizzle/schema";
 import {
   isDateRangeValue,
   parseLocalDateEnd,
@@ -55,8 +65,17 @@ export function buildWhere(
 ): SQL | undefined {
   const conditions: SQL[] = [];
 
+  // Customers are tenant-wide, so a branch "owns" a customer only through the
+  // reservations it took for them.
   if (input.branchId) {
-    conditions.push(eq(RentalCustomersTable.branchId, input.branchId));
+    conditions.push(
+      sql`EXISTS (
+        SELECT 1 FROM ${ReservationsTable}
+        WHERE ${ReservationsTable.customerId} = ${RentalCustomersTable.id}
+          AND ${ReservationsTable.branchId} = ${input.branchId}
+          AND ${ReservationsTable.deletedAt} IS NULL
+      )`,
+    );
   }
 
   if (input.globalFilter?.trim()) {

@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, between, desc, eq, inArray, isNull, ne } from "drizzle-orm";
+import { and, between, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 
 import {
   BranchesTable,
@@ -8,8 +8,13 @@ import {
   RentalCustomersTable,
   ReservationsTable,
 } from "@/drizzle/schema";
+import {
+  assertOperationalStaff,
+  assertReservationIdsAccessible,
+  assertUserCanAccessBranch,
+} from "@/features/system/shared/staff-access";
+import { rentalCustomerPhoneKey } from "@/lib/phone";
 import { rentalWindowsOverlap } from "@/lib/rental-availability";
-
 import { generateReservationCode } from "../utils";
 import type {
   ReservationBulkDeleteInput,
@@ -21,11 +26,6 @@ import type {
   ReservationUpdateInput,
   ReservationUpdateStatusInput,
 } from "./schemas";
-import {
-  assertOperationalStaff,
-  assertReservationIdsAccessible,
-  assertUserCanAccessBranch,
-} from "@/features/system/shared/staff-access";
 
 import { getRequiredSession, type TRPCContext } from "./shared";
 
@@ -103,10 +103,14 @@ async function ensureUniqueActiveReservationCode(
   }
 }
 
+/**
+ * Customers are tenant-wide, so a record is reachable from any branch. Lookup by
+ * phone matches on the normalized key, which keeps `0100…`, `+20100…` and
+ * `100…` on one record instead of creating a near-duplicate per format.
+ */
 async function resolveCustomer(
   ctx: TRPCContext,
   input: {
-    branchId: string;
     customerId?: string;
     customerName: string;
     customerPhone: string;
@@ -115,10 +119,7 @@ async function resolveCustomer(
 ) {
   if (input.customerId) {
     const existing = await ctx.db.query.RentalCustomersTable.findFirst({
-      where: and(
-        eq(RentalCustomersTable.id, input.customerId),
-        eq(RentalCustomersTable.branchId, input.branchId),
-      ),
+      where: eq(RentalCustomersTable.id, input.customerId),
     });
     if (!existing) {
       throw new TRPCError({
@@ -130,18 +131,17 @@ async function resolveCustomer(
   }
 
   const phone = input.customerPhone.trim();
-  const found = await ctx.db.query.RentalCustomersTable.findFirst({
-    where: and(
-      eq(RentalCustomersTable.branchId, input.branchId),
-      eq(RentalCustomersTable.phone, phone),
-    ),
-  });
+  const phoneKey = rentalCustomerPhoneKey(phone);
+  const found = phoneKey
+    ? await ctx.db.query.RentalCustomersTable.findFirst({
+        where: sql`rental_customer_phone_key(${RentalCustomersTable.phone}) = ${phoneKey}`,
+      })
+    : undefined;
   if (found) return found;
 
   const [created] = await ctx.db
     .insert(RentalCustomersTable)
     .values({
-      branchId: input.branchId,
       name: input.customerName.trim(),
       phone,
       note: input.notes?.trim() || null,

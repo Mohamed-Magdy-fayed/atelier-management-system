@@ -1,4 +1,5 @@
 import { mapLegacySettingRow } from "@/features/system/settings/lib/legacy-setting-map";
+import { rentalCustomerPhoneKey } from "@/lib/phone";
 
 import {
   LEGACY_BRANCH_PLACEHOLDERS,
@@ -34,6 +35,40 @@ async function resolveDefaultBranchId(target: MigrationSql): Promise<string> {
   return rows[0].id;
 }
 
+/**
+ * legacy `customers.id` → target `rental_customers.id`.
+ *
+ * The customers step merges legacy per-branch rows into one tenant-wide row per
+ * phone, so a legacy id can point at a row that was never inserted. Resolving
+ * through the phone key is also resume-safe: it re-derives the mapping from the
+ * database instead of relying on state carried inside a single run.
+ */
+async function resolveTargetCustomerIdsByLegacyId(
+  legacy: MigrationSql,
+  target: MigrationSql,
+): Promise<Map<string, string>> {
+  const legacyCustomers = await legacy<
+    { id: string; phone: string }[]
+  >`SELECT id::text AS id, phone FROM customers`;
+  const targetCustomers = await target<
+    { id: string; phone: string }[]
+  >`SELECT id::text AS id, phone FROM rental_customers`;
+
+  const targetByPhoneKey = new Map<string, string>();
+  for (const row of targetCustomers) {
+    const key = rentalCustomerPhoneKey(row.phone);
+    if (key) targetByPhoneKey.set(key, row.id);
+  }
+
+  const byLegacyId = new Map<string, string>();
+  for (const row of legacyCustomers) {
+    const targetId = targetByPhoneKey.get(rentalCustomerPhoneKey(row.phone));
+    if (targetId) byLegacyId.set(row.id, targetId);
+  }
+
+  return byLegacyId;
+}
+
 export const migrationSteps: MigrationStep[] = [
   {
     id: "branches",
@@ -58,14 +93,8 @@ export const migrationSteps: MigrationStep[] = [
 
       if (!dryRun) {
         const usedShortCodes = new Set<string>();
-        const {
-          addressEn,
-          addressAr,
-          phone,
-          opensAt,
-          closesAt,
-          mapUrl,
-        } = LEGACY_BRANCH_PLACEHOLDERS;
+        const { addressEn, addressAr, phone, opensAt, closesAt, mapUrl } =
+          LEGACY_BRANCH_PLACEHOLDERS;
 
         for (const row of legacyRows) {
           const nameEn = row.name.slice(0, 128);
@@ -457,23 +486,22 @@ export const migrationSteps: MigrationStep[] = [
   },
   {
     id: "rental_customers",
-    description: "customers → rental_customers",
+    description:
+      "customers → rental_customers (branch-scoped rows merged by phone)",
     run: async ({ legacy, target, dryRun }) => {
       const step = "rental_customers";
       const legacyCount = await countLegacy(legacy, "customers");
-      const defaultBranchId = dryRun
-        ? null
-        : await resolveDefaultBranchId(target);
-      const validBranchIds = new Set(
-        (await legacy<{ id: string }[]>`SELECT id FROM branches`).map(
-          (r) => r.id,
-        ),
-      );
 
+      // Legacy customers were unique per (branch, phone); target customers are
+      // tenant-wide and unique per phone. One person who walked into two
+      // branches is two legacy rows and must become one target row, so rows are
+      // merged on the normalized phone key and the earliest row wins the id.
+      // `reservations`/`payments` resolve their customer through the same key
+      // (see resolveTargetCustomerIdsByLegacyId) rather than the legacy id, so
+      // dropping a duplicate id here does not orphan them.
       const legacyRows = await legacy<
         {
           id: string;
-          branchId: string | null;
           name: string;
           phone: string;
           reservationsCount: number;
@@ -481,23 +509,43 @@ export const migrationSteps: MigrationStep[] = [
           lastReservationAt: Date | null;
           createdAt: Date;
         }[]
-      >`SELECT * FROM customers`;
+      >`SELECT * FROM customers ORDER BY "createdAt" ASC, id ASC`;
 
-      if (!dryRun && defaultBranchId) {
-        for (const row of legacyRows) {
-          const branchId =
-            row.branchId && validBranchIds.has(row.branchId)
-              ? row.branchId
-              : defaultBranchId;
+      const merged = new Map<string, (typeof legacyRows)[number]>();
+      let duplicates = 0;
+      for (const row of legacyRows) {
+        const key = rentalCustomerPhoneKey(row.phone) || `id:${row.id}`;
+        const existing = merged.get(key);
+        if (!existing) {
+          merged.set(key, { ...row });
+          continue;
+        }
+        duplicates += 1;
+        existing.reservationsCount += row.reservationsCount;
+        existing.note = existing.note ?? row.note;
+        if (
+          row.lastReservationAt &&
+          (!existing.lastReservationAt ||
+            row.lastReservationAt > existing.lastReservationAt)
+        ) {
+          existing.lastReservationAt = row.lastReservationAt;
+        }
+      }
 
+      logStep(
+        step,
+        `legacy rows: ${legacyCount} → ${merged.size} customers (${duplicates} cross-branch duplicates merged)`,
+      );
+
+      if (!dryRun) {
+        for (const row of merged.values()) {
           await target`
             INSERT INTO rental_customers (
-              id, "branchId", name, phone, "reservationsCount", note,
+              id, name, phone, "reservationsCount", note,
               "lastReservationAt", "createdAt"
             )
             VALUES (
               ${row.id}::uuid,
-              ${branchId}::uuid,
               ${row.name},
               ${row.phone},
               ${row.reservationsCount},
@@ -505,9 +553,8 @@ export const migrationSteps: MigrationStep[] = [
               ${sqlNullable(row.lastReservationAt)},
               ${row.createdAt}
             )
-            ON CONFLICT (id) DO UPDATE SET
+            ON CONFLICT (phone) DO UPDATE SET
               name = EXCLUDED.name,
-              phone = EXCLUDED.phone,
               "reservationsCount" = EXCLUDED."reservationsCount",
               note = EXCLUDED.note,
               "lastReservationAt" = EXCLUDED."lastReservationAt"
@@ -516,7 +563,7 @@ export const migrationSteps: MigrationStep[] = [
       }
 
       const targetCount = dryRun
-        ? legacyCount
+        ? merged.size
         : await countTarget(target, "rental_customers");
       await markStepCompleted(
         target,
@@ -542,6 +589,9 @@ export const migrationSteps: MigrationStep[] = [
           (r) => r.id,
         ),
       );
+      const customerIdByLegacyId = dryRun
+        ? new Map<string, string>()
+        : await resolveTargetCustomerIdsByLegacyId(legacy, target);
 
       const legacyRows = await legacy<
         {
@@ -581,6 +631,8 @@ export const migrationSteps: MigrationStep[] = [
             row.createdBy?.trim() && row.createdBy.length <= 64
               ? row.createdBy.slice(0, 64)
               : MIGRATION_ACTOR;
+          const customerId =
+            customerIdByLegacyId.get(row.customerId) ?? row.customerId;
 
           await target`
             INSERT INTO reservations (
@@ -594,7 +646,7 @@ export const migrationSteps: MigrationStep[] = [
               ${row.id}::uuid,
               ${branchId}::uuid,
               ${row.dressId}::uuid,
-              ${row.customerId}::uuid,
+              ${customerId}::uuid,
               ${row.reservationCode},
               ${row.customerName},
               ${sqlNullable(row.customerPhone)},
@@ -649,6 +701,9 @@ export const migrationSteps: MigrationStep[] = [
           (r) => r.id,
         ),
       );
+      const customerIdByLegacyId = dryRun
+        ? new Map<string, string>()
+        : await resolveTargetCustomerIdsByLegacyId(legacy, target);
 
       const legacyRows = await legacy<
         {
@@ -676,6 +731,9 @@ export const migrationSteps: MigrationStep[] = [
               ? row.createdBy.slice(0, 64)
               : MIGRATION_ACTOR;
 
+          const customerId =
+            customerIdByLegacyId.get(row.customerId) ?? row.customerId;
+
           await target`
             INSERT INTO payments (
               id, "branchId", "reservationId", "customerId", amount, type, method, note,
@@ -685,7 +743,7 @@ export const migrationSteps: MigrationStep[] = [
               ${row.id}::uuid,
               ${branchId}::uuid,
               ${row.reservationId}::uuid,
-              ${row.customerId}::uuid,
+              ${customerId}::uuid,
               ${row.amount},
               ${row.type}::payment_type,
               ${row.method}::payment_method,

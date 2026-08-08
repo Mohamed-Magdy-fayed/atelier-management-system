@@ -2,6 +2,10 @@ import { count } from "drizzle-orm";
 
 import { RentalCustomersTable } from "@/drizzle/schema";
 import {
+  assertOperationalStaff,
+  resolveListBranchId,
+} from "@/features/system/shared/staff-access";
+import {
   buildWhere,
   RENTAL_CUSTOMER_EXPORT_ROW_LIMIT,
   sortExpr,
@@ -10,17 +14,12 @@ import type {
   ExportRentalCustomersInput,
   ListRentalCustomersInput,
 } from "./schemas";
-import {
-  assertOperationalStaff,
-  resolveListBranchId,
-} from "@/features/system/shared/staff-access";
 
 import { getRequiredSession, type TRPCContext } from "./shared";
 import type { RentalCustomerGridRow } from "./types";
 
 const rentalCustomerGridSelect = {
   id: RentalCustomersTable.id,
-  branchId: RentalCustomersTable.branchId,
   name: RentalCustomersTable.name,
   phone: RentalCustomersTable.phone,
   reservationsCount: RentalCustomersTable.reservationsCount,
