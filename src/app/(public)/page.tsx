@@ -5,10 +5,10 @@ import { LinkButton } from "@/components/general/link-button";
 import { buttonVariants } from "@/components/ui/button";
 import { H1, Lead, Muted } from "@/components/ui/typography";
 import { getAuth } from "@/features/core/auth/nextjs/actions";
-import { getPostAuthRedirect } from "@/features/core/auth/nextjs/lib/post-auth-redirect";
 import { getLocaleCookie, getT } from "@/features/core/i18n/server";
 import { PublicDressCard } from "@/features/public-catalog/components/public-dress-card";
 import { PublicPageShell } from "@/features/public-catalog/components/public-page-shell";
+import { getPublicAccountDestination } from "@/features/public-catalog/lib/public-account-destination";
 import {
   getPublicCatalogHidePrices,
   listFeaturedPublicDresses,
@@ -21,13 +21,12 @@ export default async function PublicHomePage() {
   const locale = await getLocaleCookie();
   const auth = await getAuth();
 
-  const secondaryHref = auth.isAuthenticated
-    ? getPostAuthRedirect(auth.session.user)
-    : "/sign-in";
-  const secondaryLabel = auth.isAuthenticated
-    ? auth.session.user.role === "customer"
-      ? t("landing.primaryAuthenticatedCustomer")
-      : t("landing.secondaryAuthenticated")
+  const accountDestination = auth.isAuthenticated
+    ? getPublicAccountDestination(auth.session.user)
+    : null;
+  const secondaryHref = accountDestination?.href ?? "/sign-in";
+  const secondaryLabel = accountDestination
+    ? t(accountDestination.labelKey)
     : t("landing.secondaryGuest");
 
   const [branches, peek, hidePrices] = await Promise.all([

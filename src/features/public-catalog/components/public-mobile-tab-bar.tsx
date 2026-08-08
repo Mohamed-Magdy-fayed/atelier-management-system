@@ -45,7 +45,9 @@ export function PublicMobileTabBar() {
     ? getPublicAccountDestination(session.user)
     : null;
   const AccountIcon =
-    accountDestination?.href === "/dashboard" ? LayoutDashboardIcon : UserIcon;
+    accountDestination?.labelKey === "common.dashboard"
+      ? LayoutDashboardIcon
+      : UserIcon;
 
   return (
     <nav
