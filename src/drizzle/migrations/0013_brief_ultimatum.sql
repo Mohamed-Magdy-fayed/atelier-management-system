@@ -1,0 +1,1 @@
+ALTER TABLE "dresses" DROP COLUMN "timesRented";

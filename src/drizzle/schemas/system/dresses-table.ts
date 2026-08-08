@@ -49,7 +49,6 @@ export const DressesTable = pgTable(
     pricePerDay: integer().notNull(),
     depositAmount: integer().notNull(),
     insurance: integer().notNull(),
-    timesRented: integer().notNull().default(0),
     isActive: boolean().notNull().default(true),
     currentStatus: dressCurrentStatusEnum().notNull().default("available"),
     createdBy,

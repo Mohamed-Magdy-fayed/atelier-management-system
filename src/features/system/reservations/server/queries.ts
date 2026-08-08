@@ -1,4 +1,4 @@
-import { and, asc, count, eq, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, count, eq, isNull, ne, not, sql } from "drizzle-orm";
 
 import {
   BranchesTable,
@@ -268,9 +268,12 @@ export async function getDressOccasionBlockedRanges(
       ? (input.branchId ?? dress.branchId)
       : dress.branchId;
 
+  // A cancelled reservation releases its occasion day — leaving it in blocked
+  // the calendar for a booking that no longer exists.
   const conditions = [
     eq(ReservationsTable.dressId, input.dressId),
     isNull(ReservationsTable.deletedAt),
+    not(eq(ReservationsTable.status, "cancelled")),
     eq(ReservationsTable.branchId, branchId),
   ];
   if (input.excludeReservationId) {

@@ -9,6 +9,7 @@ import {
   ilike,
   inArray,
   isNull,
+  not,
   or,
   sql,
 } from "drizzle-orm";
@@ -135,9 +136,10 @@ const dressPublicSelect = {
   branchMapUrl: BranchesTable.mapUrl,
 } as const;
 
-/** Same ranking as dashboard “top dresses”: rental count → revenue → timesRented → id.
+/** Same ranking as dashboard “top dresses”: rental count → revenue → id.
+ *  Cancelled bookings are excluded — they never made a dress popular.
  *  Column names match Drizzle migrations (quoted camelCase on `reservations`). */
-const rentalStatsSubquery = sql`(SELECT "dressId", COUNT(*)::int AS rental_cnt, COALESCE(SUM("totalPaid"), 0) AS revenue FROM reservations WHERE "deletedAt" IS NULL GROUP BY "dressId") AS rental_stats`;
+const rentalStatsSubquery = sql`(SELECT "dressId", COUNT(*)::int AS rental_cnt, COALESCE(SUM("totalPaid"), 0) AS revenue FROM reservations WHERE "deletedAt" IS NULL AND status <> 'cancelled' GROUP BY "dressId") AS rental_stats`;
 
 export type { PublicDressSort } from "@/features/public-catalog/lib/public-dress-sort";
 
@@ -153,6 +155,7 @@ export async function listFeaturedPublicDresses(
       and(
         eq(DressesTable.id, ReservationsTable.dressId),
         isNull(ReservationsTable.deletedAt),
+        not(eq(ReservationsTable.status, "cancelled")),
       ),
     )
     .where(and(eq(DressesTable.isActive, true), isNull(DressesTable.deletedAt)))
@@ -160,7 +163,6 @@ export async function listFeaturedPublicDresses(
     .orderBy(
       sql`COALESCE(COUNT(${ReservationsTable.id}), 0) DESC`,
       sql`COALESCE(SUM(${ReservationsTable.totalPaid}), 0) DESC`,
-      sql`${DressesTable.timesRented} DESC`,
       sql`${DressesTable.id} ASC`,
     )
     .limit(capped);
@@ -252,7 +254,6 @@ export async function listPublicDresses(input: {
       ? [
           desc(sql`COALESCE(rental_stats.rental_cnt, 0)`),
           desc(sql`COALESCE(rental_stats.revenue, 0)`),
-          desc(DressesTable.timesRented),
           asc(DressesTable.id),
         ]
       : sort === "priceAsc"

@@ -1,13 +1,18 @@
 import { TRPCError } from "@trpc/server";
-import { and, count, eq, isNull } from "drizzle-orm";
+import { and, count, eq, isNull, not } from "drizzle-orm";
 
-import { DressesTable } from "@/drizzle/schema";
+import { DressesTable, ReservationsTable } from "@/drizzle/schema";
 import {
   assertOperationalStaff,
   assertUserCanAccessBranch,
   resolveListBranchId,
 } from "@/features/system/shared/staff-access";
-import { buildWhere, DRESS_EXPORT_ROW_LIMIT, sortExpr } from "./filters";
+import {
+  buildWhere,
+  DRESS_EXPORT_ROW_LIMIT,
+  DRESS_RENTALS_COUNT_EXPR,
+  sortExpr,
+} from "./filters";
 import type {
   DressByIdInput,
   ExportDressesInput,
@@ -29,7 +34,7 @@ const dressGridSelect = {
   pricePerDay: DressesTable.pricePerDay,
   depositAmount: DressesTable.depositAmount,
   insurance: DressesTable.insurance,
-  timesRented: DressesTable.timesRented,
+  timesRented: DRESS_RENTALS_COUNT_EXPR,
   isActive: DressesTable.isActive,
   currentStatus: DressesTable.currentStatus,
   createdAt: DressesTable.createdAt,
@@ -39,6 +44,21 @@ const dressGridSelect = {
   deletedAt: DressesTable.deletedAt,
   deletedBy: DressesTable.deletedBy,
 } as const;
+
+/**
+ * Join backing `DRESS_RENTALS_COUNT_EXPR`. The rental count is derived rather
+ * than read from the old `dresses.timesRented` counter: nothing in the booking
+ * flow ever incremented that column — only the legacy import wrote it — so
+ * every dress rented in-app reported 0 forever.
+ *
+ * A dress belongs to exactly one branch and `createReservation` refuses a dress
+ * from another branch, so the join needs no branch scoping of its own.
+ */
+const rentalsCountJoin = and(
+  eq(ReservationsTable.dressId, DressesTable.id),
+  isNull(ReservationsTable.deletedAt),
+  not(eq(ReservationsTable.status, "cancelled")),
+);
 
 export async function listDresses(ctx: TRPCContext, input: ListDressesInput) {
   const session = getRequiredSession(ctx);
@@ -55,10 +75,14 @@ export async function listDresses(ctx: TRPCContext, input: ListDressesInput) {
   const page = Math.min(input.page, pageCount);
   const offset = (page - 1) * input.perPage;
 
+  // The total above stays unjoined: grouping is per dress, so the row count is
+  // unaffected by the join.
   const rows = await ctx.db
     .select(dressGridSelect)
     .from(DressesTable)
+    .leftJoin(ReservationsTable, rentalsCountJoin)
     .where(whereClause)
+    .groupBy(DressesTable.id)
     .orderBy(sortExpr(input.sorting))
     .limit(input.perPage)
     .offset(offset);
@@ -81,7 +105,9 @@ export async function exportDresses(
   const rows = await ctx.db
     .select(dressGridSelect)
     .from(DressesTable)
+    .leftJoin(ReservationsTable, rentalsCountJoin)
     .where(buildWhere({ ...input, branchId }))
+    .groupBy(DressesTable.id)
     .orderBy(sortExpr(input.sorting))
     .limit(DRESS_EXPORT_ROW_LIMIT);
 
@@ -107,5 +133,18 @@ export async function getDressById(ctx: TRPCContext, input: DressByIdInput) {
 
   await assertUserCanAccessBranch(ctx, session, dress.branchId);
 
-  return dress;
+  // The view dialog shows "times rented", so the detail row needs the same
+  // derived count as the grid rather than the dropped counter column.
+  const [rentals] = await ctx.db
+    .select({ timesRented: DRESS_RENTALS_COUNT_EXPR })
+    .from(ReservationsTable)
+    .where(
+      and(
+        eq(ReservationsTable.dressId, dress.id),
+        isNull(ReservationsTable.deletedAt),
+        not(eq(ReservationsTable.status, "cancelled")),
+      ),
+    );
+
+  return { ...dress, timesRented: Number(rentals?.timesRented ?? 0) };
 }

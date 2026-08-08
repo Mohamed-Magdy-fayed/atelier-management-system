@@ -1,6 +1,7 @@
-import { and, count, eq, isNull } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 
 import { RentalCustomersTable, ReservationsTable } from "@/drizzle/schema";
+import { countableReservation } from "@/features/system/shared/reservation-scope";
 import {
   assertOperationalStaff,
   resolveListBranchId,
@@ -34,15 +35,14 @@ const rentalCustomerGridSelect = {
  *
  * Scoped to the same branch as the list filter, so a branch's customer list
  * reports that branch's bookings while all-branches reports the tenant total —
- * matching how the dashboard counts a branch's customers. Cancelled reservations
- * are included (only soft-deleted ones are excluded), the same definition the
- * dashboard's top-customers list uses.
+ * matching how the dashboard counts a branch's customers. Cancelled bookings are
+ * excluded, the same definition the dashboard's top-customers list uses, so a
+ * customer cannot show 4 reservations here and 3 there.
  */
 function reservationsCountJoin(branchId?: string) {
   return and(
+    countableReservation(branchId),
     eq(ReservationsTable.customerId, RentalCustomersTable.id),
-    isNull(ReservationsTable.deletedAt),
-    branchId ? eq(ReservationsTable.branchId, branchId) : undefined,
   );
 }
 
