@@ -19,6 +19,7 @@
     "dev": "next dev",
     "inngest": "npx inngest-cli@latest dev",
     "seed": "tsx src/drizzle/seed/cli.ts",
+    "smoke:dashboard": "tsx scripts/smoke-dashboard.ts",
     "seed:all": "tsx src/drizzle/seed/cli.ts all",
     "seed:clear": "tsx src/drizzle/seed/cli.ts clear",
     "migrate:legacy": "tsx scripts/migrations/migrate-legacy.ts",

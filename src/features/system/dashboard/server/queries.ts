@@ -110,6 +110,12 @@ export async function getDashboardData(
    * of their own, so acquisition can only be read off the reservations they
    * generated — which also makes the branch and all-branches views use one
    * definition. A cancelled booking never acquired anyone.
+   *
+   * The bounds are bound as ISO strings with an explicit cast, never as Date
+   * objects: `first_reservation_at` is a subquery alias, so Postgres reports the
+   * parameter type back as unknown and postgres.js then tries to serialize the
+   * Date as text and throws. Typecheck and build cannot see this — only running
+   * the query can.
    */
   const newCustomersQuery = (from: Date, to: Date) =>
     ctx.db
@@ -127,7 +133,9 @@ export async function getDashboardData(
           .groupBy(ReservationsTable.customerId)
           .as("customer_first_reservation"),
       )
-      .where(sql`first_reservation_at BETWEEN ${from} AND ${to}`);
+      .where(
+        sql`first_reservation_at BETWEEN ${from.toISOString()}::timestamptz AND ${to.toISOString()}::timestamptz`,
+      );
 
   const paymentReservationJoin = eq(
     PaymentsTable.reservationId,
