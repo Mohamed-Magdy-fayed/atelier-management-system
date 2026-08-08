@@ -8,6 +8,10 @@ import type {
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { DEFAULT_TABLE_SORTING } from "../lib/default-sorting";
+
+const DEFAULT_SORT_PARAM = JSON.stringify(DEFAULT_TABLE_SORTING);
+
 type Defaults = {
   page?: number;
   perPage?: number;
@@ -41,7 +45,9 @@ function readState(
       pageIndex: Math.max(0, (Number.isFinite(p) ? p : page) - 1),
       pageSize: Number.isFinite(pp) && pp > 0 ? pp : perPage,
     },
-    sorting: safeParseJson<SortingState>(params.get("sort")) ?? [],
+    sorting:
+      safeParseJson<SortingState>(params.get("sort")) ??
+      [...DEFAULT_TABLE_SORTING],
     columnFilters:
       safeParseJson<ColumnFiltersState>(params.get("filters")) ?? [],
     globalFilter: params.get("q") ?? "",
@@ -59,8 +65,11 @@ function buildSearchParams(
   if (state.pagination.pageSize !== defaults.perPage) {
     out.set("perPage", String(state.pagination.pageSize));
   }
-  if (state.sorting.length) {
-    out.set("sort", JSON.stringify(state.sorting));
+  // Omit the default sort the same way perPage is omitted at its default, so a
+  // freshly opened grid does not carry a redundant `sort` param around.
+  const sort = JSON.stringify(state.sorting);
+  if (state.sorting.length && sort !== DEFAULT_SORT_PARAM) {
+    out.set("sort", sort);
   }
   if (state.columnFilters.length) {
     out.set("filters", JSON.stringify(state.columnFilters));

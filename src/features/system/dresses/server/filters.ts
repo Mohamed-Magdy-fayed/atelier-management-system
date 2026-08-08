@@ -5,6 +5,7 @@ import {
   eq,
   gte,
   ilike,
+  inArray,
   isNull,
   lte,
   or,
@@ -13,6 +14,10 @@ import {
 } from "drizzle-orm";
 
 import { DressesTable, ReservationsTable } from "@/drizzle/schema";
+import {
+  type DressCurrentStatus,
+  dressCurrentStatusValues,
+} from "@/drizzle/schemas/system/dresses-table";
 import {
   isDateRangeValue,
   isNumberRangeValue,
@@ -62,6 +67,24 @@ function applyDressColumnFilters(
         } else if (values[0] === "false") {
           conditions.push(eq(DressesTable.isActive, false));
         }
+      }
+    } else if (filter.id === "currentStatus") {
+      const raw = filter.value;
+      const values = Array.isArray(raw)
+        ? raw.map(String)
+        : raw != null && raw !== ""
+          ? [String(raw)]
+          : [];
+
+      const cleaned = values.filter((v): v is DressCurrentStatus =>
+        (dressCurrentStatusValues as readonly string[]).includes(v),
+      );
+
+      if (cleaned.length === 1) {
+        const only = cleaned[0];
+        if (only) conditions.push(eq(DressesTable.currentStatus, only));
+      } else if (cleaned.length > 1) {
+        conditions.push(inArray(DressesTable.currentStatus, cleaned));
       }
     } else if (
       filter.id === "pricePerDay" &&
@@ -129,6 +152,8 @@ export function sortExpr(sorting: { id: string; desc: boolean }[]) {
       return direction(DressesTable.pricePerDay);
     case "isActive":
       return direction(DressesTable.isActive);
+    case "currentStatus":
+      return direction(DressesTable.currentStatus);
     case "createdAt":
       return direction(DressesTable.createdAt);
     case "updatedAt":

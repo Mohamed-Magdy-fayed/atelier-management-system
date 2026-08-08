@@ -63,9 +63,12 @@ export function ReservationsTablePage() {
     setGlobalFilter,
   } = useTableUrlState({ page: 1, perPage: 20 });
 
+  // `dressId` is a zero-width placeholder column that only exists to back the
+  // dress facet in the filter bar — it renders no header and no cell, so it
+  // stays hidden. `enableHiding: false` on the column keeps it out of the
+  // view-options menu, where it used to appear as a second "Dress" entry.
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     dressId: false,
-    createdAt: false,
   });
   const [columnPinning, setColumnPinning] = useState<ColumnPinningState>(() =>
     getEntityColumnPinning(),

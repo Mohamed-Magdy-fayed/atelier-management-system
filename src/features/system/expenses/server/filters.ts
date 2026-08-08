@@ -107,6 +107,8 @@ export function sortExpr(sorting: { id: string; desc: boolean }[]) {
       return direction(ExpensesTable.type);
     case "date":
       return direction(ExpensesTable.date);
+    case "createdAt":
+      return direction(ExpensesTable.createdAt);
     default:
       return direction(ExpensesTable.date);
   }

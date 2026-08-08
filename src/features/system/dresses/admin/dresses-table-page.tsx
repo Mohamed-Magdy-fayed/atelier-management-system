@@ -71,9 +71,7 @@ export function DressesTablePage() {
   } = useTableUrlState({ page: 1, perPage: 20 });
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
-    createdAt: false,
-  });
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnPinning, setColumnPinning] = useState<ColumnPinningState>(() =>
     getEntityColumnPinning(),
   );

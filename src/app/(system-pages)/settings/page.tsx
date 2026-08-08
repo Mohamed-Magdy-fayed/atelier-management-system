@@ -1,10 +1,11 @@
+import { DEFAULT_TABLE_SORTING } from "@/features/core/data-table/lib/default-sorting";
 import { SettingsTablePage } from "@/features/system/settings";
 import { HydrateClient, prefetch, trpc } from "@/integrations/trpc/server";
 
 const defaultSettingsInput = {
   page: 1,
   perPage: 20,
-  sorting: [] as { id: string; desc: boolean }[],
+  sorting: [...DEFAULT_TABLE_SORTING],
   globalFilter: undefined as string | undefined,
 };
 

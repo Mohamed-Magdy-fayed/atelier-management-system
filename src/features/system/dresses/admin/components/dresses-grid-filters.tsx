@@ -2,6 +2,7 @@
 
 import type { Table } from "@tanstack/react-table";
 
+import { dressCurrentStatusValues } from "@/drizzle/schemas/system/dresses-table";
 import {
   DataTableDateRangeFilter,
   DataTableFacetedFilter,
@@ -10,9 +11,23 @@ import {
 import { useTranslation } from "@/features/core/i18n/client";
 import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
 
+function dressCurrentStatusTranslationId(status: string) {
+  switch (status) {
+    case "atTailor":
+      return "systemPages.dressCurrentStatusAtTailor" as const;
+    case "atDryCleaner":
+      return "systemPages.dressCurrentStatusAtDryCleaner" as const;
+    case "underRepair":
+      return "systemPages.dressCurrentStatusUnderRepair" as const;
+    default:
+      return "systemPages.dressCurrentStatusAvailable" as const;
+  }
+}
+
 export function DressesGridFilters({ table }: { table: Table<DressGridRow> }) {
   const { t } = useTranslation();
   const statusColumn = table.getColumn("isActive");
+  const currentStatusColumn = table.getColumn("currentStatus");
   const priceColumn = table.getColumn("pricePerDay");
   const createdAtColumn = table.getColumn("createdAt");
 
@@ -21,6 +36,11 @@ export function DressesGridFilters({ table }: { table: Table<DressGridRow> }) {
     { label: String(t("common.inactive")), value: "false" },
   ];
 
+  const currentStatusOptions = dressCurrentStatusValues.map((value) => ({
+    value,
+    label: String(t(dressCurrentStatusTranslationId(value))),
+  }));
+
   return (
     <>
       {statusColumn ? (
@@ -28,6 +48,13 @@ export function DressesGridFilters({ table }: { table: Table<DressGridRow> }) {
           column={statusColumn}
           title={String(t("systemPages.dressesStatus"))}
           options={statusOptions}
+        />
+      ) : null}
+      {currentStatusColumn ? (
+        <DataTableFacetedFilter
+          column={currentStatusColumn}
+          title={String(t("systemPages.dressCurrentStatus"))}
+          options={currentStatusOptions}
         />
       ) : null}
       {priceColumn ? (
