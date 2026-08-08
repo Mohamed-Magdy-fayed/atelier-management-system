@@ -200,6 +200,7 @@ export function CustomersTablePage() {
                 email: row.email,
                 phone: row.phone,
                 age: row.age,
+                verified: row.emailVerifiedAt ? "true" : "false",
                 emailVerifiedAt: row.emailVerifiedAt,
                 lastSignInAt: row.lastSignInAt,
                 createdAt: row.createdAt,

@@ -18,7 +18,13 @@ export {
   useDataTable,
 } from "./hooks/use-data-table";
 export { useTableUrlState } from "./hooks/use-table-url-state";
-export { downloadCsv, parseCsvToObjects, rowsToCsv } from "./lib/csv";
+export {
+  downloadCsv,
+  formatCsvDate,
+  formatCsvDateTime,
+  parseCsvToObjects,
+  rowsToCsv,
+} from "./lib/csv";
 export type {
   DataTableDateRangeValue,
   DataTableNumberRangeValue,
