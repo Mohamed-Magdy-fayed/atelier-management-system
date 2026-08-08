@@ -284,6 +284,10 @@ export function DashboardRentalPage() {
         ? rangeStats.prevRevenue - rangeStats.prevExpenses
         : 0,
       highlight: (rangeStats?.netProfit ?? 0) < 0,
+      // Revenue is windowed on when the payment was recorded, expenses on the
+      // date typed into the expense. Say so rather than let the two look
+      // interchangeable.
+      note: dr("rangeNetProfitBasis"),
     },
     {
       id: "range-expenses",
@@ -311,6 +315,19 @@ export function DashboardRentalPage() {
           label: dr("liveDressesAvailable"),
           value: summary.dressesAvailable,
           variant: "default" as const,
+        },
+        {
+          // Dresses physically with a customer right now. Split out from
+          // "Available" because the stored dress status never reflects rentals.
+          label: dr("liveDressesOut"),
+          value: summary.dressesOut,
+          variant: "secondary" as const,
+          hint:
+            summary.dressUtilizationRate != null
+              ? dr("liveUtilization", {
+                  value: summary.dressUtilizationRate.toFixed(0),
+                })
+              : undefined,
         },
         {
           label: dr("liveDressesAtTailor"),
@@ -465,6 +482,11 @@ export function DashboardRentalPage() {
                       previous={card.previous}
                     />
                     <Muted className="text-xs">{dr("rangeVsPrevPeriod")}</Muted>
+                    {card.note && (
+                      <Muted className="block text-[10px] leading-snug">
+                        {card.note}
+                      </Muted>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -580,6 +602,14 @@ export function DashboardRentalPage() {
                 })}
               </Muted>
             )}
+            {(data?.overdueOutstanding ?? 0) > 0 && (
+              <Muted className="block text-xs text-destructive">
+                {dr("outstandingOverdue", {
+                  value: fmtMoney(data?.overdueOutstanding ?? 0),
+                  count: data?.overdueOutstandingCount ?? 0,
+                })}
+              </Muted>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -591,16 +621,18 @@ export function DashboardRentalPage() {
           <p className="text-sm font-semibold">{dr("liveOperationalTitle")}</p>
           <Muted className="text-xs">{dr("liveOperationalDescription")}</Muted>
         </div>
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-8">
           {isPending && liveStats.length === 0
-            ? (["l1", "l2", "l3", "l4", "l5", "l6", "l7"] as const).map((k) => (
-                <Card key={k} className="animate-pulse">
-                  <CardContent className="pt-4">
-                    <div className="h-6 w-10 rounded bg-muted" />
-                    <div className="mt-2 h-3 w-16 rounded bg-muted" />
-                  </CardContent>
-                </Card>
-              ))
+            ? (["l1", "l2", "l3", "l4", "l5", "l6", "l7", "l8"] as const).map(
+                (k) => (
+                  <Card key={k} className="animate-pulse">
+                    <CardContent className="pt-4">
+                      <div className="h-6 w-10 rounded bg-muted" />
+                      <div className="mt-2 h-3 w-16 rounded bg-muted" />
+                    </CardContent>
+                  </Card>
+                ),
+              )
             : liveStats.map((stat) => (
                 <Card
                   key={stat.label}
@@ -619,6 +651,11 @@ export function DashboardRentalPage() {
                       {numberFormatter.format(stat.value)}
                     </div>
                     <Muted className="mt-1 block text-xs">{stat.label}</Muted>
+                    {stat.hint && (
+                      <Muted className="mt-0.5 block text-[10px]">
+                        {stat.hint}
+                      </Muted>
+                    )}
                   </CardContent>
                 </Card>
               ))}

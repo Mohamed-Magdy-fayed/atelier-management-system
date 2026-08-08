@@ -10,7 +10,6 @@ import {
   gte,
   inArray,
   isNull,
-  lt,
   lte,
   not,
   sql,
@@ -26,6 +25,14 @@ import {
   UsersTable,
 } from "@/drizzle/schema";
 
+import {
+  balanceDueDateSql,
+  countableReservation,
+  dressIsOutNow,
+  liveReservation,
+  OWING_STATUSES,
+  remainingBalanceSql,
+} from "@/features/system/shared/reservation-scope";
 import {
   assertOperationalStaff,
   resolveListBranchId,
@@ -80,25 +87,11 @@ export async function getDashboardData(
   const prevRangeStartDate = toLocalDateString(prevRangeStart);
   const prevRangeEndDate = toLocalDateString(prevRangeEnd);
 
-  const currentMonthStartIso = dates.currentMonthStart.toISOString();
-  const currentMonthEndIso = dates.currentMonthEnd.toISOString();
-  const previousMonthStartIso = dates.previousMonthStart.toISOString();
-  const previousMonthEndIso = dates.previousMonthEnd.toISOString();
-  const currentWeekStartIso = dates.currentWeekStart.toISOString();
-  const currentWeekEndIso = dates.currentWeekEnd.toISOString();
-  const previousWeekStartIso = dates.previousWeekStart.toISOString();
-  const previousWeekEndIso = dates.previousWeekEnd.toISOString();
   const nowIso = dates.now.toISOString();
-  const todayStartIso = dates.todayStart.toISOString();
-  const todayEndIso = dates.todayEnd.toISOString();
   const upcomingWindowEndIso = dates.upcomingWindowEnd.toISOString();
 
   // DATE-only strings for the expenses.date column (Postgres DATE type). These
   // must be rendered in the local calendar — see toLocalDateString.
-  const currentMonthStartDate = toLocalDateString(dates.currentMonthStart);
-  const currentMonthEndDate = toLocalDateString(dates.currentMonthEnd);
-  const previousMonthStartDate = toLocalDateString(dates.previousMonthStart);
-  const previousMonthEndDate = toLocalDateString(dates.previousMonthEnd);
   const rangeStartDate = toLocalDateString(rangeStart);
   const rangeEndDate = toLocalDateString(rangeEnd);
 
@@ -106,28 +99,17 @@ export async function getDashboardData(
   const occasionWindowEnd = new Date(dates.todayStart);
   occasionWindowEnd.setDate(occasionWindowEnd.getDate() + 7);
 
-  const reservationsBaseWhere = and(
-    isNull(ReservationsTable.deletedAt),
-    branchId ? eq(ReservationsTable.branchId, branchId) : undefined,
-  );
+  // Both predicates live in shared/reservation-scope.ts so the dashboard, the
+  // reservation list and the booking-conflict check cannot drift apart.
+  const reservationsBaseWhere = liveReservation(branchId);
+  const countableReservationWhere = countableReservation(branchId);
 
   /**
-   * The single definition of a reservation that counts toward business metrics:
-   * alive and not cancelled. Cancelled rows stay in the table for the
-   * cancellation-rate numerator only. Every "how many bookings" query must use
-   * this — the aggregate and range counts used to disagree.
-   */
-  const countableReservationWhere = and(
-    isNull(ReservationsTable.deletedAt),
-    not(eq(ReservationsTable.status, "cancelled")),
-    branchId ? eq(ReservationsTable.branchId, branchId) : undefined,
-  );
-
-  /**
-   * Customers acquired in a range: those whose first reservation *at this scope*
-   * falls inside it. Customer rows are tenant-wide and have no branch of their
-   * own, so acquisition can only be read off the reservations they generated —
-   * which also makes the branch and all-branches views use one definition.
+   * Customers acquired in a range: those whose first *countable* reservation at
+   * this scope falls inside it. Customer rows are tenant-wide and have no branch
+   * of their own, so acquisition can only be read off the reservations they
+   * generated — which also makes the branch and all-branches views use one
+   * definition. A cancelled booking never acquired anyone.
    */
   const newCustomersQuery = (from: Date, to: Date) =>
     ctx.db
@@ -141,7 +123,7 @@ export async function getDashboardData(
             ),
           })
           .from(ReservationsTable)
-          .where(reservationsBaseWhere)
+          .where(countableReservation(branchId))
           .groupBy(ReservationsTable.customerId)
           .as("customer_first_reservation"),
       )
@@ -165,19 +147,21 @@ export async function getDashboardData(
     not(eq(ReservationsTable.status, "cancelled")),
   );
 
-  const remainingBalanceSql = sql`GREATEST((COALESCE(${ReservationsTable.totalPrice}, 0) - COALESCE(${ReservationsTable.discount}, 0)) - COALESCE(${ReservationsTable.totalPaid}, 0), 0)`;
-
-  /** Built per call so each query builder gets its own SQL chunk. */
+  /**
+   * Every reservation that still owes money — not only those past their pickup
+   * date. "Outstanding balance" is read as total receivables, so a picked-up or
+   * returned rental with an unpaid remainder belongs here too.
+   *
+   * Built per call so each query builder gets its own SQL chunk.
+   */
   const buildOutstandingWhere = () =>
     and(
-      eq(ReservationsTable.status, "reserved"),
-      lt(ReservationsTable.receivingDateTime, dates.now),
+      countableReservation(branchId),
+      inArray(ReservationsTable.status, [...OWING_STATUSES]),
       gt(
         sql`(COALESCE(${ReservationsTable.totalPrice}, 0) - COALESCE(${ReservationsTable.discount}, 0)) - COALESCE(${ReservationsTable.totalPaid}, 0)`,
         0,
       ),
-      isNull(ReservationsTable.deletedAt),
-      branchId ? eq(ReservationsTable.branchId, branchId) : undefined,
     );
 
   const employeeWhere = and(
@@ -185,11 +169,24 @@ export async function getDashboardData(
     isNull(UsersTable.deletedAt),
   );
 
+  /**
+   * Branch scoping for tenant-wide customer rows, identical to the predicate
+   * behind the /rental-customers grid total (rental-customers/server/filters.ts)
+   * so the quick-action badge and the page it links to cannot disagree.
+   */
+  const customerBranchWhere = branchId
+    ? sql`EXISTS (
+        SELECT 1 FROM ${ReservationsTable}
+        WHERE ${ReservationsTable.customerId} = ${RentalCustomersTable.id}
+          AND ${ReservationsTable.branchId} = ${branchId}
+          AND ${ReservationsTable.deletedAt} IS NULL
+      )`
+    : undefined;
+
   const [
     reservationsAggregateRow,
-    paymentsAggregateRow,
-    dressesAggregateRow,
-    customerAggregateRow,
+    dressPortfolioRow,
+    customerCountRow,
     employeeCountRow,
     paymentsCountRow,
     rangeRevenueRow,
@@ -198,12 +195,9 @@ export async function getDashboardData(
     topDressesRaw,
     upcomingReservationsRaw,
     outstandingReservationsRaw,
-    dressesOutResult,
     dueTodayRaw,
     recentCustomersRaw,
-    monthlyExpensesRow,
     rangeExpensesRow,
-    dressStatusRaw,
     upcomingOccasionsRaw,
     prevRangeRevenueRow,
     prevRangeExpensesRow,
@@ -213,61 +207,51 @@ export async function getDashboardData(
     rangePaymentsByMethodRaw,
     outstandingTotalsRow,
   ] = await Promise.all([
+    // Live operational counts. Each arm already filters on a status that
+    // excludes cancelled; the base predicate states it rather than implying it.
     ctx.db
       .select({
-        totalReservations: sql<number>`COALESCE(SUM(CASE WHEN ${ReservationsTable.status} <> 'cancelled' THEN 1 ELSE 0 END), 0)`,
         activeReservations: sql<number>`COALESCE(SUM(CASE WHEN ${ReservationsTable.status} IN ('reserved', 'pickedUp') THEN 1 ELSE 0 END), 0)`,
         completedReservations: sql<number>`COALESCE(SUM(CASE WHEN ${ReservationsTable.status} = 'returned' THEN 1 ELSE 0 END), 0)`,
-        reservationsThisWeek: sql<number>`COALESCE(SUM(CASE WHEN ${ReservationsTable.createdAt} >= ${currentWeekStartIso} AND ${ReservationsTable.createdAt} <= ${currentWeekEndIso} AND ${ReservationsTable.status} <> 'cancelled' THEN 1 ELSE 0 END), 0)`,
-        reservationsToday: sql<number>`COALESCE(SUM(CASE WHEN ${ReservationsTable.createdAt} >= ${todayStartIso} AND ${ReservationsTable.createdAt} <= ${todayEndIso} AND ${ReservationsTable.status} <> 'cancelled' THEN 1 ELSE 0 END), 0)`,
-        reservationsLastWeek: sql<number>`COALESCE(SUM(CASE WHEN ${ReservationsTable.createdAt} >= ${previousWeekStartIso} AND ${ReservationsTable.createdAt} <= ${previousWeekEndIso} AND ${ReservationsTable.status} <> 'cancelled' THEN 1 ELSE 0 END), 0)`,
         upcomingPickups: sql<number>`COALESCE(SUM(CASE WHEN ${ReservationsTable.receivingDateTime} >= ${nowIso} AND ${ReservationsTable.receivingDateTime} <= ${upcomingWindowEndIso} AND ${ReservationsTable.status} = 'reserved' THEN 1 ELSE 0 END), 0)`,
         overdueReturns: sql<number>`COALESCE(SUM(CASE WHEN ${ReservationsTable.returnDateTime} < ${nowIso} AND ${ReservationsTable.status} = 'pickedUp' THEN 1 ELSE 0 END), 0)`,
-        upcomingBalanceDue: sql<number>`COALESCE(SUM(CASE WHEN ${ReservationsTable.receivingDateTime} >= ${nowIso} AND ${ReservationsTable.receivingDateTime} <= ${upcomingWindowEndIso} AND ${ReservationsTable.status} = 'reserved' THEN GREATEST((COALESCE(${ReservationsTable.totalPrice}, 0) - COALESCE(${ReservationsTable.discount}, 0)) - COALESCE(${ReservationsTable.totalPaid}, 0), 0) ELSE 0 END), 0)`,
       })
       .from(ReservationsTable)
-      .where(reservationsBaseWhere),
+      .where(countableReservationWhere),
 
+    /**
+     * One pass over the rentable portfolio, putting every dress in exactly one
+     * bucket so the tiles sum to `activeDresses`.
+     *
+     * `dresses.currentStatus` is a MAINTENANCE flag — nothing in the reservation
+     * lifecycle writes it, so on its own it reports a dress that left with a
+     * customer this morning as "available". Being out on a rental therefore
+     * wins over the stored status.
+     */
     ctx.db
       .select({
-        totalRevenue: sql<number>`COALESCE(SUM(${PaymentsTable.amount}), 0)`,
-        monthlyRevenue: sql<number>`COALESCE(SUM(CASE WHEN ${PaymentsTable.createdAt} >= ${currentMonthStartIso} AND ${PaymentsTable.createdAt} <= ${currentMonthEndIso} THEN ${PaymentsTable.amount} ELSE 0 END), 0)`,
-        previousMonthlyRevenue: sql<number>`COALESCE(SUM(CASE WHEN ${PaymentsTable.createdAt} >= ${previousMonthStartIso} AND ${PaymentsTable.createdAt} <= ${previousMonthEndIso} THEN ${PaymentsTable.amount} ELSE 0 END), 0)`,
-      })
-      .from(PaymentsTable)
-      .innerJoin(ReservationsTable, paymentReservationJoin)
-      .where(
-        and(
-          countablePaymentWhere,
-          branchId ? eq(ReservationsTable.branchId, branchId) : undefined,
-        ),
-      ),
-
-    // Denominator of dressUtilizationRate — soft-deleted dresses are excluded
-    // so the numerator below can never exceed it.
-    ctx.db
-      .select({
-        activeDresses: sql<number>`COALESCE(SUM(CASE WHEN ${DressesTable.isActive} THEN 1 ELSE 0 END), 0)`,
+        activeDresses: sql<number>`COUNT(*)`,
+        dressesOut: sql<number>`COALESCE(SUM(CASE WHEN ${dressIsOutNow(dates.now)} THEN 1 ELSE 0 END), 0)`,
+        dressesAvailable: sql<number>`COALESCE(SUM(CASE WHEN NOT ${dressIsOutNow(dates.now)} AND ${DressesTable.currentStatus} = 'available' THEN 1 ELSE 0 END), 0)`,
+        dressesAtTailor: sql<number>`COALESCE(SUM(CASE WHEN NOT ${dressIsOutNow(dates.now)} AND ${DressesTable.currentStatus} = 'atTailor' THEN 1 ELSE 0 END), 0)`,
+        dressesAtDryCleaner: sql<number>`COALESCE(SUM(CASE WHEN NOT ${dressIsOutNow(dates.now)} AND ${DressesTable.currentStatus} = 'atDryCleaner' THEN 1 ELSE 0 END), 0)`,
+        dressesUnderRepair: sql<number>`COALESCE(SUM(CASE WHEN NOT ${dressIsOutNow(dates.now)} AND ${DressesTable.currentStatus} = 'underRepair' THEN 1 ELSE 0 END), 0)`,
       })
       .from(DressesTable)
       .where(
         and(
           isNull(DressesTable.deletedAt),
+          eq(DressesTable.isActive, true),
           branchId ? eq(DressesTable.branchId, branchId) : undefined,
         ),
       ),
 
-    // Customers are tenant-wide, so a branch's customers are the distinct
-    // customers it took reservations for, not rows it owns. Both figures are
-    // derived from reservations so the branch and all-branches views share one
-    // definition.
+    // Counted off the customer table, not off reservations, so the badge equals
+    // the /rental-customers grid total it links to.
     ctx.db
-      .select({
-        activeCustomers: sql<number>`COUNT(DISTINCT CASE WHEN ${ReservationsTable.createdAt} >= ${currentMonthStartIso} AND ${ReservationsTable.createdAt} <= ${currentMonthEndIso} THEN ${ReservationsTable.customerId} END)`,
-        customerCount: sql<number>`COUNT(DISTINCT ${ReservationsTable.customerId})`,
-      })
-      .from(ReservationsTable)
-      .where(reservationsBaseWhere),
+      .select({ customerCount: count() })
+      .from(RentalCustomersTable)
+      .where(customerBranchWhere),
 
     // Not collapsed: the branch arm needs an extra join to resolve membership.
     branchId
@@ -299,8 +283,8 @@ export async function getDashboardData(
         ),
       ),
 
-    // Range revenue uses the same rule as lifetime revenue: money attached to a
-    // cancelled or soft-deleted reservation is not revenue.
+    // Range revenue: money attached to a cancelled or soft-deleted reservation
+    // is not revenue.
     ctx.db
       .select({ totalRevenue: sum(PaymentsTable.amount) })
       .from(PaymentsTable)
@@ -312,9 +296,16 @@ export async function getDashboardData(
         ),
       ),
 
-    // Same countable definition as reservationsAggregateRow.totalReservations.
+    // Count and average contract value share one pass. The average is the mean
+    // agreed price of bookings MADE in the window — not revenue ÷ bookings,
+    // which would mix payments on older reservations into the numerator.
     ctx.db
-      .select({ reservationsCount: count(ReservationsTable.id) })
+      .select({
+        reservationsCount: count(ReservationsTable.id),
+        averageContractValue: sql<
+          string | null
+        >`AVG(GREATEST(COALESCE(${ReservationsTable.totalPrice}, 0) - COALESCE(${ReservationsTable.discount}, 0), 0))`,
+      })
       .from(ReservationsTable)
       .where(
         and(
@@ -331,7 +322,6 @@ export async function getDashboardData(
         code: DressesTable.code,
         title: DressesTable.title,
         isActive: DressesTable.isActive,
-        timesRented: DressesTable.timesRented,
         rentals: sql<number>`COALESCE(COUNT(${ReservationsTable.id}), 0)`,
         revenue: sql<number>`COALESCE(SUM(${ReservationsTable.totalPaid}), 0)`,
       })
@@ -345,18 +335,23 @@ export async function getDashboardData(
           between(ReservationsTable.receivingDateTime, rangeStart, rangeEnd),
         ),
       )
-      .where(branchId ? eq(DressesTable.branchId, branchId) : undefined)
+      // A soft-deleted dress must not rank here — `activeDresses` excludes it,
+      // so without this the two panels describe different portfolios.
+      .where(
+        and(
+          isNull(DressesTable.deletedAt),
+          branchId ? eq(DressesTable.branchId, branchId) : undefined,
+        ),
+      )
       .groupBy(
         DressesTable.id,
         DressesTable.code,
         DressesTable.title,
         DressesTable.isActive,
-        DressesTable.timesRented,
       )
       .orderBy(
         sql`COALESCE(COUNT(${ReservationsTable.id}), 0) DESC`,
         sql`COALESCE(SUM(${ReservationsTable.totalPaid}), 0) DESC`,
-        sql`${DressesTable.timesRented} DESC`,
         sql`${DressesTable.id} ASC`,
       )
       .limit(5),
@@ -374,37 +369,14 @@ export async function getDashboardData(
       limit: 6,
     }),
 
-    // Display list only — capped at 6. The true total comes from
-    // outstandingTotalsRow below, which aggregates over every matching row.
+    // Display list only — capped at 6, oldest debt first. The true totals come
+    // from outstandingTotalsRow below, which aggregates over every matching row.
     ctx.db.query.ReservationsTable.findMany({
       where: buildOutstandingWhere(),
-      orderBy: [asc(ReservationsTable.returnDateTime)],
+      orderBy: [asc(balanceDueDateSql)],
       with: { dress: true },
       limit: 6,
     }),
-
-    // Numerator of dressUtilizationRate — must be drawn from the same
-    // population as activeDresses or the ratio can exceed 100%.
-    ctx.db
-      .select({
-        count: sql<number>`COUNT(DISTINCT ${ReservationsTable.dressId})`,
-      })
-      .from(ReservationsTable)
-      .innerJoin(
-        DressesTable,
-        and(
-          eq(DressesTable.id, ReservationsTable.dressId),
-          isNull(DressesTable.deletedAt),
-          eq(DressesTable.isActive, true),
-        ),
-      )
-      .where(
-        and(
-          eq(ReservationsTable.status, "pickedUp"),
-          isNull(ReservationsTable.deletedAt),
-          branchId ? eq(ReservationsTable.branchId, branchId) : undefined,
-        ),
-      ),
 
     ctx.db.query.ReservationsTable.findMany({
       where: and(
@@ -422,7 +394,7 @@ export async function getDashboardData(
     // Aggregated from reservations rather than read off
     // `rental_customers.reservationsCount`: customers are tenant-wide, so the
     // stored counter is a tenant-wide total and cannot answer "top customers of
-    // this branch".
+    // this branch". A cancelled booking does not make someone a top customer.
     ctx.db
       .select({
         id: RentalCustomersTable.id,
@@ -436,7 +408,7 @@ export async function getDashboardData(
         ReservationsTable,
         eq(ReservationsTable.customerId, RentalCustomersTable.id),
       )
-      .where(reservationsBaseWhere)
+      .where(countableReservationWhere)
       .groupBy(
         RentalCustomersTable.id,
         RentalCustomersTable.name,
@@ -444,14 +416,6 @@ export async function getDashboardData(
       )
       .orderBy(desc(sql`COUNT(${ReservationsTable.id})`))
       .limit(6),
-
-    ctx.db
-      .select({
-        monthlyExpenses: sql<number>`COALESCE(SUM(CASE WHEN ${ExpensesTable.date} >= ${currentMonthStartDate} AND ${ExpensesTable.date} <= ${currentMonthEndDate} THEN ${ExpensesTable.amount} ELSE 0 END), 0)`,
-        previousMonthExpenses: sql<number>`COALESCE(SUM(CASE WHEN ${ExpensesTable.date} >= ${previousMonthStartDate} AND ${ExpensesTable.date} <= ${previousMonthEndDate} THEN ${ExpensesTable.amount} ELSE 0 END), 0)`,
-      })
-      .from(ExpensesTable)
-      .where(branchId ? eq(ExpensesTable.branchId, branchId) : undefined),
 
     ctx.db
       .select({ totalExpenses: sum(ExpensesTable.amount) })
@@ -463,20 +427,6 @@ export async function getDashboardData(
           branchId ? eq(ExpensesTable.branchId, branchId) : undefined,
         ),
       ),
-
-    ctx.db
-      .select({
-        currentStatus: DressesTable.currentStatus,
-        statusCount: count(),
-      })
-      .from(DressesTable)
-      .where(
-        and(
-          isNull(DressesTable.deletedAt),
-          branchId ? eq(DressesTable.branchId, branchId) : undefined,
-        ),
-      )
-      .groupBy(DressesTable.currentStatus),
 
     ctx.db.query.ReservationsTable.findMany({
       where: and(
@@ -515,19 +465,16 @@ export async function getDashboardData(
         ),
       ),
 
-    // Previous-period reservations + current-range cancellations (one round-trip)
+    // Previous-period reservations + current-range cancellations (one
+    // round-trip). This is the one figure that WANTS cancelled rows, so it is
+    // the only consumer of the base predicate.
     ctx.db
       .select({
         prevReservations: sql<number>`COALESCE(SUM(CASE WHEN ${ReservationsTable.createdAt} >= ${prevRangeStart.toISOString()} AND ${ReservationsTable.createdAt} <= ${prevRangeEnd.toISOString()} AND ${ReservationsTable.status} <> 'cancelled' THEN 1 ELSE 0 END), 0)`,
         cancellations: sql<number>`COALESCE(SUM(CASE WHEN ${ReservationsTable.createdAt} >= ${rangeStart.toISOString()} AND ${ReservationsTable.createdAt} <= ${rangeEnd.toISOString()} AND ${ReservationsTable.status} = 'cancelled' THEN 1 ELSE 0 END), 0)`,
       })
       .from(ReservationsTable)
-      .where(
-        and(
-          isNull(ReservationsTable.deletedAt),
-          branchId ? eq(ReservationsTable.branchId, branchId) : undefined,
-        ),
-      ),
+      .where(reservationsBaseWhere),
 
     // Previous-period new customers
     newCustomersQuery(prevRangeStart, prevRangeEnd),
@@ -565,77 +512,42 @@ export async function getDashboardData(
       )
       .groupBy(PaymentsTable.method),
 
-    // Outstanding total must aggregate over ALL matching reservations — the
-    // list above is capped at 6 rows purely for display.
+    // Outstanding totals aggregate over ALL matching reservations — the list
+    // above is capped at 6 rows purely for display. The overdue split tells the
+    // manager how much of the debt is already chaseable.
     ctx.db
       .select({
         totalOutstanding: sql<number>`COALESCE(SUM(${remainingBalanceSql}), 0)`,
         outstandingCount: count(),
+        overdueOutstanding: sql<number>`COALESCE(SUM(CASE WHEN ${balanceDueDateSql} < ${nowIso} THEN ${remainingBalanceSql} ELSE 0 END), 0)`,
+        overdueCount: sql<number>`COALESCE(SUM(CASE WHEN ${balanceDueDateSql} < ${nowIso} THEN 1 ELSE 0 END), 0)`,
       })
       .from(ReservationsTable)
       .where(buildOutstandingWhere()),
   ]);
 
   const reservationStats = reservationsAggregateRow[0] ?? {};
-  const paymentStats = paymentsAggregateRow[0] ?? {};
-
-  const totalRevenue = Number(paymentStats.totalRevenue ?? 0);
-  const monthlyRevenue = Number(paymentStats.monthlyRevenue ?? 0);
-  const previousMonthlyRevenue = Number(
-    paymentStats.previousMonthlyRevenue ?? 0,
-  );
-  const reservationsThisWeek = Number(
-    reservationStats.reservationsThisWeek ?? 0,
-  );
-  const reservationsLastWeek = Number(
-    reservationStats.reservationsLastWeek ?? 0,
-  );
-
-  const monthlyRevenueChange =
-    previousMonthlyRevenue > 0
-      ? ((monthlyRevenue - previousMonthlyRevenue) / previousMonthlyRevenue) *
-        100
-      : monthlyRevenue > 0
-        ? 100
-        : null;
-
-  const reservationsWeekChange =
-    reservationsLastWeek > 0
-      ? ((reservationsThisWeek - reservationsLastWeek) / reservationsLastWeek) *
-        100
-      : reservationsThisWeek > 0
-        ? 100
-        : null;
+  const dressStats = dressPortfolioRow[0] ?? {};
 
   const rangeTotalRevenue = Number(rangeRevenueRow[0]?.totalRevenue ?? 0);
   const rangeReservationsCount = Number(
     rangeReservationsRow[0]?.reservationsCount ?? 0,
   );
   const rangeNewCustomers = Number(rangeNewCustomersRow[0]?.newCustomers ?? 0);
+  // AVG returns NULL — not 0 — when no reservation was booked in the window,
+  // which is what the "not enough data yet" state on the card renders.
+  const rawAverageContractValue =
+    rangeReservationsRow[0]?.averageContractValue ?? null;
   const averageReservationValue =
-    rangeReservationsCount > 0
-      ? rangeTotalRevenue / rangeReservationsCount
-      : null;
-
-  const monthlyExpenses = Number(monthlyExpensesRow[0]?.monthlyExpenses ?? 0);
-  const previousMonthExpenses = Number(
-    monthlyExpensesRow[0]?.previousMonthExpenses ?? 0,
-  );
-  const monthlyNetProfit = monthlyRevenue - monthlyExpenses;
-  const monthlyExpensesChange =
-    previousMonthExpenses > 0
-      ? ((monthlyExpenses - previousMonthExpenses) / previousMonthExpenses) *
-        100
-      : monthlyExpenses > 0
-        ? 100
-        : null;
+    rawAverageContractValue == null ? null : Number(rawAverageContractValue);
 
   const rangeTotalExpenses = Number(rangeExpensesRow[0]?.totalExpenses ?? 0);
   // KNOWN LIMITATION: revenue is windowed on `payments.createdAt` (the instant
   // the row was inserted) while expenses are windowed on the user-entered
   // `expenses.date` calendar day. There is no payment-date column, so a
   // back-dated payment lands in the period it was recorded, not the period it
-  // was received. The UI discloses this under the net-profit card.
+  // was received. The net-profit card discloses this on screen — see the
+  // `rangeNetProfitBasis` string under it.
   const rangeNetProfit = rangeTotalRevenue - rangeTotalExpenses;
 
   const prevRevenue = Number(prevRangeRevenueRow[0]?.totalRevenue ?? 0);
@@ -654,11 +566,8 @@ export async function getDashboardData(
   const cancellationRate =
     totalForRate > 0 ? (cancellations / totalForRate) * 100 : null;
 
-  const dressStatusMap = Object.fromEntries(
-    dressStatusRaw.map((row) => [row.currentStatus, Number(row.statusCount)]),
-  );
-  const activeDresses = Number(dressesAggregateRow[0]?.activeDresses ?? 0);
-  const dressesOutCount = Number(dressesOutResult[0]?.count ?? 0);
+  const activeDresses = Number(dressStats.activeDresses ?? 0);
+  const dressesOutCount = Number(dressStats.dressesOut ?? 0);
   const dressUtilizationRate =
     activeDresses > 0 ? (dressesOutCount / activeDresses) * 100 : null;
 
@@ -670,13 +579,19 @@ export async function getDashboardData(
         totalDue - Number(reservation.totalPaid ?? 0),
         0,
       );
+      // Mirrors balanceDueDateSql: an uncollected booking is chased from its
+      // pickup date, one already out or back from its return date.
+      const dueDate =
+        reservation.status === "reserved"
+          ? reservation.receivingDateTime
+          : reservation.returnDateTime;
       return {
         id: String(reservation.id),
         reservationCode: reservation.reservationCode,
         customerName: reservation.customerName,
         dressId: String(reservation.dressId),
         dressTitle: reservation.dress?.title ?? "—",
-        dueDate: new Date(reservation.receivingDateTime).toISOString(),
+        dueDate: new Date(dueDate).toISOString(),
         remaining,
         status: reservation.status,
       };
@@ -685,31 +600,20 @@ export async function getDashboardData(
 
   return {
     summary: {
-      totalRevenue,
-      monthlyRevenue,
-      monthlyRevenueChange,
-      monthlyExpenses,
-      monthlyExpensesChange,
-      monthlyNetProfit,
-      totalReservations: Number(reservationStats.totalReservations ?? 0),
-      reservationsThisWeek,
-      reservationsToday: Number(reservationStats.reservationsToday ?? 0),
-      reservationsWeekChange,
       activeReservations: Number(reservationStats.activeReservations ?? 0),
       completedReservations: Number(
         reservationStats.completedReservations ?? 0,
       ),
       upcomingPickups: Number(reservationStats.upcomingPickups ?? 0),
       overdueReturns: Number(reservationStats.overdueReturns ?? 0),
-      upcomingBalanceDue: Number(reservationStats.upcomingBalanceDue ?? 0),
       activeDresses,
-      dressesAvailable: dressStatusMap.available ?? 0,
-      dressesAtTailor: dressStatusMap.atTailor ?? 0,
-      dressesAtDryCleaner: dressStatusMap.atDryCleaner ?? 0,
-      dressesUnderRepair: dressStatusMap.underRepair ?? 0,
+      dressesOut: dressesOutCount,
+      dressesAvailable: Number(dressStats.dressesAvailable ?? 0),
+      dressesAtTailor: Number(dressStats.dressesAtTailor ?? 0),
+      dressesAtDryCleaner: Number(dressStats.dressesAtDryCleaner ?? 0),
+      dressesUnderRepair: Number(dressStats.dressesUnderRepair ?? 0),
       dressUtilizationRate,
-      activeCustomers: Number(customerAggregateRow[0]?.activeCustomers ?? 0),
-      customerCount: Number(customerAggregateRow[0]?.customerCount ?? 0),
+      customerCount: Number(customerCountRow[0]?.customerCount ?? 0),
       employeeCount: Number(employeeCountRow[0]?.employeeCount ?? 0),
       paymentsCount: Number(paymentsCountRow[0]?.paymentsCount ?? 0),
     },
@@ -744,7 +648,6 @@ export async function getDashboardData(
       isActive: Boolean(row.isActive),
       rentals: Number(row.rentals ?? 0),
       revenue: Number(row.revenue ?? 0),
-      timesRented: row.timesRented ?? 0,
     })),
     upcomingReservations: upcomingReservationsRaw.map((reservation) => ({
       id: String(reservation.id),
@@ -760,7 +663,10 @@ export async function getDashboardData(
     totalOutstandingCount: Number(
       outstandingTotalsRow[0]?.outstandingCount ?? 0,
     ),
-    dressesOutCount,
+    overdueOutstanding: Number(
+      outstandingTotalsRow[0]?.overdueOutstanding ?? 0,
+    ),
+    overdueOutstandingCount: Number(outstandingTotalsRow[0]?.overdueCount ?? 0),
     dueTodayReservations: dueTodayRaw.map((reservation) => ({
       id: String(reservation.id),
       reservationCode: reservation.reservationCode,
