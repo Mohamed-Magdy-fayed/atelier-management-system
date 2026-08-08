@@ -175,10 +175,7 @@ export default {
     title: "Effortless elegance for your occasion.",
     lead: "Browse our curated dresses, see pricing by branch, and check availability—then visit us to reserve in person.",
     primaryGuest: "View collection",
-    primaryAuthenticated: "Open workspace",
-    primaryAuthenticatedCustomer: "My account",
-    secondaryGuest: "Staff sign in",
-    secondaryAuthenticated: "Go to dashboard",
+    secondaryGuest: "Sign in",
     footerTagline:
       "Visit our boutiques for fittings and reservations—online reservation coming soon.",
     locationsTitle: "Our locations",
@@ -197,12 +194,8 @@ export default {
     statScaleTitle: "Reserve in store",
     statScaleBody:
       "No online checkout—we welcome you in person for fittings and reservations.",
-    authPanelTitle: "Behind the curtain",
-    authPanelLead:
-      "Staff use this workspace for reservations, branches, and daily operations.",
     headerAccountMenu: "Account menu",
     myAccount: "My account",
-    workspace: "Workspace",
     mobileTabBarLabel: "Site navigation",
     tabHome: "Home",
     tabBrowse: "Browse",
