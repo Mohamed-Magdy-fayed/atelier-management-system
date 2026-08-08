@@ -1,10 +1,11 @@
+import { DEFAULT_TABLE_SORTING } from "@/features/core/data-table/lib/default-sorting";
 import { DressesTablePage } from "@/features/system/dresses/admin";
 import { HydrateClient, prefetch, trpc } from "@/integrations/trpc/server";
 
 const defaultDressesInput = {
   page: 1,
   perPage: 20,
-  sorting: [] as { id: string; desc: boolean }[],
+  sorting: [...DEFAULT_TABLE_SORTING],
   globalFilter: undefined as string | undefined,
 };
 

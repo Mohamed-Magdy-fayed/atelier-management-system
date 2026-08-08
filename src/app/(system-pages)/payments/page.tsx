@@ -1,10 +1,11 @@
+import { DEFAULT_TABLE_SORTING } from "@/features/core/data-table/lib/default-sorting";
 import { PaymentsTablePage } from "@/features/system/payments";
 import { HydrateClient, prefetch, trpc } from "@/integrations/trpc/server";
 
 const defaultPaymentsInput = {
   page: 1,
   perPage: 20,
-  sorting: [] as { id: string; desc: boolean }[],
+  sorting: [...DEFAULT_TABLE_SORTING],
   columnFilters: [] as { id: string; value: unknown }[],
   globalFilter: undefined as string | undefined,
 };

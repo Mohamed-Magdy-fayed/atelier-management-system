@@ -178,7 +178,10 @@ export function buildReservationColumns(opts: {
       header: () => null,
       cell: () => null,
       enableSorting: false,
-      enableHiding: true,
+      // Placeholder column: it carries the dress facet's filter state for the
+      // toolbar and renders nothing. Not hideable, so it never shows up in the
+      // view-options menu alongside the real `dress` column below.
+      enableHiding: false,
       size: 0,
       maxSize: 0,
       meta: { label: String(t("systemPages.reservationsDress")) },
