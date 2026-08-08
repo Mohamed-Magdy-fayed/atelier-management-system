@@ -46,6 +46,7 @@ import { useBranch } from "@/features/core/auth/nextjs/components/branch-provide
 import { useActiveBranchId } from "@/features/core/auth/nextjs/hooks/use-active-branch-id";
 import { useTranslation } from "@/features/core/i18n/client";
 import {
+  ALL_TIME_RANGE_START,
   endOfDay,
   startOfDay,
   subDays,
@@ -184,6 +185,14 @@ export function DashboardRentalPage() {
         label: String(t("systemPages.dashboardRental.rangeLast3Months")),
         getRange: () => ({
           from: startOfDay(subDays(now, 89)),
+          to: endOfDay(now),
+        }),
+      },
+      {
+        id: "allTime",
+        label: String(t("systemPages.dashboardRental.rangeAllTime")),
+        getRange: () => ({
+          from: ALL_TIME_RANGE_START,
           to: endOfDay(now),
         }),
       },

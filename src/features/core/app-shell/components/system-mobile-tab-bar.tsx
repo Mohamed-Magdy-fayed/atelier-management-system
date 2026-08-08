@@ -34,6 +34,9 @@ function navLabelKey(
   return `systemPages.${translationKey}` as const;
 }
 
+const sheetLinkClass =
+  "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-muted";
+
 export function SystemMobileTabBar({ user }: { user: User }) {
   const pathname = usePathname() ?? "/";
   const { t } = useTranslation();
@@ -118,29 +121,32 @@ export function SystemMobileTabBar({ user }: { user: User }) {
           <ScrollArea className="flex max-h-[min(70dvh,28rem)] flex-col gap-2 p-4">
             {overflowNav.length > 0 ? (
               overflowNav.map(({ href, translationKey, Icon }) => (
-                <Link
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-muted"
-                  href={href}
+                <SheetClose
                   key={href}
+                  render={<Link className={sheetLinkClass} href={href} />}
                 >
                   <Icon
                     className="size-5 shrink-0 text-muted-foreground"
                     aria-hidden
                   />
                   {String(t(navLabelKey(translationKey)))}
-                </Link>
+                </SheetClose>
               ))
             ) : (
-              <Link
-                className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-muted"
-                href={accountDestination.href}
+              <SheetClose
+                render={
+                  <Link
+                    className={sheetLinkClass}
+                    href={accountDestination.href}
+                  />
+                }
               >
                 <AccountIcon
                   className="size-5 shrink-0 text-muted-foreground"
                   aria-hidden
                 />
                 {String(t(accountDestination.labelKey))}
-              </Link>
+              </SheetClose>
             )}
             <SheetClose
               render={<Button className="w-full" variant="outline" />}

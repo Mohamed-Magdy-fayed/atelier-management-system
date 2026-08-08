@@ -1,7 +1,27 @@
 const MAX_IMPORT_BYTES = 256 * 1024;
 
+/** Excel opens CSV with the system ANSI codepage unless the file starts with a BOM. */
+const UTF8_BOM = "﻿";
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** `YYYY-MM-DD HH:mm` in local time — parsed as a date by Excel/Sheets. */
+export function formatCsvDateTime(value: Date | string | number): string {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${formatCsvDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** `YYYY-MM-DD` in local time. */
+export function formatCsvDate(value: Date | string | number): string {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 function escapeCell(value: unknown): string {
-  const s = value === null || value === undefined ? "" : String(value);
+  if (value === null || value === undefined) return "";
+  const s = value instanceof Date ? formatCsvDateTime(value) : String(value);
   if (/[",\n\r]/.test(s)) return `"${s.replaceAll('"', '""')}"`;
   return s;
 }
@@ -18,13 +38,17 @@ export function rowsToCsv(
 }
 
 export function downloadCsv(filename: string, csv: string) {
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const blob = new Blob([UTF8_BOM, csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function stripBom(text: string): string {
+  return text.startsWith(UTF8_BOM) ? text.slice(1) : text;
 }
 
 function parseCsvLine(line: string): string[] {
@@ -61,7 +85,9 @@ export function parseCsvToObjects(
   text: string,
 ): { headers: string[]; rows: Record<string, unknown>[] } | null {
   if (text.length > MAX_IMPORT_BYTES) return null;
-  const lines = text.split(/\r?\n/).filter((l) => l.length > 0);
+  const lines = stripBom(text)
+    .split(/\r?\n/)
+    .filter((l) => l.length > 0);
   if (lines.length === 0) return null;
   const first = lines[0];
   if (first === undefined) return null;
@@ -85,7 +111,9 @@ export function parseCsvPreview(
   maxRows = 8,
 ): { headers: string[]; rows: string[][] } | null {
   if (text.length > MAX_IMPORT_BYTES) return null;
-  const lines = text.split(/\r?\n/).filter((l) => l.length > 0);
+  const lines = stripBom(text)
+    .split(/\r?\n/)
+    .filter((l) => l.length > 0);
   if (lines.length === 0) return null;
   const first = lines[0];
   if (first === undefined) return null;

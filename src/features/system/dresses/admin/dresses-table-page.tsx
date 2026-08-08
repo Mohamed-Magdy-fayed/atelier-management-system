@@ -217,6 +217,7 @@ export function DressesTablePage() {
                 code: row.code,
                 title: row.title,
                 pricePerDay: row.pricePerDay,
+                currentStatus: row.currentStatus,
                 isActive: row.isActive,
                 createdAt: row.createdAt,
               })}

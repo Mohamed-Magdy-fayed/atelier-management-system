@@ -38,7 +38,9 @@ export function parseCsvToObjects(
 ): { headers: string[]; rows: Record<string, unknown>[] } | null {
   if (text.length > MAX_IMPORT_BYTES) return null;
 
-  const lines = text.split(/\r?\n/).filter((line) => line.length > 0);
+  const lines = (text.startsWith("﻿") ? text.slice(1) : text)
+    .split(/\r?\n/)
+    .filter((line) => line.length > 0);
   const firstLine = lines[0];
 
   if (!firstLine) return null;

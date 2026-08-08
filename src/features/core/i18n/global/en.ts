@@ -357,6 +357,7 @@ export default {
       quickActionsPaymentsBadge: "{count} payments today",
       rangeDateRange: "Date range",
       rangeLast3Months: "Last 3 months",
+      rangeAllTime: "All time",
       rangeRevenue: "Revenue",
       rangeReservations: "Reservations",
       rangeNewCustomers: "New customers",
@@ -432,7 +433,7 @@ export default {
       paymentMethodEmpty: "No payments recorded in this period.",
       topDressesRangeTitle: "Top dresses",
       topDressesRangeDescription:
-        "Ranked by pickups within the selected date range.",
+        "Ranked by bookings made within the selected date range.",
     },
     dashboardBranchesTitle: "Active branches",
     dashboardBranchesDescription:

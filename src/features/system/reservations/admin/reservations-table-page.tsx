@@ -25,6 +25,8 @@ import {
   DataTableToolbar,
   DataTableViewOptions,
   EntityPageHeader,
+  formatCsvDate,
+  formatCsvDateTime,
   getEntityColumnPinning,
   useDataTable,
   useTableUrlState,
@@ -200,10 +202,20 @@ export function ReservationsTablePage() {
               getExportRow={(row) => ({
                 reservationCode: row.reservationCode,
                 customerName: row.customerName,
-                status: row.status,
-                receivingDateTime: row.receivingDateTime,
-                returnDateTime: row.returnDateTime,
+                customerPhone: row.customerPhone ?? "",
                 totalPrice: row.totalPrice,
+                insurance: row.insurance,
+                discount: row.discount,
+                depositPaid: row.depositPaid,
+                totalPaid: row.totalPaid,
+                remainingBalance: row.remainingBalance,
+                status: row.status,
+                dressId: row.dressId,
+                dress: row.dressTitle,
+                receivingDateTime: formatCsvDateTime(row.receivingDateTime),
+                occasionDate: formatCsvDate(row.occasionDate),
+                returnDateTime: formatCsvDateTime(row.returnDateTime),
+                createdAt: formatCsvDateTime(row.createdAt),
               })}
             />
           </DataTableToolbar>

@@ -84,13 +84,17 @@ export function CustomerMobileTabBar() {
             <Muted className="text-center text-xs leading-relaxed">
               {String(t("landing.moreSheetAccountHint"))}
             </Muted>
-            <LinkButton
-              className="w-full justify-center"
-              href="/#locations"
-              variant="outline"
+            <SheetClose
+              render={
+                <LinkButton
+                  className="w-full justify-center"
+                  href="/#locations"
+                  variant="outline"
+                />
+              }
             >
               {String(t("landing.tabLocations"))}
-            </LinkButton>
+            </SheetClose>
             <SheetClose
               render={<Button className="w-full" variant="outline" />}
             >

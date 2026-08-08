@@ -156,6 +156,7 @@ export function EmployeesTablePage() {
                   )
                   .join(", "),
                 age: row.age,
+                verified: row.emailVerifiedAt ? "true" : "false",
                 emailVerifiedAt: row.emailVerifiedAt,
                 lastSignInAt: row.lastSignInAt,
                 createdAt: row.createdAt,

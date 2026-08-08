@@ -17,6 +17,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import type { User } from "@/drizzle/schema";
 import { hasPermission } from "@/features/core/auth/core/permissions";
@@ -50,6 +51,7 @@ function userInitials(user: User): string {
 export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname() ?? "/";
   const { t, dir } = useTranslation();
+  const { setOpenMobile } = useSidebar();
 
   const visibleNav = useMemo(
     () =>
@@ -86,6 +88,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
                     <SidebarMenuButton
                       isActive={active}
                       tooltip={label}
+                      onClick={() => setOpenMobile(false)}
                       render={<Link href={href} />}
                     >
                       <Icon aria-hidden />
