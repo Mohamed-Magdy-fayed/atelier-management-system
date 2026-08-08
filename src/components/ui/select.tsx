@@ -4,6 +4,7 @@ import { Select as SelectPrimitive } from "@base-ui/react/select";
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import type * as React from "react";
 
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 const Select = SelectPrimitive.Root;
@@ -63,13 +64,28 @@ function SelectContent({
   sideOffset = 4,
   align = "center",
   alignOffset = 0,
-  alignItemWithTrigger = true,
+  alignItemWithTrigger,
+  positionMethod = "fixed",
   ...props
 }: SelectPrimitive.Popup.Props &
   Pick<
     SelectPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
+    | "align"
+    | "alignOffset"
+    | "side"
+    | "sideOffset"
+    | "alignItemWithTrigger"
+    | "positionMethod"
   >) {
+  const isMobile = useIsMobile();
+
+  // Item-aligned placement measures the trigger against the viewport and then
+  // falls back to plain anchored placement whenever the trigger sits near the
+  // viewport edge — which is always the case inside a dialog on a phone. The
+  // fallback is only reached after the popup has already been laid out at full
+  // viewport height, so the user sees it blow up and snap back. Skip it there.
+  const alignItem = alignItemWithTrigger ?? !isMobile;
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Positioner
@@ -77,12 +93,13 @@ function SelectContent({
         sideOffset={sideOffset}
         align={align}
         alignOffset={alignOffset}
-        alignItemWithTrigger={alignItemWithTrigger}
+        alignItemWithTrigger={alignItem}
+        positionMethod={positionMethod}
         className="isolate z-50"
       >
         <SelectPrimitive.Popup
           data-slot="select-content"
-          data-align-trigger={alignItemWithTrigger}
+          data-align-trigger={alignItem}
           className={cn(
             "relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-start-2 data-[side=inline-start]:slide-in-from-end-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             className,
