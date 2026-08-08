@@ -655,7 +655,7 @@ export default {
     reservationInvalidDress: "اختر فستانًا نشطًا صالحًا لهذا الفرع.",
     reservationDressSlotOverlap:
       "أوقات الاستلام والإرجاع تتعارض مع حجز نشط آخر لهذا الفستان.",
-    reservationInvalidCustomer: "العميل غير موجود في هذا الفرع.",
+    reservationInvalidCustomer: "العميل غير موجود.",
     reservationPaymentExceedsBalance: "المبلغ يتجاوز الرصيد المتبقي.",
     reservationEditReservedOnly: "يمكن تعديل الحجوزات المحجوزة فقط.",
     reservationDeleteAdminOnly: "المدير فقط يمكنه حذف الحجوزات.",

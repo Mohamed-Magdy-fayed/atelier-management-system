@@ -1,51 +1,39 @@
 import { relations } from "drizzle-orm";
-import {
-  index,
-  integer,
-  pgTable,
-  text,
-  timestamp,
-  unique,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { index, pgTable, text, unique, uuid } from "drizzle-orm/pg-core";
 
-import { BranchesTable } from "@/drizzle/schemas/auth/branches-table";
 import { UsersTable } from "@/drizzle/schemas/auth/users-table";
 import { createdAt, id } from "@/drizzle/schemas/helpers";
 
-/** Operational walk-in customers (Option A — not auth users). */
+/**
+ * Operational walk-in customers (Option A — not auth users).
+ *
+ * Customers are tenant-wide, not branch-owned: the same person books at any
+ * branch and keeps one history. Branch attribution lives on the reservation.
+ *
+ * Booking history is derived from `reservations` at read time, never cached on
+ * the customer. `reservationsCount`/`lastReservationAt` columns used to live
+ * here and silently went stale: only the legacy import ever wrote them, so a
+ * customer created in-app showed 0 reservations forever.
+ */
 export const RentalCustomersTable = pgTable(
   "rental_customers",
   {
     id,
-    branchId: uuid()
-      .notNull()
-      .references(() => BranchesTable.id, { onDelete: "cascade" }),
     userId: uuid().references(() => UsersTable.id, { onDelete: "set null" }),
     name: text().notNull(),
     phone: text().notNull(),
-    reservationsCount: integer().notNull().default(0),
     note: text(),
-    lastReservationAt: timestamp({ withTimezone: true }),
     createdAt,
   },
   (table) => ({
-    branchIdx: index("rental_customers_branch_id_idx").on(table.branchId),
     userIdx: index("rental_customers_user_id_idx").on(table.userId),
-    branchPhoneUnique: unique("rental_customers_branch_phone_unique").on(
-      table.branchId,
-      table.phone,
-    ),
+    phoneUnique: unique("rental_customers_phone_unique").on(table.phone),
   }),
 );
 
 export const rentalCustomersRelations = relations(
   RentalCustomersTable,
   ({ one }) => ({
-    branch: one(BranchesTable, {
-      fields: [RentalCustomersTable.branchId],
-      references: [BranchesTable.id],
-    }),
     user: one(UsersTable, {
       fields: [RentalCustomersTable.userId],
       references: [UsersTable.id],

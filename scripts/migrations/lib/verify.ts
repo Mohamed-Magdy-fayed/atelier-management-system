@@ -32,6 +32,20 @@ export async function verifyMigrationCounts(
 
   for (const { step, legacyTable, targetTable } of PAIRS) {
     let legacyCount = await countLegacy(legacy, legacyTable);
+    if (step === "rental_customers") {
+      // Legacy customers are per (branch, phone); target customers are one row
+      // per person, so the expected target count is the distinct phone count.
+      // Mirrors rentalCustomerPhoneKey() in src/lib/phone.ts.
+      const rows = await legacy<{ count: number }[]>`
+        SELECT COUNT(DISTINCT ltrim(
+          regexp_replace(
+            regexp_replace(phone, '\\D', '', 'g'),
+            '^20(?=[0-9]{8})', ''
+          ), '0'
+        ))::int AS count FROM customers
+      `;
+      legacyCount = Number(rows[0]?.count ?? 0);
+    }
     if (step === "user_credentials") {
       const rows = await legacy<{ count: number }[]>`
         SELECT COUNT(*)::int AS count FROM users

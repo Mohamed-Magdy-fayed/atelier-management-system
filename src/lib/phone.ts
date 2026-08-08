@@ -20,3 +20,16 @@ export function normalizePhoneKey(phone: string | null | undefined): string {
   }
   return digits;
 }
+
+/**
+ * Identity key for a rental customer: one person is one row regardless of how
+ * the phone was typed. Drops formatting, the `20` country code, and leading
+ * zeros, so `0100 123 4567`, `+201001234567` and `1001234567` collapse to one
+ * key. Kept in sync with the `rental_customer_phone_key(text)` SQL function
+ * created in migration 0011.
+ */
+export function rentalCustomerPhoneKey(
+  phone: string | null | undefined,
+): string {
+  return normalizePhoneKey(phone).replace(/^0+/, "");
+}
