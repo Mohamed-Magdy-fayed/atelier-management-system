@@ -104,6 +104,14 @@ export function toLocalDateString(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * Start of the "all time" window. The atelier has no records before this date,
+ * so pairing it with `endOfDay(now)` covers every row while still going through
+ * the same bounded `from`/`to` path as every other preset — no special-casing in
+ * `parseDashboardRange` or the queries.
+ */
+export const ALL_TIME_RANGE_START = new Date(2000, 0, 1, 0, 0, 0, 0);
+
 export function parseDashboardRange(
   params: { from?: string; to?: string } | undefined,
   ctx: DashboardDateContext,

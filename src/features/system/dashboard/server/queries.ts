@@ -334,20 +334,35 @@ export async function getDashboardData(
         revenue: sql<number>`COALESCE(SUM(${ReservationsTable.totalPaid}), 0)`,
       })
       .from(DressesTable)
+      /**
+       * Windowed on `createdAt` — the date the booking was MADE — not on
+       * `receivingDateTime`. Two reasons:
+       *
+       * 1. It matches `rangeReservationsRow` above, so "Reservations: N" and the
+       *    sum of these rental counts describe the same set of rows. Windowing
+       *    one on pickup and the other on creation made them disagree for every
+       *    range, by design rather than by accident.
+       * 2. The all-time range ends at end-of-day today (ALL_TIME_RANGE_START
+       *    pairs with `endOfDay(now)`), so a pickup-based window silently drops
+       *    every future booking. That put the same reservation inside
+       *    `activeReservations` and outside its own dress's rental count.
+       */
       .leftJoin(
         ReservationsTable,
         and(
           eq(DressesTable.id, ReservationsTable.dressId),
           isNull(ReservationsTable.deletedAt),
           not(eq(ReservationsTable.status, "cancelled")),
-          between(ReservationsTable.receivingDateTime, rangeStart, rangeEnd),
+          between(ReservationsTable.createdAt, rangeStart, rangeEnd),
         ),
       )
-      // A soft-deleted dress must not rank here — `activeDresses` excludes it,
-      // so without this the two panels describe different portfolios.
+      // Same portfolio the `activeDresses` tile counts: alive AND active. A
+      // soft-deleted or retired dress must not rank here, or the two panels
+      // describe different portfolios.
       .where(
         and(
           isNull(DressesTable.deletedAt),
+          eq(DressesTable.isActive, true),
           branchId ? eq(DressesTable.branchId, branchId) : undefined,
         ),
       )
