@@ -833,6 +833,10 @@ export default {
     importReasonBranchNotFound: "No branch matches the code “{value}”.",
     importReasonBranchMissing:
       "{column} is empty and no branch was selected for this import.",
+    importReasonBranchNotAllowed:
+      "You do not have access to the branch named in {column}.",
+    importReasonTargetBranchNotAllowed:
+      "“{value}” already exists in a branch you do not have access to.",
     importReasonRoleMismatch:
       "An account with this email already exists as {role}.",
     importUnsupportedEntity: "This data type cannot be imported yet.",

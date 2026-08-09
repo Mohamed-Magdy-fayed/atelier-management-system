@@ -48,6 +48,7 @@ async function main() {
   const { and, eq, like } = await import("drizzle-orm");
   const {
     BranchesTable,
+    BranchMembershipsTable,
     DressesTable,
     ImportJobsTable,
     RentalCustomersTable,
@@ -102,8 +103,9 @@ async function main() {
     entitySlug: string,
     content: string,
     branchId?: string,
+    actorCtx: never = ctx,
   ) {
-    const job = await createImportJob(ctx, {
+    const job = await createImportJob(actorCtx, {
       entitySlug: entitySlug as never,
       fileName: `${entitySlug}.csv`,
       content,
@@ -114,7 +116,7 @@ async function main() {
     let cursor = 0;
     let validation = { validRows: 0, invalidRows: 0, totalRows: 0 };
     for (;;) {
-      const result = await validateImportBatch(ctx, {
+      const result = await validateImportBatch(actorCtx, {
         jobId: job.id,
         cursor,
       });
@@ -123,7 +125,7 @@ async function main() {
       if (result.done) break;
     }
 
-    const invalid = await listImportJobRows(ctx, {
+    const invalid = await listImportJobRows(actorCtx, {
       jobId: job.id,
       filter: "invalid",
       page: 1,
@@ -134,12 +136,15 @@ async function main() {
       console.log(`    row ${row.rowNumber}: ${row.reasons.join(" | ")}`);
     }
 
-    await startImportCommit(ctx, { jobId: job.id });
+    await startImportCommit(actorCtx, { jobId: job.id });
 
     cursor = 0;
     let committedRows = 0;
     for (;;) {
-      const result = await commitImportBatch(ctx, { jobId: job.id, cursor });
+      const result = await commitImportBatch(actorCtx, {
+        jobId: job.id,
+        cursor,
+      });
       cursor = result.processedRows;
       committedRows = result.committedRows;
       if (result.done) break;
@@ -150,6 +155,7 @@ async function main() {
       ignoredColumns: job.ignoredColumns ?? [],
       ...validation,
       committedRows,
+      invalidReasons: invalid.rows.flatMap((row) => row.reasons),
     };
   }
 
@@ -258,6 +264,106 @@ async function main() {
       rejected = true;
     }
     check("stale batch rejected", rejected, true);
+
+    // --- Import must not be a weaker door than the normal mutation path.
+    // The actor here is an employee whose only membership is branch B, so
+    // everything touching branch ${MARKER}1 has to be refused.
+    console.log("\nauthorization");
+
+    const [branchB] = await db
+      .insert(BranchesTable)
+      .values({
+        shortCode: `${MARKER}B`,
+        nameEn: "Smoke Other",
+        nameAr: "دخان آخر",
+      })
+      .returning({ id: BranchesTable.id });
+
+    const [employee] = await db
+      .insert(UsersTable)
+      .values({
+        email: `${MARKER}.employee@smoke.local`,
+        name: "Smoke Employee",
+        role: "employee",
+        createdBy: admin.id,
+      })
+      .returning({ id: UsersTable.id, role: UsersTable.role });
+
+    await db
+      .insert(BranchMembershipsTable)
+      .values({ userId: employee.id, branchId: branchB.id });
+
+    const employeeCtx = {
+      db,
+      t,
+      cookies: { get: () => undefined },
+      session: {
+        user: { id: employee.id, role: employee.role },
+        exp: Date.now() / 1000 + 3600,
+      },
+    } as never;
+
+    // Branch CRUD is admin-only, so the branches spec must refuse outright.
+    let branchesRefused = false;
+    try {
+      await createImportJob(employeeCtx, {
+        entitySlug: "branches" as never,
+        fileName: "branches.csv",
+        content: `shortCode,nameEn,nameAr\n${MARKER}X,Sneaky,متسلل`,
+        branchId: null,
+      });
+    } catch {
+      branchesRefused = true;
+    }
+    check("employee refused branches import", branchesRefused, true);
+    check(
+      "no branch created by employee",
+      (
+        await db
+          .select({ id: BranchesTable.id })
+          .from(BranchesTable)
+          .where(eq(BranchesTable.shortCode, `${MARKER}X`))
+      ).length,
+      0,
+    );
+
+    // Naming an unreachable branch in the file must fail the row, not write it.
+    const crossBranchCreate = await runJob(
+      "dresses",
+      [
+        "code,title,pricePerDay,depositAmount,insurance,branchShortCode",
+        `${MARKER}-D9,Cross Branch,900,300,100,${MARKER}1`,
+      ].join("\n"),
+      branchB.id,
+      employeeCtx,
+    );
+    check("cross-branch create rejected", crossBranchCreate.committedRows, 0);
+    check(
+      "reason names branch access",
+      crossBranchCreate.invalidReasons.some((reason) =>
+        reason.includes("do not have access to the branch"),
+      ),
+      true,
+    );
+
+    // Matching an existing dress by code reaches across branches, so a dress
+    // living in an unreachable branch must not become an update target.
+    const crossBranchUpdate = await runJob(
+      "dresses",
+      [
+        "code,title,pricePerDay,depositAmount,insurance,branchShortCode",
+        `${MARKER}-D1,Hijacked,1,1,1,${MARKER}B`,
+      ].join("\n"),
+      branchB.id,
+      employeeCtx,
+    );
+    check("cross-branch update rejected", crossBranchUpdate.committedRows, 0);
+
+    const untouched = await db
+      .select({ price: DressesTable.pricePerDay })
+      .from(DressesTable)
+      .where(eq(DressesTable.code, `${MARKER}-D1`));
+    check("other branch's dress untouched", untouched[0]?.price, 1600);
   } finally {
     console.log("\ncleanup");
     const { eq: eqOp, like: likeOp, inArray } = await import("drizzle-orm");
@@ -268,6 +374,10 @@ async function main() {
     await db
       .delete(RentalCustomersTable)
       .where(likeOp(RentalCustomersTable.phone, "%555000%"));
+    // Memberships first: the smoke employee references the smoke branch.
+    await db
+      .delete(UsersTable)
+      .where(likeOp(UsersTable.email, `${MARKER}%@smoke.local`));
     await db
       .delete(BranchesTable)
       .where(likeOp(BranchesTable.shortCode, `${MARKER}%`));

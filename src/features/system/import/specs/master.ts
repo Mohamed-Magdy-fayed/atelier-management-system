@@ -13,6 +13,8 @@ export const branchesImportSpec: ImportEntitySpec = {
   slug: "branches",
   kind: "master",
   titleKey: "systemPages.branchesTitle",
+  // Branch CRUD is admin-only in branches/server/mutations.ts; import must match.
+  requiredRole: "admin",
   dependsOn: [],
   naturalKey: ["shortCode"],
   branchScoped: false,

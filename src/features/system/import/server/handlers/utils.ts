@@ -1,8 +1,9 @@
-import { inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
-import { BranchesTable } from "@/drizzle/schema";
+import { BranchesTable, BranchMembershipsTable } from "@/drizzle/schema";
 
 import type { ImportColumnSpec, ImportEntitySpec } from "../../specs";
+import type { ProtectedTRPCSession } from "../shared";
 import type { ImportDb, PreparedRow } from "./types";
 
 /**
@@ -71,4 +72,37 @@ export async function loadBranchIdsByShortCode(
     .where(inArray(BranchesTable.shortCode, unique));
 
   return new Map(rows.map((row) => [row.shortCode.toUpperCase(), row.id]));
+}
+
+/**
+ * Branches the actor may write to, or `null` for an admin (unrestricted).
+ *
+ * The job carries one branch, but a branch-scoped file names a branch per row —
+ * so the per-row branch is client-supplied input and has to be checked against
+ * the actor's memberships exactly as `assertUserCanAccessBranch` does on the
+ * normal mutation path. Loaded once per batch rather than once per row.
+ */
+export async function loadWritableBranchIds(
+  db: ImportDb,
+  session: ProtectedTRPCSession,
+): Promise<Set<string> | null> {
+  if (session.user.role === "admin") {
+    return null;
+  }
+
+  const rows = await db
+    .select({ branchId: BranchMembershipsTable.branchId })
+    .from(BranchMembershipsTable)
+    .where(eq(BranchMembershipsTable.userId, session.user.id));
+
+  return new Set(rows.map((row) => row.branchId));
+}
+
+/** True when the actor may write to `branchId`. */
+export function canWriteToBranch(
+  writableBranchIds: Set<string> | null,
+  branchId: string | null,
+): boolean {
+  if (writableBranchIds === null) return true;
+  return branchId != null && writableBranchIds.has(branchId);
 }
