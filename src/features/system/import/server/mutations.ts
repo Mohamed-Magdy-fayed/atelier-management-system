@@ -33,6 +33,22 @@ function translateReasons(ctx: TRPCContext, reasons: ImportReason[]) {
   return reasons.map((reason) => translate(reason.reasonKey, reason.params));
 }
 
+/**
+ * Enforces a spec's own role floor.
+ *
+ * `assertOperationalStaff` admits employees, which is right for most entities
+ * but not for those whose routers demand an admin. Without this, import is a
+ * weaker door to the same tables.
+ */
+function assertSpecRole(spec: ImportEntitySpec, role: string) {
+  if (spec.requiredRole === "admin" && role !== "admin") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Insufficient permissions",
+    });
+  }
+}
+
 async function loadJobForActor(ctx: TRPCContext, jobId: string) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
@@ -43,6 +59,13 @@ async function loadJobForActor(ctx: TRPCContext, jobId: string) {
 
   if (!job) {
     throw new TRPCError({ code: "NOT_FOUND" });
+  }
+
+  // Re-checked on every step, not just at creation: a job started while the
+  // actor was an admin must not stay drivable after a demotion.
+  const jobSpec = getImportSpec(job.entitySlug);
+  if (jobSpec) {
+    assertSpecRole(jobSpec, session.user.role);
   }
 
   // An import writes across the tenant, so only its creator (or an admin) may
@@ -69,6 +92,8 @@ export async function createImportJob(
       message: ctx.t("systemPages.importUnsupportedEntity"),
     });
   }
+
+  assertSpecRole(spec, session.user.role);
 
   if (input.branchId) {
     await assertUserCanAccessBranch(ctx, session, input.branchId);

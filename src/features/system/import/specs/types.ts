@@ -65,6 +65,12 @@ export type ImportEntitySpec = {
   slug: ImportEntitySlug;
   kind: "master" | "transactional";
   titleKey: ImportTranslationKey;
+  /**
+   * Minimum role, when the entity's own mutations demand more than operational
+   * staff. Import writes to the same tables, so it must not be a weaker door:
+   * anything gated on `assertAdminRole` in its router has to say so here.
+   */
+  requiredRole?: "admin";
   /** Entities that must be imported first, for the recommended order. */
   dependsOn: readonly ImportEntitySlug[];
   /** Columns identifying an existing record, for dedupe and create-vs-update. */

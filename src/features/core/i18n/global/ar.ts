@@ -810,6 +810,10 @@ export default {
     importReasonBranchNotFound: "لا يوجد فرع مطابق للرمز «{value}».",
     importReasonBranchMissing:
       "{column} فارغ ولم يتم اختيار فرع لعملية الاستيراد هذه.",
+    importReasonBranchNotAllowed:
+      "ليس لديك صلاحية الوصول إلى الفرع المذكور في {column}.",
+    importReasonTargetBranchNotAllowed:
+      "‏«{value}» موجود بالفعل في فرع ليس لديك صلاحية الوصول إليه.",
     importReasonRoleMismatch: "يوجد حساب بهذا البريد الإلكتروني بصفة {role}.",
     importUnsupportedEntity: "لا يمكن استيراد هذا النوع من البيانات بعد.",
     importFileUnreadable:

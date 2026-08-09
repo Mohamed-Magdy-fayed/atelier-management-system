@@ -14,13 +14,15 @@ import {
 } from "../normalize";
 import type { ImportHandler, ResolvedRow } from "./types";
 import {
+  canWriteToBranch,
   findColumn,
   loadBranchIdsByShortCode,
+  loadWritableBranchIds,
   markInFileDuplicates,
 } from "./utils";
 
 export const dressesImportHandler: ImportHandler = {
-  async prepare({ db, spec, branchId: fallbackBranchId }, rows) {
+  async prepare({ db, session, spec, branchId: fallbackBranchId }, rows) {
     const codeColumn = findColumn(spec, "code");
     const titleColumn = findColumn(spec, "title");
     const pricePerDayColumn = findColumn(spec, "pricePerDay");
@@ -38,6 +40,8 @@ export const dressesImportHandler: ImportHandler = {
       db,
       rows.map(({ cells }) => readCell(cells, "branchShortCode")),
     );
+
+    const writableBranchIds = await loadWritableBranchIds(db, session);
 
     const prepared = rows.map(({ rowNumber, cells }) => {
       const builder = new RowBuilder();
@@ -98,6 +102,15 @@ export const dressesImportHandler: ImportHandler = {
         });
       }
 
+      // The branch is client-supplied per row, so membership is checked here
+      // and not just on the job's fallback branch.
+      if (resolvedBranchId && !canWriteToBranch(writableBranchIds, resolvedBranchId)) {
+        builder.fail("systemPages.importReasonBranchNotAllowed", {
+          column: branchColumn.key,
+          value: branchShortCode || "",
+        });
+      }
+
       return {
         rowNumber,
         values: {
@@ -126,17 +139,22 @@ export const dressesImportHandler: ImportHandler = {
       .filter((key): key is string => key != null);
 
     // dresses.code is globally unique, so an existing code is a match
-    // regardless of which branch the row claims.
+    // regardless of which branch the row claims. That makes the match itself a
+    // cross-branch reach, so the stored branch is fetched and checked below.
     const existing =
       codes.length > 0
         ? await db
-            .select({ id: DressesTable.id, code: DressesTable.code })
+            .select({
+              id: DressesTable.id,
+              code: DressesTable.code,
+              branchId: DressesTable.branchId,
+            })
             .from(DressesTable)
             .where(inArray(DressesTable.code, codes))
         : [];
 
     const existingByCode = new Map(
-      existing.map((dress) => [dress.code, dress.id]),
+      existing.map((dress) => [dress.code, dress]),
     );
 
     return prepared.map((row): ResolvedRow => {
@@ -144,9 +162,30 @@ export const dressesImportHandler: ImportHandler = {
         return { ...row, action: "skip", targetId: null };
       }
 
-      const targetId = existingByCode.get(row.naturalKey) ?? null;
+      const match = existingByCode.get(row.naturalKey);
 
-      return { ...row, action: targetId ? "update" : "create", targetId };
+      if (!match) {
+        return { ...row, action: "create", targetId: null };
+      }
+
+      // An existing code in an unreachable branch must not become an update —
+      // otherwise a file naming that code rewrites another branch's dress.
+      if (!canWriteToBranch(writableBranchIds, match.branchId)) {
+        return {
+          ...row,
+          action: "skip",
+          targetId: null,
+          reasons: [
+            ...row.reasons,
+            {
+              reasonKey: "systemPages.importReasonTargetBranchNotAllowed",
+              params: { column: codeColumn.key, value: row.naturalKey },
+            },
+          ],
+        };
+      }
+
+      return { ...row, action: "update", targetId: match.id };
     });
   },
 
