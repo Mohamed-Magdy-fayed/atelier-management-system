@@ -28,6 +28,7 @@ const ISSUE_MESSAGE_KEYS = {
   ownTokenUndecryptable: "systemPages.whatsappIssueOwnTokenUndecryptable",
   platformNotConfigured: "systemPages.whatsappIssuePlatformNotConfigured",
   instanceNotConnected: "systemPages.whatsappIssueInstanceNotConnected",
+  instanceStarting: "systemPages.whatsappIssueInstanceStarting",
   authRejected: "systemPages.whatsappIssueAuthRejected",
   unreachable: "systemPages.whatsappIssueUnreachable",
 } as const satisfies Record<WhatsAppIssueCode, string>;
@@ -119,6 +120,17 @@ export function WhatsAppStatusAlert() {
                 : issue}
             </li>
           ))}
+          {/* Names the raw state, so a status word we don't recognise yet is
+              diagnosable from the screen instead of needing a server log. */}
+          {data.status ? (
+            <li className="opacity-80">
+              {String(
+                t("systemPages.whatsappStatusReported", {
+                  status: data.status,
+                }),
+              )}
+            </li>
+          ) : null}
         </ul>
       </AlertDescription>
     </Alert>

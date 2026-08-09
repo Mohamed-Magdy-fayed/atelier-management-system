@@ -338,6 +338,35 @@ async function main() {
     );
     check("blank phone", toWhatsAppChatId(""), null);
 
+    // --- Wapilot calls a healthy session WORKING, not "connected". Getting
+    // this wrong reported a live instance as disconnected in production.
+    console.log("\nstatus vocabulary");
+    const { classifyWapilotStatus } = await import(
+      "@/features/system/whatsapp/server/diagnostics"
+    );
+    check("WORKING is healthy", classifyWapilotStatus("WORKING"), null);
+    check("working (lowercase) is healthy", classifyWapilotStatus("working"), null);
+    check(
+      "SCAN_QR_CODE needs a re-scan",
+      classifyWapilotStatus("SCAN_QR_CODE"),
+      "instanceNotConnected",
+    );
+    check(
+      "STARTING says wait, not re-scan",
+      classifyWapilotStatus("STARTING"),
+      "instanceStarting",
+    );
+    check(
+      "FAILED is not healthy",
+      classifyWapilotStatus("FAILED"),
+      "instanceNotConnected",
+    );
+    check(
+      "unknown state is not silently healthy",
+      classifyWapilotStatus("SOMETHING_NEW"),
+      "instanceNotConnected",
+    );
+
     // --- A value outside the enum must be refused.
     console.log("\nmode validation");
     let rejected = false;

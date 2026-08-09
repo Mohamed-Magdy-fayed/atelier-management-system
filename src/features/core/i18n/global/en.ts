@@ -765,6 +765,9 @@ export default {
       "The Gateling Atelier number is not configured on this server. Contact support, or switch to your own number.",
     whatsappIssueInstanceNotConnected:
       "Wapilot reports this number as not connected. Open Wapilot and re-scan the WhatsApp QR code for this instance.",
+    whatsappIssueInstanceStarting:
+      "Wapilot is still starting this number up. Give it a moment, then reload this page.",
+    whatsappStatusReported: "Wapilot reported: {status}",
     whatsappIssueAuthRejected:
       "Wapilot rejected these credentials. Check the instance ID and paste a fresh API token.",
     whatsappIssueUnreachable:

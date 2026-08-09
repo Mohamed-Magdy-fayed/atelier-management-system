@@ -95,7 +95,10 @@ export const env = createEnv({
           ...rest,
           DATABASE_URL:
             DATABASE_URL ??
-            `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}${DB_PORT}/${DB_NAME}`,
+            // The colon before the port was missing, so this branch composed
+            // `@host5432/db` and could never connect. Nothing can have depended
+            // on it, since every environment sets DATABASE_URL directly.
+            `postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}`,
         };
       });
   },
