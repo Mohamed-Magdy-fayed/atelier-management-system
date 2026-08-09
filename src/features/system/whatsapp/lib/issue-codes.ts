@@ -13,6 +13,8 @@ export const WHATSAPP_ISSUE_CODES = [
   "ownTokenUndecryptable",
   "platformNotConfigured",
   "instanceNotConnected",
+  /** Session is booting; waiting is the fix, not re-scanning a QR code. */
+  "instanceStarting",
   "authRejected",
   "unreachable",
 ] as const;

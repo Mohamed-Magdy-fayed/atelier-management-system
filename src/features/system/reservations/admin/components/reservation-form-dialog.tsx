@@ -142,6 +142,24 @@ type EditFormValues = z.infer<typeof editFormSchema>;
 
 const CREATE_TOTAL_STEPS = 3;
 
+/**
+ * Builds a step's parse payload from the step schema's own keys.
+ *
+ * Hand-listing the keys lets the two drift: a key added to the schema is then
+ * simply absent from the object, arrives as `undefined`, and fails as
+ * "required" — which is how step 1 became impossible to leave while every
+ * visible field was filled in. Reading the keys off the schema makes the pair
+ * impossible to desync.
+ */
+function valuesForSchema(
+  schema: z.ZodObject<z.ZodRawShape>,
+  values: Record<string, unknown>,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.keys(schema.shape).map((key) => [key, values[key]]),
+  );
+}
+
 const createStep1Schema = createFormSchema.pick({
   branchId: true,
   dressId: true,
@@ -438,12 +456,9 @@ export function ReservationFormDialog({
     setCreateStep((current) => {
       const v = createForm.store.state.values as CreateFormValues;
       if (current === 1) {
-        const r = createStep1Schema.safeParse({
-          dressId: v.dressId,
-          receivingDateTime: v.receivingDateTime,
-          returnDateTime: v.returnDateTime,
-          occasionDate: v.occasionDate,
-        });
+        const r = createStep1Schema.safeParse(
+          valuesForSchema(createStep1Schema, v),
+        );
         if (!r.success) {
           toast.error(
             translateZodIssueMessages(
@@ -456,11 +471,9 @@ export function ReservationFormDialog({
         return 2;
       }
       if (current === 2) {
-        const r = createStep2Schema.safeParse({
-          customerId: v.customerId,
-          customerName: v.customerName,
-          customerPhone: v.customerPhone,
-        });
+        const r = createStep2Schema.safeParse(
+          valuesForSchema(createStep2Schema, v),
+        );
         if (!r.success) {
           toast.error(
             translateZodIssueMessages(

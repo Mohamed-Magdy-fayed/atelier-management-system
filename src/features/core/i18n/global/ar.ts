@@ -743,6 +743,9 @@ export default {
       "رقم Gateling Atelier غير مُعدّ على هذا الخادم. تواصل مع الدعم، أو انتقل إلى رقمك الخاص.",
     whatsappIssueInstanceNotConnected:
       "يُبلغ Wapilot أن هذا الرقم غير متصل. افتح Wapilot وأعد مسح رمز QR الخاص بواتساب لهذا الحساب.",
+    whatsappIssueInstanceStarting:
+      "ما زال Wapilot يجهّز هذا الرقم. انتظر قليلاً ثم أعد تحميل الصفحة.",
+    whatsappStatusReported: "‏Wapilot أبلغ بالحالة: {status}",
     whatsappIssueAuthRejected:
       "رفض Wapilot بيانات الاعتماد هذه. تحقق من معرّف الحساب والصق رمز وصول جديدًا.",
     whatsappIssueUnreachable:
