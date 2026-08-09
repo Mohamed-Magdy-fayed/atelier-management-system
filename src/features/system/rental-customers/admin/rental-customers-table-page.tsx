@@ -22,6 +22,7 @@ import {
   useTableUrlState,
 } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
+import { ImportButton } from "@/features/system/import/admin";
 import { useTRPC } from "@/integrations/trpc/client";
 
 import {
@@ -172,6 +173,7 @@ export function RentalCustomersTablePage() {
                 createdAt: row.createdAt,
               })}
             />
+            <ImportButton entitySlug="customers" />
           </DataTableToolbar>
         }
         footer={<DataTablePagination table={table} />}

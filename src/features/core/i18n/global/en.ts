@@ -551,9 +551,6 @@ export default {
     dressActivated: "Dress activated.",
     dressDeactivated: "Dress deactivated.",
     dressStatusChangeFailed: "Could not update dress status.",
-    dressBranchRequired: "Select an active branch before saving a dress.",
-    dressFormAllBranchesHint:
-      "All branches is selected. Choose a branch from the branch switcher in the sidebar, then you can create a dress for that location.",
     bulkActivateDresses: "Activate selected dresses",
     bulkDeactivateDresses: "Deactivate selected dresses",
     bulkArchiveDresses: "Archive selected dresses",
@@ -602,12 +599,6 @@ export default {
     reservationNotFound: "Reservation not found.",
     reservationCodeDuplicate:
       "Another active reservation already uses this code.",
-    reservationBranchRequired:
-      "Select an active branch before saving a reservation.",
-    reservationsFormAllBranchesHint:
-      "You are viewing all branches. Pick a dress—this reservation will be created for that dress's branch.",
-    reservationsFormSelectDressForBranch:
-      "Select a dress to determine which branch this reservation belongs to.",
     reservationsFormNoDresses: "No active dresses found.",
     reservationsFormNoDressesInBranch:
       "No active dresses in the selected branch. Switch branch or add dresses first.",
@@ -702,7 +693,6 @@ export default {
     expenseCreated: "Expense recorded.",
     expenseUpdated: "Expense updated.",
     expenseSaveFailed: "Could not save expense.",
-    expenseBranchRequired: "Select an active branch before saving an expense.",
     expenseDeleted: "Expense deleted.",
     expenseDeleteFailed: "Could not delete expense.",
     deleteExpenseTitle: "Delete expense?",
@@ -789,6 +779,99 @@ export default {
     addUserDescription: "Create a new user record.",
     editUserDescription: "Update the user's details.",
     roleAdmin: "Admin",
+    formBranch: "Branch",
+    formBranchPlaceholder: "Select a branch…",
+    importColumnShortCode: "Branch short code",
+    importColumnNameEn: "Name (English)",
+    importColumnNameAr: "Name (Arabic)",
+    importColumnAddressEn: "Address (English)",
+    importColumnAddressAr: "Address (Arabic)",
+    importColumnPhone: "Phone",
+    importColumnNote: "Note",
+    importColumnIsActive: "Active",
+    importColumnBranchShortCode: "Branch short code",
+    importHelpShortCode:
+      "A short unique code for the branch, up to 8 characters. Used to link other files to this branch.",
+    importHelpEmailKey:
+      "Used to match existing employees. A row whose email already exists is skipped.",
+    importHelpPhoneKey:
+      "Used to match existing customers. A row whose phone already exists is skipped.",
+    importHelpDressCodeKey:
+      "Must be unique across all branches. Used to match existing dresses.",
+    importHelpBranchAssignment:
+      "Assigns the employee to that branch. Leave empty to assign no branch.",
+    importHelpBranchFallback:
+      "Leave empty to use the branch selected above for every row.",
+    importHelpBoolean: "Accepts true/false, yes/no, or 1/0.",
+    importTemplateHint:
+      "Download the template, paste your exported data under the matching columns, then upload it. Column names are matched loosely, so an export that already uses similar headers usually works as-is.",
+    importDownloadTemplate: "Download template",
+    importGuideColumn: "Column",
+    importGuideRequired: "Required?",
+    importGuideType: "Accepts",
+    importGuideExample: "Example",
+    importRequired: "Required",
+    importOptional: "Optional",
+    importType_string: "Any text",
+    importType_int: "A whole number",
+    importType_money: "An amount, whole number only",
+    importType_date: "A date, e.g. 2026-03-14",
+    importType_datetime: "A date and time, e.g. 2026-03-14 18:30",
+    importType_boolean: "true or false",
+    importType_enum: "One of the listed values",
+    importType_ref: "Matched by {lookup}",
+    importReasonRequired: "{column} is required.",
+    importReasonTooLong: "{column} is longer than {max} characters.",
+    importReasonNotWholeNumber: "{column} must be a whole number.",
+    importReasonOutOfRange: "{column} must be between {min} and {max}.",
+    importReasonNotBoolean: "{column} must be true or false.",
+    importReasonNotAllowedValue: "{column} must be one of: {allowed}.",
+    importReasonInvalidEmail: "{column} is not a valid email address.",
+    importReasonInvalidPhone: "{column} is not a usable phone number.",
+    importReasonDuplicateInFile:
+      "{column} appears more than once in this file.",
+    importReasonBranchNotFound: "No branch matches the code “{value}”.",
+    importReasonBranchMissing:
+      "{column} is empty and no branch was selected for this import.",
+    importReasonRoleMismatch:
+      "An account with this email already exists as {role}.",
+    importUnsupportedEntity: "This data type cannot be imported yet.",
+    importFileUnreadable:
+      "That file could not be read as a CSV. Re-download the template and paste your data into it.",
+    importFileEmpty: "That file has headers but no data rows.",
+    importTooManyRows: "That file has more than {max} rows. Split it up.",
+    importMissingColumns: "These required columns are missing: {columns}",
+    importJobNotValidating: "This import is no longer being checked.",
+    importJobNotReviewable: "This import is not ready to be applied.",
+    importJobNotCommitting: "This import is not being applied.",
+    importTitle: "Import {entity}",
+    importDescription:
+      "Paste your existing data into the template, then upload it here. Nothing is saved until you review the results and confirm.",
+    importChooseFile: "Choose CSV file",
+    importReplaceFile: "Choose a different file",
+    importFileTooLarge:
+      "That file is larger than {max} MB. Split it into smaller files and import them one at a time.",
+    importNotCsv: "Please choose a .csv file.",
+    importValidating: "Checking your file…",
+    importCommitting: "Applying your data…",
+    importProgress: "{processed} of {total} rows",
+    importIgnoredColumns: "These columns were not recognised and are ignored:",
+    importDownloadErrors: "Download error report",
+    importPageOf: "Page {page} of {pages}",
+    importApply: "Import {count} rows",
+    importNothingToApply: "No rows can be imported yet.",
+    importDoneTitle: "Import finished",
+    importDoneSummary: "{committed} rows imported, {invalid} skipped.",
+    importResumeNotice: "Picking up an import that was already in progress.",
+    importBranchLabel: "Import into branch",
+    importBranchHint:
+      "Used for rows that leave the branch column empty. A row with a branch code always wins.",
+    importPrevious: "Previous",
+    importFailedTitle: "Import could not continue",
+    expenseDressNotInBranch:
+      "That dress does not belong to the selected branch.",
+    expenseEmployeeNotInBranch:
+      "That employee is not assigned to the selected branch.",
     userAssignedBranches: "Assigned branches",
     userAssignedBranchesPlaceholder: "Select branches…",
     userBranchesRequired: "Assign at least one branch for this user.",

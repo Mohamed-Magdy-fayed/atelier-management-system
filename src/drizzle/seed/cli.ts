@@ -25,12 +25,56 @@ if (explicitEnvPath) {
   }
 }
 
+/**
+ * Every seed command writes, so the resolved target is printed before anything
+ * runs — the failure mode this repo has already hit is a "local" seed silently
+ * landing in production.
+ */
+function describeTarget() {
+  const rawUrl = process.env.DATABASE_URL;
+  if (!rawUrl) return null;
+
+  try {
+    const { hostname, port, pathname } = new URL(rawUrl);
+    const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
+    return { hostname, port, pathname, isLocal };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The default admin password is a well-known constant in this repo. Putting it
+ * on a remote database would hand out an admin account to anyone who has read
+ * the source, so a remote target must supply its own.
+ */
+function assertAdminPasswordIsSafe(target: ReturnType<typeof describeTarget>) {
+  if (!target || target.isLocal) return;
+  if (process.env.SEED_ADMIN_PASSWORD) return;
+
+  console.error(
+    "❌ Refusing to seed the built-in admin password into a remote database.\n" +
+      "   Set SEED_ADMIN_PASSWORD (and optionally SEED_ADMIN_EMAIL) and run again.",
+  );
+  process.exit(1);
+}
+
 const commands = {
   settings: {
-    description: "Upsert default settings rows only (does not clear the database).",
+    description:
+      "Upsert default settings rows only (does not clear the database).",
     action: async () => {
       const { runSeedProfile } = await import("@/drizzle/seed");
       await runSeedProfile("settings");
+    },
+  },
+  admin: {
+    description:
+      "Create the admin account only — no branches or sample data, clears nothing.",
+    action: async () => {
+      assertAdminPasswordIsSafe(describeTarget());
+      const { runSeedProfile } = await import("@/drizzle/seed");
+      await runSeedProfile("admin");
     },
   },
   all: {
@@ -89,11 +133,29 @@ function printHelp() {
   console.log("\nExamples:");
   console.log("  npm run seed");
   console.log("  npm run seed -- settings");
+  console.log("  npm run seed:admin");
   console.log("  npm run seed -- demo");
   console.log("  npm run seed -- baseline");
   console.log("  npm run seed -- performance");
   console.log("  npm run seed:all");
   console.log("  npm run seed:clear");
+  console.log("\nSeeding a remote database (targets .env.prod explicitly):");
+  console.log(
+    "  DOTENV_CONFIG_PATH=.env.prod SEED_ADMIN_EMAIL=you@example.com \\",
+  );
+  console.log(
+    "    SEED_ADMIN_PASSWORD='<a strong password>' npm run seed:admin",
+  );
+  console.log("\nEnvironment variables:");
+  console.log(
+    "  SEED_ADMIN_EMAIL           Admin email (default: the built-in seed address)",
+  );
+  console.log(
+    "  SEED_ADMIN_PASSWORD        Required for any non-localhost target",
+  );
+  console.log(
+    "  SEED_ADMIN_RESET_PASSWORD  Set to 1 to rotate an existing admin password",
+  );
 }
 
 async function run() {
@@ -107,6 +169,14 @@ async function run() {
   }
 
   const command = commands[commandName];
+  const target = describeTarget();
+
+  if (target) {
+    console.log(
+      `🎯 Target: ${target.hostname}${target.port ? `:${target.port}` : ""}${target.pathname}${target.isLocal ? "" : "  ← REMOTE"}`,
+    );
+  }
+
   console.log(`➡️  Running seed command: ${commandName}...`);
 
   let closeDbConnection: (() => Promise<void>) | undefined;

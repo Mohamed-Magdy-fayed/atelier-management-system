@@ -30,6 +30,7 @@ export function FormSelectField({
   multiple,
   ...props
 }: FormSelectFieldProps) {
+  const { disabled } = props;
   const field = useFieldContext();
   const stateValue = field.state.value;
   const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
@@ -71,6 +72,7 @@ export function FormSelectField({
     <FormBase {...props}>
       <Select
         value={currentValue}
+        disabled={disabled}
         onValueChange={(val) => setSingleValue((val as string) ?? null)}
       >
         <SelectTrigger

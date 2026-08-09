@@ -23,7 +23,7 @@ import {
   useDataTable,
 } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
-import { UsersImportButton } from "@/features/core/import-review";
+import { ImportButton } from "@/features/system/import/admin";
 import { useTRPC } from "@/integrations/trpc/client";
 import type {
   EmployeeGridRow,
@@ -162,7 +162,7 @@ export function EmployeesTablePage() {
                 createdAt: row.createdAt,
               })}
             />
-            <UsersImportButton role="employee" />
+            <ImportButton entitySlug="employees" />
           </DataTableToolbar>
         }
         footer={<DataTablePagination table={table} />}

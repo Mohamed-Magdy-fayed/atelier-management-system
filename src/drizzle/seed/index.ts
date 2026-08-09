@@ -6,6 +6,7 @@ import {
   SEED_SYSTEM_ACTOR,
   type SeedProfileName,
 } from "./constants";
+import { seedAdminProfile } from "./profiles/admin";
 import { seedBaselineProfile } from "./profiles/baseline";
 import { seedDemoProfile } from "./profiles/demo";
 import { seedPerformanceProfile } from "./profiles/performance";
@@ -13,6 +14,7 @@ import { seedSettingsProfile } from "./profiles/settings";
 
 const profileRunners = {
   settings: seedSettingsProfile,
+  admin: seedAdminProfile,
   baseline: seedBaselineProfile,
   demo: seedDemoProfile,
   performance: seedPerformanceProfile,
@@ -38,7 +40,7 @@ export async function runSeedProfile(
   profile: SeedProfileName = DEFAULT_SEED_PROFILE,
 ) {
   const result = await profileRunners[profile]();
-  console.info('Default settings upserted (profile: "%s").', result.profile);
+  console.info('Seed profile "%s" finished.', result.profile);
   return result;
 }
 

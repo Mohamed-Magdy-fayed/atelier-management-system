@@ -1,7 +1,11 @@
 import { TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
-import { ExpensesTable } from "@/drizzle/schema";
+import {
+  BranchMembershipsTable,
+  DressesTable,
+  ExpensesTable,
+} from "@/drizzle/schema";
 import {
   assertOperationalStaff,
   assertUserCanAccessBranch,
@@ -14,6 +18,52 @@ import type {
 } from "./schemas";
 import { getRequiredSession, type TRPCContext } from "./shared";
 
+/**
+ * The form's dress and employee options are branch-scoped, but the branch is a
+ * client-supplied input — so an expense could otherwise be linked to a dress or
+ * an employee belonging to a different branch.
+ */
+async function assertLinksBelongToBranch(
+  ctx: TRPCContext,
+  branchId: string,
+  links: { dressId?: string | null; employeeId?: string | null },
+) {
+  if (links.dressId) {
+    const dress = await ctx.db.query.DressesTable.findFirst({
+      where: and(
+        eq(DressesTable.id, links.dressId),
+        eq(DressesTable.branchId, branchId),
+        isNull(DressesTable.deletedAt),
+      ),
+      columns: { id: true },
+    });
+
+    if (!dress) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: ctx.t("systemPages.expenseDressNotInBranch"),
+      });
+    }
+  }
+
+  if (links.employeeId) {
+    const membership = await ctx.db.query.BranchMembershipsTable.findFirst({
+      where: and(
+        eq(BranchMembershipsTable.userId, links.employeeId),
+        eq(BranchMembershipsTable.branchId, branchId),
+      ),
+      columns: { branchId: true },
+    });
+
+    if (!membership) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: ctx.t("systemPages.expenseEmployeeNotInBranch"),
+      });
+    }
+  }
+}
+
 export async function createExpense(
   ctx: TRPCContext,
   input: CreateExpenseInput,
@@ -21,6 +71,7 @@ export async function createExpense(
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
   await assertUserCanAccessBranch(ctx, session, input.branchId);
+  await assertLinksBelongToBranch(ctx, input.branchId, input);
 
   const [row] = await ctx.db
     .insert(ExpensesTable)
@@ -57,6 +108,9 @@ export async function updateExpense(
   }
 
   await assertUserCanAccessBranch(ctx, session, existing.branchId);
+  // The branch of an existing expense never changes, so links are validated
+  // against the stored branch rather than anything the client sent.
+  await assertLinksBelongToBranch(ctx, existing.branchId, input);
 
   await ctx.db
     .update(ExpensesTable)

@@ -31,6 +31,7 @@ import {
 } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
 import { ExpenseFormDialog } from "@/features/system/expenses/admin/components";
+import { ImportButton } from "@/features/system/import/admin";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
 
@@ -220,6 +221,7 @@ export function DressesTablePage() {
                 createdAt: row.createdAt,
               })}
             />
+            <ImportButton entitySlug="dresses" />
           </DataTableToolbar>
         }
         footer={<DataTablePagination table={table} />}

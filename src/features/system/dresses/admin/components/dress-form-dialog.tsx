@@ -3,7 +3,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DicesIcon,
-  InfoIcon,
   Loader2Icon,
   PlusIcon,
   SaveIcon,
@@ -21,7 +20,6 @@ import {
   OverlayFormFooterActions,
   OverlayFormSubmitButton,
 } from "@/components/forms/overlay-form";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,11 +54,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
 import { translationKey } from "@/features/core/i18n/global";
 import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { generateDressCode } from "@/features/system/dresses/lib/generate-dress-code";
+import { useBranchFieldOptions } from "@/features/system/shared/use-branch-field-options";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
 
@@ -121,6 +119,7 @@ const dressFormSchema = z.object({
     .max(10_000_000, translationKey("forms.validation.numberIntMaxLarge")),
   isActive: z.boolean(),
   currentStatus: z.enum(DRESS_CURRENT_STATUSES).optional(),
+  branchId: z.uuid(translationKey("forms.validation.required")),
 });
 
 type DressFormValues = z.infer<typeof dressFormSchema>;
@@ -148,12 +147,8 @@ export function DressFormDialog({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const invalidateDashboard = useInvalidateDashboard();
-  const branchState = useBranch();
+  const { options: branchOptions, defaultBranchId } = useBranchFieldOptions();
   const isEdit = dress != null;
-  const branchId =
-    dress?.branchId ??
-    (branchState?.hasActiveOrg ? branchState.activeBranch.id : undefined);
-  const needsActiveBranch = !branchId;
 
   const createMut = useMutation(trpc.dresses.create.mutationOptions());
   const updateMut = useMutation(trpc.dresses.update.mutationOptions());
@@ -174,22 +169,18 @@ export function DressFormDialog({
       insurance: dress?.insurance ?? 0,
       isActive: dress?.isActive ?? true,
       currentStatus: dress?.currentStatus ?? "available",
+      branchId: dress?.branchId ?? defaultBranchId,
     }),
-    [dress],
+    [dress, defaultBranchId],
   );
 
   const form = useAppForm({
     defaultValues,
     validators: { onSubmit: dressFormSchema },
     onSubmit: async ({ value }) => {
-      if (!branchId) {
-        toast.error(String(t("systemPages.dressBranchRequired")));
-        return;
-      }
-
       const trimmedDescription = value.description?.trim();
       const payload = {
-        branchId,
+        branchId: value.branchId,
         code: value.code,
         title: value.title,
         description: trimmedDescription ? trimmedDescription : undefined,
@@ -303,15 +294,16 @@ export function DressFormDialog({
             <OverlayFormBody formId={formId} className="space-y-4" onSubmit={handleBodySubmit}>
               <FieldSet disabled={pending}>
                 <FieldGroup>
-                  {needsActiveBranch ? (
-                    <Alert variant="default">
-                      <InfoIcon />
-                      <AlertTitle>{String(t("systemPages.dressBranchRequired"))}</AlertTitle>
-                      <AlertDescription>
-                        {String(t("systemPages.dressFormAllBranchesHint"))}
-                      </AlertDescription>
-                    </Alert>
-                  ) : null}
+                  <form.AppField name="branchId">
+                    {(field) => (
+                      <field.SelectField
+                        label={String(t("systemPages.formBranch"))}
+                        placeholder={String(t("systemPages.formBranchPlaceholder"))}
+                        options={branchOptions}
+                        disabled={isEdit}
+                      />
+                    )}
+                  </form.AppField>
                   <form.AppField name="code">
                     {(field) => {
                       const invalid = field.state.meta.isTouched && !field.state.meta.isValid;
@@ -460,33 +452,19 @@ export function DressFormDialog({
                 <XIcon className="size-3.5" />
                 {t("common.cancel")}
               </Button>
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <span className="inline-flex min-w-0 flex-1">
-                      <OverlayFormSubmitButton
-                        aria-describedby={needsActiveBranch ? "dress-form-branch-hint" : undefined}
-                        className="w-full"
-                        disabled={pending || needsActiveBranch}
-                        formId={formId}
-                        size="default"
-                      >
-                        <SubmitIcon className={pending ? "size-3.5 animate-spin" : "size-3.5"} />
-                        {pending
-                          ? String(t("common.saving"))
-                          : isEdit
-                            ? String(t("common.save"))
-                            : String(t("common.create"))}
-                      </OverlayFormSubmitButton>
-                    </span>
-                  }
-                />
-                {needsActiveBranch ? (
-                  <TooltipContent id="dress-form-branch-hint" side="top">
-                    {String(t("systemPages.dressBranchRequired"))}
-                  </TooltipContent>
-                ) : null}
-              </Tooltip>
+              <OverlayFormSubmitButton
+                className="min-w-0 flex-1"
+                disabled={pending}
+                formId={formId}
+                size="default"
+              >
+                <SubmitIcon className={pending ? "size-3.5 animate-spin" : "size-3.5"} />
+                {pending
+                  ? String(t("common.saving"))
+                  : isEdit
+                    ? String(t("common.save"))
+                    : String(t("common.create"))}
+              </OverlayFormSubmitButton>
             </OverlayFormFooterActions>
           </DialogFooter>
         </DialogContent>
