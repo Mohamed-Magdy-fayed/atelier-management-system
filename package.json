@@ -6,6 +6,7 @@
     "lint": "biome check",
     "format": "biome format --write",
     "build": "next build",
+    "vercel-build": "drizzle-kit migrate && next build",
     "check": "biome check .",
     "check:unsafe": "biome check --write --unsafe .",
     "check:write": "biome check --write .",
