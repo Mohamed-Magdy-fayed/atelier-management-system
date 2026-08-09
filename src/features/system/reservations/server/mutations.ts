@@ -8,11 +8,15 @@ import {
   RentalCustomersTable,
   ReservationsTable,
 } from "@/drizzle/schema";
+import { LOCALE_COOKIE_NAME } from "@/features/core/i18n/lib";
 import {
   assertOperationalStaff,
   assertReservationIdsAccessible,
   assertUserCanAccessBranch,
 } from "@/features/system/shared/staff-access";
+import { resolveWhatsAppSender } from "@/features/system/whatsapp/server/credentials";
+import { reservationCreated } from "@/integrations/inngest/functions/reservation-whatsapp";
+import { inngest } from "@/integrations/inngest/client";
 import { rentalCustomerPhoneKey } from "@/lib/phone";
 import { rentalWindowsOverlap } from "@/lib/rental-availability";
 import { generateReservationCode } from "../utils";
@@ -294,7 +298,87 @@ export async function createReservation(
     createdBy: session.user.id,
   });
 
+  await queueReservationConfirmation(ctx, {
+    reservationId: row.id,
+    branchId: input.branchId,
+    customerName: snapshotName,
+    customerPhone: snapshotPhone,
+    reservationCode,
+    dress,
+    receivingDateTime: input.receivingDateTime,
+    occasionDate: input.occasionDate,
+    returnDateTime: input.returnDateTime,
+    totalPrice,
+    discount,
+    depositPaid: input.depositPaid,
+  });
+
   return { reservationId: row.id };
+}
+
+/**
+ * Hands the customer's confirmation to Inngest.
+ *
+ * Wrapped so a queue outage can never fail a reservation that is already
+ * written — the booking is the transaction that matters, the message is not.
+ * The mode is checked first so an atelier with sending off never fills the
+ * queue with jobs that immediately skip.
+ */
+async function queueReservationConfirmation(
+  ctx: TRPCContext,
+  args: {
+    reservationId: string;
+    branchId: string;
+    customerName: string;
+    customerPhone: string | null;
+    reservationCode: string;
+    dress: { title: string; code: string | null; insurance: number };
+    receivingDateTime: Date;
+    occasionDate: Date | null;
+    returnDateTime: Date;
+    totalPrice: number;
+    discount: number;
+    depositPaid: number;
+  },
+): Promise<void> {
+  try {
+    if (!args.customerPhone?.trim()) return;
+
+    const sender = await resolveWhatsAppSender(ctx.db);
+    if (sender.mode === "off") return;
+
+    const branch = await ctx.db.query.BranchesTable.findFirst({
+      where: eq(BranchesTable.id, args.branchId),
+      columns: { nameEn: true, nameAr: true },
+    });
+
+    const locale = ctx.cookies.get(LOCALE_COOKIE_NAME)?.value || "ar";
+
+    await inngest.send(
+      reservationCreated.create({
+        reservationId: args.reservationId,
+        customerName: args.customerName,
+        customerPhone: args.customerPhone,
+        branchName:
+          (locale === "ar" ? branch?.nameAr : branch?.nameEn) ??
+          branch?.nameEn ??
+          "",
+        reservationCode: args.reservationCode,
+        dressTitle: args.dress.title,
+        dressCode: args.dress.code,
+        receivingDateTime: args.receivingDateTime.toISOString(),
+        occasionDate: args.occasionDate?.toISOString() ?? null,
+        returnDateTime: args.returnDateTime.toISOString(),
+        totalPrice: args.totalPrice,
+        discount: args.discount,
+        insurance: args.dress.insurance,
+        depositPaid: args.depositPaid,
+        locale,
+      }),
+    );
+  } catch (error) {
+    console.error("Failed to queue reservation WhatsApp confirmation", error);
+  }
 }
 
 export async function updateReservation(

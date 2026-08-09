@@ -710,6 +710,54 @@ export default {
     settingName00005: "رقم واتساب",
     settingDesc00005:
       "رقم الهاتف المستخدم لزر واتساب في صفحة تفاصيل الفستان وصفحة الفروع العامة. يحلّ محل رقم الفرع عند تعيينه (مثال: 01xxxxxxxxx).",
+    settingName00006: "طريقة إرسال رسائل واتساب",
+    settingDesc00006:
+      "كيفية إرسال رسائل واتساب للعملاء. «عدم الإرسال» تعني ألا يصل أي عميل رسالة واتساب إطلاقًا. «رقم Gateling Atelier» يرسل من رقمنا المشترك مع إضافة سطر قصير باسم Gateling Atelier إلى كل رسالة. «رقمنا الخاص» يرسل من رقم واتساب الخاص بك باستخدام معرّف الحساب ورمز الوصول أدناه، دون أي إضافات.",
+    settingName00007: "معرّف حساب واتساب",
+    settingDesc00007:
+      "معرّف حساب Wapilot لرقم واتساب الخاص بك. يُستخدم فقط عندما تكون طريقة الإرسال «رقمنا الخاص».",
+    settingName00008: "رمز الوصول لواتساب",
+    settingDesc00008:
+      "رمز الوصول لـ Wapilot المرتبط بمعرّف الحساب أعلاه. يُخزَّن مشفّرًا ولا يُعرض مرة أخرى بعد الحفظ — لتغييره الصق رمزًا جديدًا. يُستخدم فقط عندما تكون طريقة الإرسال «رقمنا الخاص».",
+    settingsWhatsAppModeOff: "عدم الإرسال",
+    settingsWhatsAppModePlatform: "رقم Gateling Atelier",
+    settingsWhatsAppModeOwn: "رقمنا الخاص",
+    settingsSecretStored: "المحفوظ: {hint}",
+    settingsSecretKeepCurrent: "اتركه فارغًا للإبقاء على القيمة الحالية.",
+    settingsSecretRemove: "إزالة",
+    settingsSecretPlaceholder: "الصق القيمة الجديدة",
+    whatsappStatusTitle: "رسائل واتساب",
+    whatsappStatusChecking: "جارٍ التحقق من اتصال واتساب…",
+    whatsappStatusHealthyPlatform:
+      "متصل. تُرسل الرسائل من رقم Gateling Atelier مع إضافة سطر باسم Gateling Atelier.",
+    whatsappStatusHealthyOwn: "متصل. تُرسل الرسائل من رقم واتساب الخاص بك.",
+    whatsappIssueMessagingOff:
+      "الإرسال متوقف، فلا يصل أي عميل رسالة واتساب. اختر رقمًا في «طريقة إرسال رسائل واتساب» لتشغيله.",
+    whatsappIssueOwnMissingInstanceId:
+      "طريقة الإرسال «رقمنا الخاص» لكن لم يُضبط معرّف الحساب. أضفه في «معرّف حساب واتساب»، أو أعد الطريقة إلى رقم Gateling Atelier.",
+    whatsappIssueOwnMissingToken:
+      "طريقة الإرسال «رقمنا الخاص» لكن لا يوجد رمز وصول محفوظ. الصقه في «رمز الوصول لواتساب»، أو أعد الطريقة إلى رقم Gateling Atelier.",
+    whatsappIssueOwnTokenUndecryptable:
+      "تعذّرت قراءة رمز الوصول المحفوظ — يحدث هذا عند تغيّر مفتاح التشفير على الخادم. الصق الرمز مرة أخرى لإعادة حفظه.",
+    whatsappIssuePlatformNotConfigured:
+      "رقم Gateling Atelier غير مُعدّ على هذا الخادم. تواصل مع الدعم، أو انتقل إلى رقمك الخاص.",
+    whatsappIssueInstanceNotConnected:
+      "يُبلغ Wapilot أن هذا الرقم غير متصل. افتح Wapilot وأعد مسح رمز QR الخاص بواتساب لهذا الحساب.",
+    whatsappIssueAuthRejected:
+      "رفض Wapilot بيانات الاعتماد هذه. تحقق من معرّف الحساب والصق رمز وصول جديدًا.",
+    whatsappIssueUnreachable:
+      "تعذّر الوصول إلى Wapilot. إذا استمر ذلك، تحقق من حالة Wapilot قبل تغيير أي شيء هنا.",
+    whatsappReservationGreeting: "أهلاً {name}،",
+    whatsappReservationIntro: "تم تأكيد حجزك في {branch}. رقم الحجز: {code}",
+    whatsappReservationDress: "الفستان: {dress}",
+    whatsappReservationReceiving: "الاستلام: {date}",
+    whatsappReservationOccasion: "المناسبة: {date}",
+    whatsappReservationReturn: "الإرجاع: {date}",
+    whatsappReservationTotal: "الإجمالي: {amount}",
+    whatsappReservationDeposit: "المدفوع: {amount}",
+    whatsappReservationOutstanding: "المتبقي: {amount}",
+    whatsappReservationInsurance: "التأمين المسترد: {amount}",
+    whatsappBrandingSuffix: "أُرسلت عبر Gateling Atelier",
     settingStatePricesShown: "الأسعار ظاهرة",
     settingStatePricesHidden: "الأسعار مخفية",
     settingsShowPricesState: "إظهار الأسعار",

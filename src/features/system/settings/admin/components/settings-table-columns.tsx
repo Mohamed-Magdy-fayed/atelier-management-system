@@ -14,7 +14,11 @@ import {
   getSettingDisplayDescription,
   getSettingDisplayName,
 } from "@/features/system/settings/lib/setting-i18n";
-import { SYSTEM_SETTING_CODE } from "@/features/system/settings/lib/system-settings-registry";
+import { getSettingValueOptionLabel } from "@/features/system/settings/lib/setting-value-options";
+import {
+  getSystemSettingDefinition,
+  SYSTEM_SETTING_CODE,
+} from "@/features/system/settings/lib/system-settings-registry";
 import type { SettingGridRow } from "@/integrations/trpc/routers/settings";
 
 import {
@@ -131,8 +135,28 @@ export function buildSettingColumns(opts: {
       ),
       meta: { label: String(t("systemPages.settingsValue")) },
       cell: ({ row }) => {
+        const definition = getSystemSettingDefinition(row.original.code);
+
+        // A secret's value never reaches the client; only the masked tail does.
+        if (definition?.isSecret) {
+          return row.original.valueHint ? (
+            <span className="font-mono text-xs">{row.original.valueHint}</span>
+          ) : (
+            "—"
+          );
+        }
+
         const value = row.original.value?.trim();
         if (!value) return "—";
+
+        if (definition?.valueEnum) {
+          return (
+            <span className="text-xs">
+              {getSettingValueOptionLabel(row.original.code, value, t)}
+            </span>
+          );
+        }
+
         return (
           <span className="line-clamp-2 max-w-[14rem] text-xs">{value}</span>
         );

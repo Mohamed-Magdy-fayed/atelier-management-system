@@ -17,6 +17,16 @@ export interface SendMessageParams {
   text: string;
 }
 
+/**
+ * Send acknowledgement. Wapilot returns more than this, but nothing else is
+ * relied on — the id is kept so a delivery can be traced in their dashboard.
+ */
+export interface SendMessageResponse {
+  success?: boolean;
+  message_id?: string;
+  message?: string;
+}
+
 type InstanceStatus = `instances/${string}/status`;
 type SendMessage = `${string}/send-message`;
 type GetPNId = `lookup/lid/pn/${string}`;

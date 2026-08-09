@@ -1,9 +1,24 @@
-import { and, asc, count, desc, eq, ilike, inArray, or } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  notInArray,
+  or,
+} from "drizzle-orm";
 
 import { SettingsTable } from "@/drizzle/schema";
-import { SYSTEM_SETTING_CODES } from "@/features/system/settings/lib/system-settings-registry";
+import {
+  getSystemSettingDefinition,
+  SECRET_SETTING_CODES,
+  SYSTEM_SETTING_CODES,
+} from "@/features/system/settings/lib/system-settings-registry";
 
 import type { ListSettingsInput } from "./schemas";
+import { secretHintFromStored } from "./secret-crypto";
 import {
   assertAdminRole,
   getRequiredSession,
@@ -25,7 +40,12 @@ function buildWhereClause(input: ListSettingsInput) {
     or(
       ilike(SettingsTable.code, likeValue),
       ilike(SettingsTable.description, likeValue),
-      ilike(SettingsTable.value, likeValue),
+      // Value search skips secrets, so a stored token can never be confirmed by
+      // typing it (or its tail) into the grid's search box.
+      and(
+        notInArray(SettingsTable.code, [...SECRET_SETTING_CODES]),
+        ilike(SettingsTable.value, likeValue),
+      ),
     ),
   );
 }
@@ -110,8 +130,32 @@ export async function listSettings(ctx: TRPCContext, input: ListSettingsInput) {
     .offset(offset);
 
   return {
-    rows: rows as SettingGridRow[],
+    rows: rows.map(toGridRow),
     pageCount,
     total: Number(total),
+  };
+}
+
+/**
+ * Swaps a secret's ciphertext for a masked hint.
+ *
+ * This is the only path settings take to a client, so doing it here means no
+ * caller can forget. An unreadable value (a rotated key, say) yields a null
+ * hint with `hasValue` still true — the diagnostics surface the real problem.
+ */
+function toGridRow(
+  row: Omit<SettingGridRow, "valueHint" | "hasValue">,
+): SettingGridRow {
+  const isSecret = getSystemSettingDefinition(row.code)?.isSecret === true;
+
+  if (!isSecret) {
+    return { ...row, valueHint: null, hasValue: Boolean(row.value?.trim()) };
+  }
+
+  return {
+    ...row,
+    value: null,
+    valueHint: secretHintFromStored(row.value),
+    hasValue: Boolean(row.value?.trim()),
   };
 }

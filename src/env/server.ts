@@ -19,8 +19,27 @@ export const env = createEnv({
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
 
-    WAPILOT_INSTANCE_ID: z.string().min(1),
-    WAPILOT_API_TOKEN: z.string().min(1),
+    /**
+     * Wraps credentials stored in `settings`. Deliberately separate from
+     * JWT_SECRET_KEY: rotating session signing must not invalidate every stored
+     * integration token. 32 bytes, base64 — `openssl rand -base64 32`.
+     *
+     * Optional so an install that stores no credentials still boots; the first
+     * attempt to read or write one fails loudly instead.
+     */
+    SETTINGS_ENCRYPTION_KEY: z.string().min(44).optional(),
+
+    /**
+     * The platform WhatsApp sender, used when setting 00006 is `platform`.
+     * Optional because an atelier on `own` or `off` never touches it, and a
+     * dev machine should not need it to boot.
+     */
+    WAPILOT_INSTANCE_ID: z.string().min(1).optional(),
+    WAPILOT_API_TOKEN: z.string().min(1).optional(),
+
+    /** Unset in dev: the Inngest dev server needs neither. */
+    INNGEST_EVENT_KEY: z.string().min(1).optional(),
+    INNGEST_SIGNING_KEY: z.string().min(1).optional(),
 
     SMTP_HOST: z.string().min(1).optional(),
     SMTP_PORT: z.coerce.number().int().positive().optional(),

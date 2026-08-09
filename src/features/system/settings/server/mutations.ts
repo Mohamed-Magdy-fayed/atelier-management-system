@@ -8,6 +8,8 @@ import {
 } from "@/features/system/settings/lib/system-settings-registry";
 import { handleDatabaseError } from "@/integrations/trpc/db-error";
 
+import { encryptSecret, SettingSecretError } from "./secret-crypto";
+
 import type {
   SettingBulkSetActiveInput,
   SettingSetActiveInput,
@@ -58,7 +60,33 @@ function assertEditableFields(
         message: "This setting cannot change value",
       });
     }
-    patch.value = input.value?.trim() || null;
+
+    const trimmed = input.value?.trim() || null;
+
+    if (trimmed && def.valueEnum && !def.valueEnum.includes(trimmed)) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: `Value must be one of: ${def.valueEnum.join(", ")}`,
+      });
+    }
+
+    // Encrypted here rather than at the call site so no future caller can
+    // write a credential in the clear by forgetting.
+    if (trimmed && def.isSecret) {
+      try {
+        patch.value = encryptSecret(trimmed);
+      } catch (err) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            err instanceof SettingSecretError
+              ? err.message
+              : "Could not store this credential",
+        });
+      }
+    } else {
+      patch.value = trimmed;
+    }
   }
 
   if (input.amount !== undefined) {

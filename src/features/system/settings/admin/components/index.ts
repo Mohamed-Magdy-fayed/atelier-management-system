@@ -7,3 +7,4 @@ export {
 } from "./setting-row-actions";
 export { SettingsBulkActions } from "./settings-bulk-actions";
 export { buildSettingColumns } from "./settings-table-columns";
+export { WhatsAppStatusAlert } from "./whatsapp-status-alert";

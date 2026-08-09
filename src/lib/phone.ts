@@ -1,5 +1,13 @@
-/** `https://wa.me/…` link for a stored phone (E.164 digits, optional leading +). */
-export function toWhatsAppUrl(phone: string | null | undefined): string | null {
+/**
+ * Bare E.164 digits for WhatsApp, or null when the number is unusable.
+ *
+ * Stored phones are a mix of national (`01xxxxxxxxx`) and country-coded
+ * (`201xxxxxxxxx`) forms depending on how they were entered or imported, so
+ * nothing may hand the raw column to WhatsApp — everything goes through here.
+ */
+export function toWhatsAppDigits(
+  phone: string | null | undefined,
+): string | null {
   if (!phone?.trim()) return null;
   let digits = phone.replace(/\D/g, "");
   if (!digits) return null;
@@ -8,7 +16,24 @@ export function toWhatsAppUrl(phone: string | null | undefined): string | null {
   } else if (digits.length === 10) {
     digits = `20${digits}`;
   }
-  return `https://wa.me/${digits}`;
+  return digits;
+}
+
+/** `https://wa.me/…` link for a stored phone (E.164 digits, optional leading +). */
+export function toWhatsAppUrl(phone: string | null | undefined): string | null {
+  const digits = toWhatsAppDigits(phone);
+  return digits ? `https://wa.me/${digits}` : null;
+}
+
+/**
+ * Wapilot addresses individual chats as `<digits>@c.us`. Kept next to the
+ * digits helper so the suffix is defined in exactly one place.
+ */
+export function toWhatsAppChatId(
+  phone: string | null | undefined,
+): string | null {
+  const digits = toWhatsAppDigits(phone);
+  return digits ? `${digits}@c.us` : null;
 }
 
 /** Digits-only key for matching walk-in rental phones to login accounts. */

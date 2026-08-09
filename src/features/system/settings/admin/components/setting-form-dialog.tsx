@@ -35,6 +35,7 @@ import {
   getSystemSettingDefinition,
   SYSTEM_SETTING_CODE,
 } from "@/features/system/settings/lib/system-settings-registry";
+import { getSettingValueOptionLabel } from "@/features/system/settings/lib/setting-value-options";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { SettingGridRow } from "@/integrations/trpc/routers/settings";
 
@@ -115,6 +116,17 @@ export function SettingFormDialog({
     [t],
   );
 
+  const valueEnumOptions = useMemo(
+    () =>
+      (definition?.valueEnum ?? []).map((option) => ({
+        value: option,
+        label: setting
+          ? getSettingValueOptionLabel(setting.code, option, t)
+          : option,
+      })),
+    [definition, setting, t],
+  );
+
   const defaultValues = useMemo<SettingFormValues>(() => {
     if (!setting) {
       return { isActive: "", value: "", amount: "" };
@@ -140,6 +152,15 @@ export function SettingFormDialog({
             ? null
             : undefined;
 
+      const trimmedValue = value.value?.trim() || null;
+
+      // A blank secret field means "leave the stored credential alone", not
+      // "clear it" — the field starts empty because the value is never sent to
+      // the browser, so treating blank as a clear would wipe it on any edit.
+      const shouldSendValue =
+        definition.editable.value &&
+        !(definition.isSecret && trimmedValue === null);
+
       try {
         await toast
           .promise(
@@ -148,9 +169,7 @@ export function SettingFormDialog({
               ...(definition.editable.isActive
                 ? { isActive: mapIsActiveToPayload(value.isActive ?? "") }
                 : {}),
-              ...(definition.editable.value
-                ? { value: value.value?.trim() || null }
-                : {}),
+              ...(shouldSendValue ? { value: trimmedValue } : {}),
               ...(definition.editable.amount ? { amount } : {}),
             }),
             {
@@ -182,6 +201,28 @@ export function SettingFormDialog({
 
   const pending = updateMut.isPending;
   const formId = useId();
+
+  /** Explicit clear, since a blank field means "keep current" for a secret. */
+  const handleRemoveSecret = useCallback(async () => {
+    if (!setting) return;
+
+    try {
+      await toast
+        .promise(updateMut.mutateAsync({ id: setting.id, value: null }), {
+          loading: String(t("common.saving")),
+          success: String(t("systemPages.settingUpdated")),
+          error: (err) =>
+            err instanceof Error
+              ? err.message
+              : String(t("systemPages.settingSaveFailed")),
+        })
+        .unwrap();
+      await queryClient.invalidateQueries({ queryKey: trpc.settings.pathKey() });
+      onOpenChange(false);
+    } catch {
+      // toast.promise already surfaced the failure.
+    }
+  }, [onOpenChange, queryClient, setting, t, trpc, updateMut]);
 
   const handleBodySubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
@@ -256,9 +297,57 @@ export function SettingFormDialog({
                 ) : null}
                 {definition.editable.value ? (
                   <form.AppField name="value">
-                    {(field) =>
-                      setting.code ===
-                      SYSTEM_SETTING_CODE.RESERVATION_USAGE_POLICY ? (
+                    {(field) => {
+                      if (definition.valueEnum) {
+                        return (
+                          <field.SelectField
+                            label={String(t("systemPages.settingsValue"))}
+                            options={valueEnumOptions}
+                          />
+                        );
+                      }
+
+                      if (definition.isSecret) {
+                        return (
+                          <div className="space-y-2">
+                            <field.PasswordField
+                              label={String(t("systemPages.settingsValue"))}
+                              placeholder={String(
+                                t("systemPages.settingsSecretPlaceholder"),
+                              )}
+                            />
+                            {setting.hasValue ? (
+                              <div className="flex items-center justify-between gap-2">
+                                <Muted className="text-xs">
+                                  {setting.valueHint
+                                    ? String(
+                                        t("systemPages.settingsSecretStored", {
+                                          hint: setting.valueHint,
+                                        }),
+                                      )
+                                    : null}{" "}
+                                  {String(
+                                    t("systemPages.settingsSecretKeepCurrent"),
+                                  )}
+                                </Muted>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-destructive hover:text-destructive"
+                                  disabled={pending}
+                                  onClick={() => void handleRemoveSecret()}
+                                >
+                                  {String(t("systemPages.settingsSecretRemove"))}
+                                </Button>
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      }
+
+                      return setting.code ===
+                        SYSTEM_SETTING_CODE.RESERVATION_USAGE_POLICY ? (
                         <field.TextareaField
                           label={String(t("systemPages.settingsValue"))}
                           placeholder={String(
@@ -272,8 +361,8 @@ export function SettingFormDialog({
                             t("systemPages.settingsValuePlaceholder"),
                           )}
                         />
-                      )
-                    }
+                      );
+                    }}
                   </form.AppField>
                 ) : null}
                 {definition.editable.amount ? (

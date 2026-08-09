@@ -21,6 +21,7 @@
     "seed": "tsx src/drizzle/seed/cli.ts",
     "smoke:dashboard": "tsx scripts/smoke-dashboard.ts",
     "smoke:import": "tsx scripts/smoke-import.ts",
+    "smoke:whatsapp": "tsx scripts/smoke-whatsapp.ts",
     "import:contract": "tsx scripts/print-import-contract.ts",
     "seed:admin": "tsx src/drizzle/seed/cli.ts admin",
     "seed:all": "tsx src/drizzle/seed/cli.ts all",
