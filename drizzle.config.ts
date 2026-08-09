@@ -29,7 +29,7 @@ if (explicitEnvPath) {
 
 const databaseUrl =
   process.env.DATABASE_URL ??
-  `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}${process.env.DB_PORT}/${process.env.DB_NAME}`;
+  `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
 
 // Migrations write, so the resolved target is announced before drizzle-kit runs.
 try {
