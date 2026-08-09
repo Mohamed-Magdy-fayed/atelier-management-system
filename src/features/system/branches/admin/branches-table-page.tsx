@@ -27,6 +27,7 @@ import {
   useTableUrlState,
 } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
+import { ImportButton } from "@/features/system/import/admin";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { BranchGridRow } from "@/integrations/trpc/routers/branches";
 
@@ -165,6 +166,7 @@ export function BranchesTablePage() {
               <TooltipContent>{addBranchLabel}</TooltipContent>
             </Tooltip>
             <DataTableViewOptions table={table} />
+            <ImportButton entitySlug="branches" />
           </DataTableToolbar>
         }
         footer={<DataTablePagination table={table} />}

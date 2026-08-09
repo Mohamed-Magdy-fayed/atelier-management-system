@@ -8,6 +8,7 @@ import { branchesRouter } from "./branches";
 import { customerPortalRouter } from "./customer-portal";
 import { dressesRouter } from "./dresses";
 import { expensesRouter } from "./expenses";
+import { importRouter } from "./import";
 import { paymentsRouter } from "./payments";
 import { rentalCustomersRouter } from "./rental-customers";
 import { reservationsRouter } from "./reservations";
@@ -56,6 +57,7 @@ export const appRouter = createTRPCRouter({
   dashboard: dashboardRouter,
   dresses: dressesRouter,
   expenses: expensesRouter,
+  import: importRouter,
   payments: paymentsRouter,
   rentalCustomers: rentalCustomersRouter,
   reservations: reservationsRouter,

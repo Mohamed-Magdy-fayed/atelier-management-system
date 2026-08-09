@@ -2,7 +2,7 @@
 
 import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { InfoIcon, Loader2Icon, PlusIcon, SaveIcon, XIcon } from "lucide-react";
+import { Loader2Icon, PlusIcon, SaveIcon, XIcon } from "lucide-react";
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -15,7 +15,6 @@ import {
   OverlayFormFooterActions,
   OverlayFormSubmitButton,
 } from "@/components/forms/overlay-form";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,11 +28,11 @@ import { FieldGroup, FieldSet } from "@/components/ui/field";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { paymentMethods } from "@/drizzle/schemas/system/payments-table";
 import { reservationStatuses } from "@/drizzle/schemas/system/reservations-table";
-import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { translationKey } from "@/features/core/i18n/global";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { DressPickerField } from "@/features/system/dresses/admin/components/dress-picker-field";
+import { useBranchFieldOptions } from "@/features/system/shared/use-branch-field-options";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ReservationGridRow } from "@/integrations/trpc/routers/reservations";
 import { formatCurrency } from "@/lib/format";
@@ -50,6 +49,7 @@ const reservationStatusSchema = z.enum(reservationStatuses);
 const paymentMethodSchema = z.enum(paymentMethods);
 
 const createFormSchema = z.object({
+  branchId: z.uuid(translationKey("forms.validation.required")),
   dressId: z.uuid(translationKey("systemPages.reservationInvalidDress")),
   customerId: z.string().optional(),
   customerName: z
@@ -89,6 +89,7 @@ const createFormSchema = z.object({
 });
 
 const editFormSchema = z.object({
+  branchId: z.uuid(translationKey("forms.validation.required")),
   reservationCode: z
     .string()
     .trim()
@@ -142,6 +143,7 @@ type EditFormValues = z.infer<typeof editFormSchema>;
 const CREATE_TOTAL_STEPS = 3;
 
 const createStep1Schema = createFormSchema.pick({
+  branchId: true,
   dressId: true,
   receivingDateTime: true,
   returnDateTime: true,
@@ -190,28 +192,15 @@ export function ReservationFormDialog({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const invalidateDashboard = useInvalidateDashboard();
-  const branchState = useBranch();
+  const { options: branchOptions, defaultBranchId } = useBranchFieldOptions();
   const isEdit = reservation != null;
   const [createStep, setCreateStep] = useState(1);
-  const activeBranchId =
-    reservation?.branchId ??
-    (branchState?.hasActiveOrg ? branchState.activeBranch.id : undefined);
-  const isAllBranchesMode =
-    !isEdit &&
-    branchState != null &&
-    branchState.canViewAllBranches &&
-    !branchState.hasActiveOrg;
-  const formDataInput = activeBranchId ? { branchId: activeBranchId } : {};
   const createMut = useMutation(trpc.reservations.create.mutationOptions());
   const updateMut = useMutation(trpc.reservations.update.mutationOptions());
   const generateCodeMut = useMutation(
     trpc.reservations.generateCode.mutationOptions(),
   );
   const [previewReservationCode, setPreviewReservationCode] = useState("");
-  const { data: formData, isFetching: formDataLoading } = useQuery({
-    ...trpc.reservations.formData.queryOptions(formDataInput),
-    enabled: open,
-  });
 
   const statusSelectOptions = useMemo(
     () =>
@@ -245,6 +234,7 @@ export function ReservationFormDialog({
     const { occasionDate, receivingDateTime, returnDateTime } =
       buildDefaultReservationDatetimes();
     return {
+      branchId: defaultBranchId,
       dressId: "",
       customerId: "",
       customerName: "",
@@ -258,10 +248,11 @@ export function ReservationFormDialog({
       status: "reserved",
       notes: "",
     };
-  }, []);
+  }, [defaultBranchId]);
 
   const editDefaults = useMemo<EditFormValues>(
     () => ({
+      branchId: reservation?.branchId ?? defaultBranchId,
       reservationCode: reservation?.reservationCode ?? "",
       dressId: reservation?.dressId ?? "",
       customerId: reservation?.customerId ?? "",
@@ -282,36 +273,18 @@ export function ReservationFormDialog({
       status: reservation?.status ?? "reserved",
       notes: reservation?.notes ?? "",
     }),
-    [reservation],
+    [reservation, defaultBranchId],
   );
 
   const createForm = useAppForm({
     defaultValues: createDefaults,
     validators: { onSubmit: createFormSchema },
     onSubmit: async ({ value }) => {
-      const latestFormData = await queryClient.ensureQueryData(
-        trpc.reservations.formData.queryOptions(formDataInput),
-      );
-      const dress = latestFormData.dresses.find((d) => d.id === value.dressId);
-      const submitBranchId = activeBranchId ?? dress?.branchId;
-      if (!submitBranchId) {
-        toast.error(
-          String(
-            t(
-              isAllBranchesMode
-                ? "systemPages.reservationsFormSelectDressForBranch"
-                : "systemPages.reservationBranchRequired",
-            ),
-          ),
-        );
-        return;
-      }
-
       try {
         await toast
           .promise(
             createMut.mutateAsync({
-              branchId: submitBranchId,
+              branchId: value.branchId,
               dressId: value.dressId,
               customerId: value.customerId?.trim() || undefined,
               customerName: value.customerName,
@@ -351,14 +324,14 @@ export function ReservationFormDialog({
     defaultValues: editDefaults,
     validators: { onSubmit: editFormSchema },
     onSubmit: async ({ value }) => {
-      if (!activeBranchId || !reservation) return;
+      if (!reservation) return;
 
       try {
         await toast
           .promise(
             updateMut.mutateAsync({
               id: reservation.id,
-              branchId: activeBranchId,
+              branchId: value.branchId,
               dressId: value.dressId,
               customerId: value.customerId,
               reservationCode: value.reservationCode,
@@ -404,27 +377,37 @@ export function ReservationFormDialog({
     (state) => state.values.customerId,
   );
   const createFormValues = useStore(createForm.store, (state) => state.values);
+  const createBranchId = useStore(
+    createForm.store,
+    (state) => state.values.branchId,
+  );
+  const editBranchId = useStore(
+    editForm.store,
+    (state) => state.values.branchId,
+  );
+
+  // The branch picked in the form decides which dresses and customers are
+  // offered — the sidebar's active branch no longer gates this dialog.
+  const resolvedBranchId = (isEdit ? editBranchId : createBranchId) || undefined;
+
+  const { data: formData, isFetching: formDataLoading } = useQuery({
+    ...trpc.reservations.formData.queryOptions(
+      resolvedBranchId ? { branchId: resolvedBranchId } : {},
+    ),
+    enabled: open,
+  });
 
   const selectedDress = useMemo(
     () => formData?.dresses.find((d) => d.id === createDressId),
     [createDressId, formData?.dresses],
   );
 
-  const resolvedBranchId = activeBranchId ?? selectedDress?.branchId;
-
-  const previewBranchName = useMemo(() => {
-    if (branchState?.hasActiveOrg) {
-      return locale === "ar"
-        ? branchState.activeBranch.nameAr
-        : branchState.activeBranch.nameEn;
-    }
-    if (selectedDress) {
-      return locale === "ar"
-        ? selectedDress.branchNameAr
-        : selectedDress.branchNameEn;
-    }
-    return "";
-  }, [branchState, locale, selectedDress]);
+  const previewBranchName = useMemo(
+    () =>
+      branchOptions.find((option) => option.value === resolvedBranchId)
+        ?.label ?? "",
+    [branchOptions, resolvedBranchId],
+  );
 
   const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
 
@@ -441,11 +424,9 @@ export function ReservationFormDialog({
     () =>
       (formData?.dresses ?? []).map((d) => ({
         value: d.id,
-        label: isAllBranchesMode
-          ? `${d.title} (${d.code}) — ${locale === "ar" ? d.branchNameAr : d.branchNameEn}`
-          : `${d.title} (${d.code})`,
+        label: `${d.title} (${d.code})`,
       })),
-    [formData?.dresses, isAllBranchesMode, locale],
+    [formData?.dresses],
   );
 
   const form = isEdit ? editForm : createForm;
@@ -653,6 +634,16 @@ export function ReservationFormDialog({
           </p>
           <p className="font-medium text-sm">{reservation?.reservationCode}</p>
         </div>
+        <editForm.AppField name="branchId">
+          {(field) => (
+            <field.SelectField
+              label={String(t("systemPages.formBranch"))}
+              placeholder={String(t("systemPages.formBranchPlaceholder"))}
+              options={branchOptions}
+              disabled
+            />
+          )}
+        </editForm.AppField>
         <editForm.AppField name="dressId">
           {() => (
             <DressPickerField
@@ -739,26 +730,27 @@ export function ReservationFormDialog({
     <FieldSet disabled={pending}>
       <FieldGroup>
         <div hidden={createStep !== 1} className="space-y-4">
-          {isAllBranchesMode ? (
-            <Alert variant="default">
-              <InfoIcon />
-              <AlertTitle>
-                {String(t("authTranslations.branch.switcher.allBranches"))}
-              </AlertTitle>
-              <AlertDescription>
-                {String(t("systemPages.reservationsFormAllBranchesHint"))}
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          {!formDataLoading && dressOptions.length === 0 ? (
+          <createForm.AppField
+            name="branchId"
+            listeners={{
+              onChange: () => {
+                // Dresses are branch-scoped; a pick left over from the previous
+                // branch would be rejected on submit.
+                createForm.setFieldValue("dressId", "");
+              },
+            }}
+          >
+            {(field) => (
+              <field.SelectField
+                label={String(t("systemPages.formBranch"))}
+                placeholder={String(t("systemPages.formBranchPlaceholder"))}
+                options={branchOptions}
+              />
+            )}
+          </createForm.AppField>
+          {!formDataLoading && resolvedBranchId && dressOptions.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              {String(
-                t(
-                  isAllBranchesMode
-                    ? "systemPages.reservationsFormNoDresses"
-                    : "systemPages.reservationsFormNoDressesInBranch",
-                ),
-              )}
+              {String(t("systemPages.reservationsFormNoDressesInBranch"))}
             </p>
           ) : null}
           <createForm.AppField name="dressId">

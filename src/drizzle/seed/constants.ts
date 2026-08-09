@@ -5,6 +5,7 @@ export const SEED_ADMIN_ID = "00000000-0000-0000-0000-000000000001";
 
 export const SEED_PROFILE_NAMES = [
   "settings",
+  "admin",
   "baseline",
   "demo",
   "performance",

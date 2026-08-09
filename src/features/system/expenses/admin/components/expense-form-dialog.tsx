@@ -43,15 +43,16 @@ import {
 import { FieldGroup, FieldSet } from "@/components/ui/field";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { expenseTypes } from "@/drizzle/schemas/system/expenses-table";
-import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
 import { translationKey } from "@/features/core/i18n/global";
 import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { DressPickerField } from "@/features/system/dresses/admin/components/dress-picker-field";
+import { useBranchFieldOptions } from "@/features/system/shared/use-branch-field-options";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ExpenseGridRow } from "@/integrations/trpc/routers/expenses";
 
 const expenseFormSchema = z.object({
+  branchId: z.uuid(translationKey("forms.validation.required")),
   type: z.enum(expenseTypes),
   amount: z
     .string()
@@ -112,10 +113,7 @@ export function ExpenseFormDialog({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const invalidateDashboard = useInvalidateDashboard();
-  const branchState = useBranch();
-  const branchId = branchState?.hasActiveOrg
-    ? branchState.activeBranch.id
-    : undefined;
+  const { options: branchOptions, defaultBranchId } = useBranchFieldOptions();
 
   const isEdit = !!expense;
 
@@ -123,10 +121,6 @@ export function ExpenseFormDialog({
   const updateMut = useMutation(trpc.expenses.update.mutationOptions());
   const updateDressStatusMut = useMutation(
     trpc.dresses.updateStatus.mutationOptions(),
-  );
-
-  const { data: formData } = useQuery(
-    trpc.expenses.formData.queryOptions({ branchId }),
   );
 
   const [pendingDressStatus, setPendingDressStatus] = useState<{
@@ -138,6 +132,7 @@ export function ExpenseFormDialog({
   const defaultValues = useMemo<ExpenseFormValues>(() => {
     if (expense) {
       return {
+        branchId: expense.branchId,
         type: expense.type as ExpenseFormValues["type"],
         amount: String(expense.amount),
         dressId: expense.dressId ?? undefined,
@@ -148,6 +143,7 @@ export function ExpenseFormDialog({
       };
     }
     return {
+      branchId: prefill?.branchId ?? defaultBranchId,
       type: prefill?.type ?? "custom",
       amount: prefill?.amount ?? "",
       dressId: prefill?.dressId ?? undefined,
@@ -156,9 +152,7 @@ export function ExpenseFormDialog({
       note: prefill?.note ?? undefined,
       date: prefill?.date ?? new Date().toISOString().slice(0, 10),
     };
-  }, [expense, prefill]);
-
-  const effectiveBranchId = expense?.branchId ?? branchId;
+  }, [expense, prefill, defaultBranchId]);
 
   // What the form is currently editing: a specific expense, or a new draft.
   const formIdentity = expense?.id ?? "new";
@@ -168,13 +162,8 @@ export function ExpenseFormDialog({
     defaultValues,
     validators: { onSubmit: expenseFormSchema },
     onSubmit: async ({ value }) => {
-      if (!effectiveBranchId) {
-        toast.error(String(t("systemPages.expenseBranchRequired")));
-        return;
-      }
-
       const payload = {
-        branchId: effectiveBranchId,
+        branchId: value.branchId,
         type: value.type,
         amount: Number(value.amount),
         dressId:
@@ -243,6 +232,15 @@ export function ExpenseFormDialog({
   });
 
   const selectedType = useStore(form.store, (s) => s.values.type);
+  const selectedBranchId = useStore(form.store, (s) => s.values.branchId);
+
+  // Dress and employee options are branch-scoped, so they follow the branch
+  // picked in the form — not the active branch in the sidebar.
+  const { data: formData } = useQuery(
+    trpc.expenses.formData.queryOptions({
+      branchId: selectedBranchId || undefined,
+    }),
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -335,6 +333,28 @@ export function ExpenseFormDialog({
             >
               <FieldSet disabled={pending}>
                 <FieldGroup>
+                  <form.AppField
+                    name="branchId"
+                    listeners={{
+                      onChange: () => {
+                        // Dress and employee options are branch-scoped; a pick
+                        // left over from the previous branch would be rejected.
+                        form.setFieldValue("dressId", undefined);
+                        form.setFieldValue("employeeId", undefined);
+                      },
+                    }}
+                  >
+                    {(field) => (
+                      <field.SelectField
+                        label={String(t("systemPages.formBranch"))}
+                        placeholder={String(
+                          t("systemPages.formBranchPlaceholder"),
+                        )}
+                        options={branchOptions}
+                        disabled={isEdit}
+                      />
+                    )}
+                  </form.AppField>
                   <form.AppField name="type">
                     {(field) => (
                       <field.SelectField
