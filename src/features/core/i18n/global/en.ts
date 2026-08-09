@@ -731,6 +731,56 @@ export default {
     settingName00005: "WhatsApp number",
     settingDesc00005:
       "Phone number used for the WhatsApp button on public dress detail and locations pages. Overrides the branch-level phone when set (e.g. 01xxxxxxxxx).",
+    settingName00006: "WhatsApp sending mode",
+    settingDesc00006:
+      "How customer WhatsApp messages are sent. “Do not send” means no customer receives a WhatsApp message at all. “Gateling Atelier number” sends from our shared number and adds a short Gateling Atelier line to each message. “Our own number” sends from your own WhatsApp using the instance ID and API token below, with no added branding.",
+    settingName00007: "WhatsApp instance ID",
+    settingDesc00007:
+      "Wapilot instance ID for your own WhatsApp number. Only used when the sending mode is “Our own number”.",
+    settingName00008: "WhatsApp API token",
+    settingDesc00008:
+      "Wapilot API token paired with the instance ID above. Stored encrypted and never shown again after saving — to change it, paste a new one. Only used when the sending mode is “Our own number”.",
+    settingsWhatsAppModeOff: "Do not send",
+    settingsWhatsAppModePlatform: "Gateling Atelier number",
+    settingsWhatsAppModeOwn: "Our own number",
+    settingsSecretStored: "Stored: {hint}",
+    settingsSecretKeepCurrent: "Leave blank to keep the current value.",
+    settingsSecretRemove: "Remove",
+    settingsSecretPlaceholder: "Paste the new value",
+    whatsappStatusTitle: "WhatsApp messaging",
+    whatsappStatusChecking: "Checking the WhatsApp connection…",
+    whatsappStatusHealthyPlatform:
+      "Connected. Messages are sent from the Gateling Atelier number with a Gateling Atelier line appended.",
+    whatsappStatusHealthyOwn:
+      "Connected. Messages are sent from your own WhatsApp number.",
+    whatsappIssueMessagingOff:
+      "Sending is off, so no customer receives a WhatsApp message. Set “WhatsApp sending mode” to a number to turn it on.",
+    whatsappIssueOwnMissingInstanceId:
+      "The sending mode is “Our own number” but no instance ID is set. Add it in “WhatsApp instance ID”, or switch the mode back to the Gateling Atelier number.",
+    whatsappIssueOwnMissingToken:
+      "The sending mode is “Our own number” but no API token is stored. Paste it into “WhatsApp API token”, or switch the mode back to the Gateling Atelier number.",
+    whatsappIssueOwnTokenUndecryptable:
+      "The stored API token cannot be read — this happens when the server's encryption key changed. Paste the token again to re-store it.",
+    whatsappIssuePlatformNotConfigured:
+      "The Gateling Atelier number is not configured on this server. Contact support, or switch to your own number.",
+    whatsappIssueInstanceNotConnected:
+      "Wapilot reports this number as not connected. Open Wapilot and re-scan the WhatsApp QR code for this instance.",
+    whatsappIssueAuthRejected:
+      "Wapilot rejected these credentials. Check the instance ID and paste a fresh API token.",
+    whatsappIssueUnreachable:
+      "Could not reach Wapilot. If this persists, check Wapilot's status before changing anything here.",
+    whatsappReservationGreeting: "Hello {name},",
+    whatsappReservationIntro:
+      "Your reservation at {branch} is confirmed. Reference: {code}",
+    whatsappReservationDress: "Dress: {dress}",
+    whatsappReservationReceiving: "Pick up: {date}",
+    whatsappReservationOccasion: "Occasion: {date}",
+    whatsappReservationReturn: "Return by: {date}",
+    whatsappReservationTotal: "Total: {amount}",
+    whatsappReservationDeposit: "Paid: {amount}",
+    whatsappReservationOutstanding: "Remaining: {amount}",
+    whatsappReservationInsurance: "Refundable insurance: {amount}",
+    whatsappBrandingSuffix: "Sent via Gateling Atelier",
     settingStatePricesShown: "Prices shown",
     settingStatePricesHidden: "Prices hidden",
     settingsShowPricesState: "Show prices",

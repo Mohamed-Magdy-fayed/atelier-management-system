@@ -30,6 +30,7 @@ import {
   SettingInfoModal,
   SettingsBulkActions,
   type SettingRowActionVariant,
+  WhatsAppStatusAlert,
 } from "./components";
 
 type RowAction = {
@@ -133,6 +134,8 @@ export function SettingsTablePage() {
       }
     >
       <EntityPageHeader slug="settings" />
+
+      <WhatsAppStatusAlert />
 
       <DataTable
         table={table}
