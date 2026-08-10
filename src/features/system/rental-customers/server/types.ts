@@ -4,4 +4,5 @@ export type RentalCustomerGridRow = {
   phone: string;
   reservationsCount: number;
   createdAt: Date;
+  lastReservationAt: Date | null;
 };

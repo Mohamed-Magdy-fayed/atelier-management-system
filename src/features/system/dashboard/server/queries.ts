@@ -41,17 +41,12 @@ import type { createTRPCContext } from "@/integrations/trpc/init";
 
 import {
   buildDashboardDateContext,
-  endOfDay,
   parseDashboardRange,
-  startOfDay,
-  subDays,
   toLocalDateString,
 } from "../lib/dates";
 import type { DashboardData } from "./types";
 
 type Ctx = Awaited<ReturnType<typeof createTRPCContext>>;
-
-const MS_PER_DAY = 86_400_000;
 
 function getRequiredSession(ctx: Ctx) {
   if (!ctx.session) {
@@ -76,14 +71,15 @@ export async function getDashboardData(
   const dates = buildDashboardDateContext();
   const { rangeStart, rangeEnd } = parseDashboardRange(input, dates);
 
-  // Previous window spans the same number of whole local days and ends the day
-  // before the current window starts, so the two never share a boundary day.
-  const rangeDays = Math.max(
-    1,
-    Math.round((rangeEnd.getTime() - rangeStart.getTime()) / MS_PER_DAY),
-  );
-  const prevRangeEnd = endOfDay(subDays(rangeStart, 1));
-  const prevRangeStart = startOfDay(subDays(rangeStart, rangeDays));
+  // Previous window is the equally long span immediately preceding this one,
+  // derived by pure arithmetic on the instants. It deliberately does NOT re-floor
+  // to a calendar day: `rangeStart`/`rangeEnd` already carry the viewer's day
+  // boundaries, and re-flooring them would re-anchor the comparison to the
+  // server's calendar (UTC in production) and stretch it past a full period.
+  // Ending 1ms before `rangeStart` keeps the two windows adjacent but disjoint.
+  const rangeSpanMs = rangeEnd.getTime() - rangeStart.getTime();
+  const prevRangeEnd = new Date(rangeStart.getTime() - 1);
+  const prevRangeStart = new Date(prevRangeEnd.getTime() - rangeSpanMs);
   const prevRangeStartDate = toLocalDateString(prevRangeStart);
   const prevRangeEndDate = toLocalDateString(prevRangeEnd);
 

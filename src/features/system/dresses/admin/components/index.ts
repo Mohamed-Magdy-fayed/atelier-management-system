@@ -1,4 +1,5 @@
 export * from "./dress-delete-dialog";
+export * from "./dress-facet-filter";
 export * from "./dress-images-field";
 export * from "./dress-form-dialog";
 export * from "./dress-info-modal";

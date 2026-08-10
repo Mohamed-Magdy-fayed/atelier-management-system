@@ -11,7 +11,12 @@ import {
   type SQL,
 } from "drizzle-orm";
 
-import { PaymentsTable } from "@/drizzle/schema";
+import {
+  DressesTable,
+  PaymentsTable,
+  RentalCustomersTable,
+  ReservationsTable,
+} from "@/drizzle/schema";
 import {
   type PaymentMethod,
   type PaymentType,
@@ -85,6 +90,20 @@ function applyPaymentColumnFilters(
       } else if (cleaned.length > 1) {
         conditions.push(inArray(PaymentsTable.method, cleaned));
       }
+    } else if (filter.id === "dress") {
+      // Dress ids, matching how the reservations grid filters by dress.
+      const raw = filter.value;
+      const values = Array.isArray(raw)
+        ? raw.map(String)
+        : raw != null && raw !== ""
+          ? [String(raw)]
+          : [];
+
+      if (values.length === 1 && values[0]) {
+        conditions.push(eq(ReservationsTable.dressId, values[0]));
+      } else if (values.length > 1) {
+        conditions.push(inArray(ReservationsTable.dressId, values));
+      }
     } else if (filter.id === "createdAt" && isDateRangeValue(filter.value)) {
       const range = filter.value;
       if (range.from?.trim()) {
@@ -112,9 +131,15 @@ export function buildWhere(input: PaymentListFilterInput): SQL | undefined {
     const s = sanitizeLikeFragment(input.globalFilter);
     if (s) {
       const query = `%${s}%`;
-      const noteOr = ilike(PaymentsTable.note, query);
-      if (noteOr) {
-        conditions.push(noteOr);
+      const globalOr = or(
+        ilike(PaymentsTable.note, query),
+        ilike(ReservationsTable.reservationCode, query),
+        ilike(RentalCustomersTable.name, query),
+        ilike(RentalCustomersTable.phone, query),
+        ilike(DressesTable.title, query),
+      );
+      if (globalOr) {
+        conditions.push(globalOr);
       }
     }
   }
@@ -137,6 +162,18 @@ export function sortExpr(sorting: { id: string; desc: boolean }[]) {
       return direction(PaymentsTable.type);
     case "method":
       return direction(PaymentsTable.method);
+    case "reservationCode":
+      return direction(ReservationsTable.reservationCode);
+    case "customerName":
+      return direction(RentalCustomersTable.name);
+    case "customerPhone":
+      return direction(RentalCustomersTable.phone);
+    case "totalPrice":
+      return direction(ReservationsTable.totalPrice);
+    case "totalPaid":
+      return direction(ReservationsTable.totalPaid);
+    case "dress":
+      return direction(DressesTable.title);
     case "createdAt":
     default:
       return direction(PaymentsTable.createdAt);

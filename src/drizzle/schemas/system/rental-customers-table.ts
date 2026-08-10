@@ -1,5 +1,12 @@
 import { relations } from "drizzle-orm";
-import { index, pgTable, text, unique, uuid } from "drizzle-orm/pg-core";
+import {
+  index,
+  pgTable,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 import { UsersTable } from "@/drizzle/schemas/auth/users-table";
 import { createdAt, id } from "@/drizzle/schemas/helpers";
@@ -10,10 +17,16 @@ import { createdAt, id } from "@/drizzle/schemas/helpers";
  * Customers are tenant-wide, not branch-owned: the same person books at any
  * branch and keeps one history. Branch attribution lives on the reservation.
  *
- * Booking history is derived from `reservations` at read time, never cached on
- * the customer. `reservationsCount`/`lastReservationAt` columns used to live
- * here and silently went stale: only the legacy import ever wrote them, so a
- * customer created in-app showed 0 reservations forever.
+ * `reservationsCount` stays derived at read time: the customer list scopes it to
+ * the active branch, and a stored counter can only ever hold the tenant-wide
+ * total.
+ *
+ * `lastReservationAt` is cached because it is branch-agnostic, and is maintained
+ * by `refreshReservationStats` (src/features/system/shared/reservation-stats.ts)
+ * on every reservation write. It is recomputed from `reservations`, never
+ * incrementally patched — the earlier version of this column was written only by
+ * the legacy import and silently went stale the moment a booking was made
+ * in-app.
  */
 export const RentalCustomersTable = pgTable(
   "rental_customers",
@@ -23,6 +36,7 @@ export const RentalCustomersTable = pgTable(
     name: text().notNull(),
     phone: text().notNull(),
     note: text(),
+    lastReservationAt: timestamp({ withTimezone: true }),
     createdAt,
   },
   (table) => ({

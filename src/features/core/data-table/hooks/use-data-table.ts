@@ -6,6 +6,8 @@ import {
   type ColumnPinningState,
   type FilterFn,
   getCoreRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -164,6 +166,10 @@ export function useDataTable<T>({
     enableColumnPinning: true,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: isServer ? undefined : getFilteredRowModel(),
+    // Client-mode tables hold every row, so the option counts on select filters
+    // can be derived here. Server-mode grids pass counts in from their query.
+    getFacetedRowModel: isServer ? undefined : getFacetedRowModel(),
+    getFacetedUniqueValues: isServer ? undefined : getFacetedUniqueValues(),
     getPaginationRowModel: isServer ? undefined : getPaginationRowModel(),
     getSortedRowModel: isServer ? undefined : getSortedRowModel(),
     globalFilterFn,

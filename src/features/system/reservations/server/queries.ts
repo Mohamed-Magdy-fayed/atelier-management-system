@@ -6,6 +6,11 @@ import {
   ReservationsTable,
 } from "@/drizzle/schema";
 import {
+  columnFiltersExcept,
+  type GridFacetCounts,
+  toFacetCounts,
+} from "@/features/system/shared/facets";
+import {
   assertOperationalStaff,
   assertUserCanAccessBranch,
   resolveListBranchId,
@@ -70,12 +75,36 @@ export async function listReservations(
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const whereClause = buildWhere({ ...input, branchId });
-  const [{ value: total }] = await ctx.db
-    .select({ value: count() })
-    .from(ReservationsTable)
-    .innerJoin(DressesTable, eq(ReservationsTable.dressId, DressesTable.id))
-    .where(whereClause);
 
+  /** Every filter except the facet's own — see `columnFiltersExcept`. */
+  const facetWhere = (columnId: string) =>
+    buildWhere({
+      ...input,
+      branchId,
+      columnFilters: columnFiltersExcept(input.columnFilters, columnId),
+    });
+
+  const [totalRow, statusFacet, dressFacet] = await Promise.all([
+    ctx.db
+      .select({ value: count() })
+      .from(ReservationsTable)
+      .innerJoin(DressesTable, eq(ReservationsTable.dressId, DressesTable.id))
+      .where(whereClause),
+    ctx.db
+      .select({ key: ReservationsTable.status, value: count() })
+      .from(ReservationsTable)
+      .innerJoin(DressesTable, eq(ReservationsTable.dressId, DressesTable.id))
+      .where(facetWhere("status"))
+      .groupBy(ReservationsTable.status),
+    ctx.db
+      .select({ key: ReservationsTable.dressId, value: count() })
+      .from(ReservationsTable)
+      .innerJoin(DressesTable, eq(ReservationsTable.dressId, DressesTable.id))
+      .where(facetWhere("dressId"))
+      .groupBy(ReservationsTable.dressId),
+  ]);
+
+  const total = Number(totalRow[0]?.value ?? 0);
   const pageCount = Math.max(1, Math.ceil(Number(total) / input.perPage));
   const page = Math.min(input.page, pageCount);
   const offset = (page - 1) * input.perPage;
@@ -89,7 +118,11 @@ export async function listReservations(
   return {
     rows: rows as ReservationGridRow[],
     pageCount,
-    total: Number(total),
+    total,
+    facets: {
+      status: toFacetCounts(statusFacet),
+      dressId: toFacetCounts(dressFacet),
+    } satisfies GridFacetCounts,
   };
 }
 

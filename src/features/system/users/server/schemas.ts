@@ -55,6 +55,11 @@ export const commitImportInput = z.object({
 
 export const userBranchIdsSchema = z.array(z.string().uuid());
 
+/** Audit dialogs resolve at most three actors (created/updated/deleted). */
+export const resolveActorsInput = z.object({
+  ids: z.array(z.string().uuid()).max(8),
+});
+
 export const userMutationSchema = z.object({
   name: z.string().trim().min(1).max(256).nullable().optional(),
   email: z.string().trim().email().max(256),
@@ -93,3 +98,4 @@ export type UserIdInput = z.infer<typeof userIdInput>;
 export type SoftDeleteInput = z.infer<typeof softDeleteInput>;
 export type BulkSetVerifiedInput = z.infer<typeof bulkSetVerifiedInput>;
 export type UserImportRole = z.infer<typeof importRoleSchema>;
+export type ResolveActorsInput = z.infer<typeof resolveActorsInput>;

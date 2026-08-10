@@ -15,6 +15,7 @@ import type {
   ExportRowsInput,
   ListCustomersInput,
   ListEmployeesInput,
+  ResolveActorsInput,
 } from "./schemas";
 import {
   assertStaffRole,
@@ -22,6 +23,7 @@ import {
   type TRPCContext,
 } from "./shared";
 import {
+  type AuditActor,
   type EmployeeBranchRef,
   type EmployeeGridRow,
   type UserGridRow,
@@ -38,6 +40,29 @@ export async function listAssignableBranches(ctx: TRPCContext) {
   const session = getRequiredSession(ctx);
   assertStaffRole(session.user.role);
   return fetchAssignableBranches(ctx);
+}
+
+/**
+ * Resolves audit actor ids to display identities. Soft-deleted users are
+ * included on purpose — an audit trail must still name whoever acted.
+ */
+export async function resolveActors(
+  ctx: TRPCContext,
+  input: ResolveActorsInput,
+): Promise<AuditActor[]> {
+  const session = getRequiredSession(ctx);
+  assertStaffRole(session.user.role);
+
+  if (input.ids.length === 0) return [];
+
+  return ctx.db
+    .select({
+      id: UsersTable.id,
+      name: UsersTable.name,
+      email: UsersTable.email,
+    })
+    .from(UsersTable)
+    .where(inArray(UsersTable.id, input.ids));
 }
 
 export async function listEmployees(

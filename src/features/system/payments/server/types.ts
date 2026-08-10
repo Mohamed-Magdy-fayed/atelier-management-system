@@ -9,4 +9,11 @@ export type PaymentGridRow = {
   note: string | null;
   createdAt: Date;
   createdBy: string;
+  reservationCode: string;
+  totalPrice: number;
+  totalPaid: number;
+  customerName: string;
+  customerPhone: string;
+  dressId: string;
+  dressTitle: string;
 };

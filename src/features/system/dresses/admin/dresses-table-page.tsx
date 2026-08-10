@@ -189,7 +189,9 @@ export function DressesTablePage() {
             globalFilter={resolvedGlobalFilter}
             onGlobalFilterChange={(value) => setResolvedGlobalFilter(value)}
             searchPlaceholder={t("dataTable.searchDressesHint")}
-            filterSlot={<DressesGridFilters table={table} />}
+            filterSlot={
+              <DressesGridFilters table={table} facets={data?.facets} />
+            }
           >
             <Tooltip>
               <TooltipTrigger
@@ -216,6 +218,7 @@ export function DressesTablePage() {
                 code: row.code,
                 title: row.title,
                 pricePerDay: row.pricePerDay,
+                netValue: row.netValue,
                 currentStatus: row.currentStatus,
                 isActive: row.isActive,
                 createdAt: row.createdAt,

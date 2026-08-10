@@ -63,6 +63,10 @@ export function ImportDialog({
 
   const job = useImportJob(entitySlug);
 
+  // Auto-resume is a one-shot per opening: once the admin discards a job, the
+  // dialog must stay on the guide instead of rejoining what they just dropped.
+  const resumeAttemptedRef = useRef(false);
+
   // A job left mid-run keeps its state in Postgres, so reopening the dialog
   // rejoins it instead of forcing the admin to start over.
   const inFlightQuery = useQuery({
@@ -71,14 +75,31 @@ export function ImportDialog({
   });
 
   useEffect(() => {
+    if (!open || resumeAttemptedRef.current) return;
+
     const latest = inFlightQuery.data?.jobs?.[0];
     if (!latest) return;
     if (latest.status !== "validating" && latest.status !== "review") return;
     if (job.jobId) return;
 
+    resumeAttemptedRef.current = true;
     setFileName(latest.fileName);
     void job.resume(latest);
-  }, [inFlightQuery.data, job]);
+  }, [inFlightQuery.data, job, open]);
+
+  /**
+   * Cancels the current job server-side and returns to the guide.
+   *
+   * Resetting locally is not enough: the job would stay in `validating` or
+   * `review`, and the next opening would rejoin it — which is what made a
+   * wrong file impossible to back out of.
+   */
+  async function discardJob() {
+    resumeAttemptedRef.current = true;
+    setFileName(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    await job.cancel();
+  }
 
   function closeDialog(next: boolean) {
     // Never abandon a run mid-write; the loop owns the cursor until it finishes.
@@ -86,11 +107,12 @@ export function ImportDialog({
 
     setOpen(next);
 
-    if (!next) {
-      job.reset();
-      setFileName(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+    if (next) {
+      resumeAttemptedRef.current = false;
+      return;
     }
+
+    void discardJob();
   }
 
   async function handleFile(file: File) {
@@ -106,11 +128,17 @@ export function ImportDialog({
       return;
     }
 
+    const content = await file.text();
+
+    // Replacing a file supersedes whatever was pending, so the old job is
+    // cancelled before the new one starts.
+    if (job.jobId) await job.cancel();
+
     setFileName(file.name);
 
     await job.start({
       fileName: file.name,
-      content: await file.text(),
+      content,
       branchId: spec?.branchScoped ? branchId || null : null,
     });
   }
@@ -277,6 +305,18 @@ export function ImportDialog({
             <XIcon data-icon="inline-start" />
             {job.step === "done" ? t("common.close") : t("common.cancel")}
           </Button>
+
+          {/* The way back out of a wrong file, without closing the dialog. */}
+          {job.step === "validating" || job.step === "review" ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void discardJob()}
+            >
+              <RefreshCcwIcon data-icon="inline-start" />
+              {t("systemPages.importReplaceFile")}
+            </Button>
+          ) : null}
 
           {job.step === "review" ? (
             <Button

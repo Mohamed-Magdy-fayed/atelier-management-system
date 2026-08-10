@@ -9,6 +9,7 @@ import {
   ReservationsTable,
 } from "@/drizzle/schema";
 import { LOCALE_COOKIE_NAME } from "@/features/core/i18n/lib";
+import { refreshReservationStats } from "@/features/system/shared/reservation-stats";
 import {
   assertOperationalStaff,
   assertReservationIdsAccessible,
@@ -298,6 +299,11 @@ export async function createReservation(
     createdBy: session.user.id,
   });
 
+  await refreshReservationStats(ctx.db, {
+    customerIds: [customer.id],
+    dressIds: [dress.id],
+  });
+
   await queueReservationConfirmation(ctx, {
     reservationId: row.id,
     branchId: input.branchId,
@@ -389,7 +395,15 @@ export async function updateReservation(
   assertOperationalStaff(session.user.role);
 
   const existing = await ctx.db.query.ReservationsTable.findFirst({
-    columns: { id: true, status: true, branchId: true },
+    // dressId/customerId are read so the summary on whoever the booking is
+    // moved *away* from is refreshed too, not just the new owner.
+    columns: {
+      id: true,
+      status: true,
+      branchId: true,
+      dressId: true,
+      customerId: true,
+    },
     where: and(
       eq(ReservationsTable.id, input.id),
       isNull(ReservationsTable.deletedAt),
@@ -455,6 +469,11 @@ export async function updateReservation(
     })
     .where(eq(ReservationsTable.id, input.id));
 
+  await refreshReservationStats(ctx.db, {
+    customerIds: [existing.customerId, input.customerId],
+    dressIds: [existing.dressId, input.dressId],
+  });
+
   return { updated: true };
 }
 
@@ -466,7 +485,7 @@ export async function updateReservationStatus(
   assertOperationalStaff(session.user.role);
 
   const existing = await ctx.db.query.ReservationsTable.findFirst({
-    columns: { id: true, branchId: true },
+    columns: { id: true, branchId: true, dressId: true, customerId: true },
     where: and(
       eq(ReservationsTable.id, input.id),
       isNull(ReservationsTable.deletedAt),
@@ -489,6 +508,13 @@ export async function updateReservationStatus(
       updatedBy: session.user.id,
     })
     .where(eq(ReservationsTable.id, input.id));
+
+  // Cancelling (or un-cancelling) moves the booking in or out of the counted
+  // set, so the summaries have to be recomputed on a status change too.
+  await refreshReservationStats(ctx.db, {
+    customerIds: [existing.customerId],
+    dressIds: [existing.dressId],
+  });
 
   return { updated: true };
 }
@@ -563,7 +589,7 @@ export async function deleteReservation(
   }
 
   const reservation = await ctx.db.query.ReservationsTable.findFirst({
-    columns: { id: true },
+    columns: { id: true, dressId: true, customerId: true },
     where: and(
       eq(ReservationsTable.id, input.id),
       isNull(ReservationsTable.deletedAt),
@@ -586,6 +612,11 @@ export async function deleteReservation(
     })
     .where(eq(ReservationsTable.id, input.id));
 
+  await refreshReservationStats(ctx.db, {
+    customerIds: [reservation.customerId],
+    dressIds: [reservation.dressId],
+  });
+
   return { deleted: true };
 }
 
@@ -596,6 +627,8 @@ export async function bulkUpdateReservationStatus(
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
   await assertReservationIdsAccessible(ctx, session, input.ids);
+
+  const affected = await loadReservationOwners(ctx, input.ids);
 
   await ctx.db
     .update(ReservationsTable)
@@ -609,6 +642,8 @@ export async function bulkUpdateReservationStatus(
         isNull(ReservationsTable.deletedAt),
       ),
     );
+
+  await refreshReservationStats(ctx.db, affected);
 
   return { updated: input.ids.length };
 }
@@ -627,6 +662,8 @@ export async function bulkDeleteReservations(
     });
   }
 
+  const affected = await loadReservationOwners(ctx, input.ids);
+
   await ctx.db
     .update(ReservationsTable)
     .set({
@@ -641,5 +678,26 @@ export async function bulkDeleteReservations(
       ),
     );
 
+  await refreshReservationStats(ctx.db, affected);
+
   return { deleted: input.ids.length };
+}
+
+/**
+ * The customers and dresses a bulk write touches. Read before the write: a soft
+ * delete makes the rows unreachable by the same filter afterwards.
+ */
+async function loadReservationOwners(ctx: TRPCContext, ids: string[]) {
+  const rows = await ctx.db
+    .select({
+      customerId: ReservationsTable.customerId,
+      dressId: ReservationsTable.dressId,
+    })
+    .from(ReservationsTable)
+    .where(inArray(ReservationsTable.id, ids));
+
+  return {
+    customerIds: rows.map((row) => row.customerId),
+    dressIds: rows.map((row) => row.dressId),
+  };
 }

@@ -75,7 +75,10 @@ const CountrySelect = memo(function CountrySelect({
   iconComponent,
 }: {
   onChange: (val: string) => void;
-  value: string;
+  // react-phone-number-input passes `undefined` when no country is resolved
+  // from the current number; normalize to `null` so Base UI's Select stays
+  // controlled for the component's whole lifetime.
+  value?: string;
   iconComponent?: (props: { country: Country }) => React.ReactNode;
 }) {
   const { t } = useTranslation();
@@ -88,11 +91,11 @@ const CountrySelect = memo(function CountrySelect({
             onChange(selectedValue);
           }
         }}
-        value={value}
+        value={value ?? null}
       >
         <ButtonGroup>
           <div className="grid place-content-center">
-            {iconComponent?.({ country: value as Country })}
+            {value ? iconComponent?.({ country: value as Country }) : null}
           </div>
           <ButtonGroupSeparator className="mx-2" />
           <SelectTrigger

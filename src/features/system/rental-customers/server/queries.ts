@@ -26,6 +26,7 @@ const rentalCustomerGridSelect = {
   phone: RentalCustomersTable.phone,
   reservationsCount: RESERVATIONS_COUNT_EXPR,
   createdAt: RentalCustomersTable.createdAt,
+  lastReservationAt: RentalCustomersTable.lastReservationAt,
 } as const;
 
 /**

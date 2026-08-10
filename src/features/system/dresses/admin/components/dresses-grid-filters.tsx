@@ -9,6 +9,7 @@ import {
   DataTableNumberRangeFilter,
 } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
+import type { GridFacetCounts } from "@/features/system/shared/facets";
 import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
 
 function dressCurrentStatusTranslationId(status: string) {
@@ -24,7 +25,13 @@ function dressCurrentStatusTranslationId(status: string) {
   }
 }
 
-export function DressesGridFilters({ table }: { table: Table<DressGridRow> }) {
+export function DressesGridFilters({
+  table,
+  facets,
+}: {
+  table: Table<DressGridRow>;
+  facets?: GridFacetCounts;
+}) {
   const { t } = useTranslation();
   const statusColumn = table.getColumn("isActive");
   const currentStatusColumn = table.getColumn("currentStatus");
@@ -48,6 +55,7 @@ export function DressesGridFilters({ table }: { table: Table<DressGridRow> }) {
           column={statusColumn}
           title={String(t("systemPages.dressesStatus"))}
           options={statusOptions}
+          counts={facets?.isActive}
         />
       ) : null}
       {currentStatusColumn ? (
@@ -55,6 +63,7 @@ export function DressesGridFilters({ table }: { table: Table<DressGridRow> }) {
           column={currentStatusColumn}
           title={String(t("systemPages.dressCurrentStatus"))}
           options={currentStatusOptions}
+          counts={facets?.currentStatus}
         />
       ) : null}
       {priceColumn ? (

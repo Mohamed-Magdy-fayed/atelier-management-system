@@ -50,6 +50,20 @@ export function buildRentalCustomerColumns(opts: {
       meta: { label: String(t("systemPages.customersReservationsCount")) },
     },
     {
+      accessorKey: "lastReservationAt",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={String(t("systemPages.customerLastReservationAt"))}
+        />
+      ),
+      meta: { label: String(t("systemPages.customerLastReservationAt")) },
+      cell: ({ row }) =>
+        row.original.lastReservationAt
+          ? dateFmt.format(new Date(row.original.lastReservationAt))
+          : "—",
+    },
+    {
       accessorKey: "createdAt",
       header: ({ column }) => (
         <DataTableColumnHeader

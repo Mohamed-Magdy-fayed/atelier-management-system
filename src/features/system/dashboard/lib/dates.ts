@@ -1,3 +1,5 @@
+import { DEFAULT_BUSINESS_TIMEZONE } from "@/features/system/settings/lib/system-settings-registry";
+
 export type DashboardDateContext = {
   now: Date;
   todayStart: Date;
@@ -90,18 +92,25 @@ export function buildDashboardDateContext(
 }
 
 /**
- * `YYYY-MM-DD` in the server's local calendar.
+ * `YYYY-MM-DD` in the atelier's calendar, not the server's.
  *
  * `toISOString().slice(0, 10)` renders the UTC calendar day, which rolls the
- * date back by one on any server east of UTC (Cairo is UTC+2/+3). The
- * `expenses.date` column is a Postgres DATE, so it must be compared against a
- * local-calendar string or the window lands a day early.
+ * date back by one for any instant east of UTC (Cairo is UTC+2/+3), and
+ * `getFullYear()/getMonth()/getDate()` render the *deploy host's* calendar —
+ * Cairo on a dev laptop, UTC on Vercel, so the same range produced two
+ * different windows depending on where it ran. The `expenses.date` column is a
+ * Postgres DATE, so it is pinned to the business timezone explicitly.
  */
+const businessDayFormatter = new Intl.DateTimeFormat("en-CA", {
+  timeZone: DEFAULT_BUSINESS_TIMEZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
 export function toLocalDateString(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  // en-CA renders as YYYY-MM-DD, which is exactly the DATE literal Postgres wants.
+  return businessDayFormatter.format(date);
 }
 
 /**
@@ -112,21 +121,31 @@ export function toLocalDateString(date: Date) {
  */
 export const ALL_TIME_RANGE_START = new Date(2000, 0, 1, 0, 0, 0, 0);
 
+/**
+ * The client sends each bound as a full ISO instant it already anchored to the
+ * *user's* midnight (see `buildRangeParams`). Re-flooring that instant with
+ * `startOfDay` would re-anchor it to the server's calendar, and on a UTC host
+ * a Cairo "yesterday" (21:00Z→20:59Z) then widened into a ~48h window: the
+ * dashboard counted money the /payments grid — which windows on the real day —
+ * correctly left out. Only a bare `YYYY-MM-DD`, which carries no instant of its
+ * own, still gets day boundaries applied here.
+ */
+function parseBound(raw: string, mode: "start" | "end"): Date | null {
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return null;
+  if (raw.includes("T")) return parsed;
+  return mode === "start" ? startOfDay(parsed) : endOfDay(parsed);
+}
+
 export function parseDashboardRange(
   params: { from?: string; to?: string } | undefined,
   ctx: DashboardDateContext,
 ) {
-  const parsedFrom = params?.from ? new Date(params.from) : null;
-  const parsedTo = params?.to ? new Date(params.to) : null;
+  const parsedFrom = params?.from ? parseBound(params.from, "start") : null;
+  const parsedTo = params?.to ? parseBound(params.to, "end") : null;
 
-  let rangeStart =
-    !parsedFrom || Number.isNaN(parsedFrom.getTime())
-      ? ctx.defaultRangeStart
-      : startOfDay(parsedFrom);
-  let rangeEnd =
-    !parsedTo || Number.isNaN(parsedTo.getTime())
-      ? ctx.defaultRangeEnd
-      : endOfDay(parsedTo);
+  let rangeStart = parsedFrom ?? ctx.defaultRangeStart;
+  let rangeEnd = parsedTo ?? ctx.defaultRangeEnd;
 
   if (rangeStart > rangeEnd) {
     const swapStart = rangeStart;
