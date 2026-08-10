@@ -7,6 +7,7 @@ import { useTranslation } from "@/features/core/i18n/client";
 import type { EmployeeGridRow } from "@/features/system/users/server/types";
 import type { UserGridRow } from "@/integrations/trpc/routers/users";
 
+import { staffRoleFilterOptions } from "./employees-table-columns";
 import { UsersGridFilters } from "./users-grid-filters";
 
 export function EmployeesGridFilters({
@@ -19,14 +20,39 @@ export function EmployeesGridFilters({
   const { t } = useTranslation();
 
   const branchesColumn = table.getColumn("branches");
+  const roleColumn = table.getColumn("role");
+  const hasPasswordColumn = table.getColumn("hasPassword");
 
   return (
     <>
+      {roleColumn ? (
+        <DataTableFacetedFilter
+          column={roleColumn}
+          title={String(t("systemPages.userRole"))}
+          options={staffRoleFilterOptions(t)}
+        />
+      ) : null}
       {branchesColumn && branchFilterOptions.length > 0 ? (
         <DataTableFacetedFilter
           column={branchesColumn}
           title={String(t("systemPages.userAssignedBranches"))}
           options={branchFilterOptions}
+        />
+      ) : null}
+      {hasPasswordColumn ? (
+        <DataTableFacetedFilter
+          column={hasPasswordColumn}
+          title={String(t("systemPages.userHasPassword"))}
+          options={[
+            {
+              label: String(t("systemPages.userHasPasswordYes")),
+              value: "true",
+            },
+            {
+              label: String(t("systemPages.userHasPasswordNo")),
+              value: "false",
+            },
+          ]}
         />
       ) : null}
       <UsersGridFilters table={table as unknown as Table<UserGridRow>} />

@@ -2,7 +2,7 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 
 import { BranchMembershipsTable, BranchesTable } from "@/drizzle/schema";
 
-import type { TRPCContext } from "./shared";
+import type { TRPCContext, UsersDb } from "./shared";
 
 export async function getUserBranchIds(
   ctx: TRPCContext,
@@ -28,13 +28,13 @@ export async function listAssignableBranches(ctx: TRPCContext) {
 }
 
 export async function syncUserBranchMemberships(
-  ctx: TRPCContext,
+  db: UsersDb,
   userId: string,
   branchIds: string[],
 ) {
   const uniqueBranchIds = Array.from(new Set(branchIds));
 
-  const existing = await ctx.db
+  const existing = await db
     .select({
       branchId: BranchMembershipsTable.branchId,
       isCurrent: BranchMembershipsTable.isCurrent,
@@ -48,7 +48,7 @@ export async function syncUserBranchMemberships(
   const hadCurrent = existing.some((row) => row.isCurrent);
 
   if (toAdd.length > 0) {
-    await ctx.db.insert(BranchMembershipsTable).values(
+    await db.insert(BranchMembershipsTable).values(
       toAdd.map((branchId, index) => ({
         branchId,
         userId,
@@ -58,7 +58,7 @@ export async function syncUserBranchMemberships(
   }
 
   if (toRemove.length > 0) {
-    await ctx.db
+    await db
       .delete(BranchMembershipsTable)
       .where(
         and(
@@ -68,7 +68,7 @@ export async function syncUserBranchMemberships(
       );
   }
 
-  const remaining = await ctx.db
+  const remaining = await db
     .select({ branchId: BranchMembershipsTable.branchId })
     .from(BranchMembershipsTable)
     .where(eq(BranchMembershipsTable.userId, userId));
@@ -77,7 +77,7 @@ export async function syncUserBranchMemberships(
     return;
   }
 
-  const stillHasCurrent = await ctx.db.query.BranchMembershipsTable.findFirst({
+  const stillHasCurrent = await db.query.BranchMembershipsTable.findFirst({
     where: and(
       eq(BranchMembershipsTable.userId, userId),
       eq(BranchMembershipsTable.isCurrent, true),
@@ -86,7 +86,7 @@ export async function syncUserBranchMemberships(
   });
 
   if (!stillHasCurrent) {
-    await ctx.db
+    await db
       .update(BranchMembershipsTable)
       .set({ isCurrent: true })
       .where(

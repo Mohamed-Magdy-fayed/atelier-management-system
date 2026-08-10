@@ -5,6 +5,7 @@ import {
   eq,
   gte,
   ilike,
+  inArray,
   isNotNull,
   isNull,
   lte,
@@ -23,6 +24,12 @@ import {
 import type { ListFilterInput } from "./schemas";
 
 export const EXPORT_ROW_LIMIT = 50_000;
+
+/**
+ * Roles shown on the Employees screen. Admins have no screen of their own, so
+ * they are listed, filtered and exported alongside employees.
+ */
+export const STAFF_ROLES = ["employee", "admin"] as const;
 
 function parseRangeBoundary(raw: string, mode: "start" | "end"): Date {
   const trimmed = raw.trim();
@@ -61,6 +68,16 @@ function applyCustomerColumnFilters(
         conditions.push(
           and(isNotNull(UsersTable.age), lte(UsersTable.age, max))!,
         );
+      }
+    } else if (f.id === "role") {
+      const selected = (Array.isArray(f.value) ? f.value : [f.value])
+        .filter((v) => v != null && v !== "")
+        .map(String)
+        .filter((v): v is (typeof STAFF_ROLES)[number] =>
+          (STAFF_ROLES as readonly string[]).includes(v),
+        );
+      if (selected.length > 0) {
+        conditions.push(inArray(UsersTable.role, selected));
       }
     } else if (f.id === "verified") {
       const raw = f.value;
@@ -110,8 +127,14 @@ export function buildWhere(
   role: "customer" | "employee",
   input: ListFilterInput,
 ): SQL | undefined {
+  // "employee" covers the whole staff grid, admins included — otherwise the
+  // export would silently drop the admins the grid is showing.
+  const roleCondition =
+    role === "employee"
+      ? inArray(UsersTable.role, STAFF_ROLES)
+      : eq(UsersTable.role, role);
   const conditions: SQL[] = [
-    and(eq(UsersTable.role, role), isNull(UsersTable.deletedAt))!,
+    and(roleCondition, isNull(UsersTable.deletedAt))!,
   ];
   if (input.globalFilter?.trim()) {
     const s = sanitizeLikeFragment(input.globalFilter);
