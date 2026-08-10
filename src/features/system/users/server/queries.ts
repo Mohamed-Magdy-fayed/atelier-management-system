@@ -1,8 +1,9 @@
-import { and, asc, count, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, count, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import {
   BranchesTable,
   BranchMembershipsTable,
+  UserCredentialsTable,
   UsersTable,
 } from "@/drizzle/schema";
 
@@ -10,7 +11,7 @@ import {
   getUserBranchIds as fetchUserBranchIds,
   listAssignableBranches as fetchAssignableBranches,
 } from "./branch-memberships";
-import { buildWhere, EXPORT_ROW_LIMIT, sortExpr } from "./filters";
+import { buildWhere, EXPORT_ROW_LIMIT, sortExpr, STAFF_ROLES } from "./filters";
 import type {
   ExportRowsInput,
   ListCustomersInput,
@@ -72,10 +73,16 @@ export async function listEmployees(
   const session = getRequiredSession(ctx);
   assertStaffRole(session.user.role);
 
+  // Admins share this grid with employees — there is no separate admin screen.
   const employeeWhere = and(
-    eq(UsersTable.role, "employee"),
+    inArray(UsersTable.role, STAFF_ROLES),
     isNull(UsersTable.deletedAt),
   );
+
+  const staffSelect = {
+    ...userGridSelect,
+    hasPassword: sql<boolean>`${UserCredentialsTable.userId} is not null`,
+  };
 
   const branchFilterIds = Array.from(
     new Set(
@@ -89,8 +96,12 @@ export async function listEmployees(
   const rows =
     branchFilterIds.length > 0
       ? await ctx.db
-          .selectDistinct(userGridSelect)
+          .selectDistinct(staffSelect)
           .from(UsersTable)
+          .leftJoin(
+            UserCredentialsTable,
+            eq(UserCredentialsTable.userId, UsersTable.id),
+          )
           .innerJoin(
             BranchMembershipsTable,
             eq(BranchMembershipsTable.userId, UsersTable.id),
@@ -103,8 +114,12 @@ export async function listEmployees(
           )
           .orderBy(asc(UsersTable.name))
       : await ctx.db
-          .select(userGridSelect)
+          .select(staffSelect)
           .from(UsersTable)
+          .leftJoin(
+            UserCredentialsTable,
+            eq(UserCredentialsTable.userId, UsersTable.id),
+          )
           .where(employeeWhere)
           .orderBy(asc(UsersTable.name));
 

@@ -150,6 +150,8 @@ export function EmployeesTablePage() {
                 name: row.name,
                 email: row.email,
                 phone: row.phone,
+                role: row.role,
+                hasPassword: row.hasPassword ? "true" : "false",
                 branches: row.branches
                   .map((branch) =>
                     locale === "ar" ? branch.nameAr : branch.nameEn,

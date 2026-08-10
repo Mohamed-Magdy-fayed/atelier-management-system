@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { userRoleValues } from "@/drizzle/schema";
+import { passwordSchema } from "@/features/core/auth/schemas";
 
 export const listEmployeesInput = z.object({
   /** @deprecated Prefer `branchIds`. Kept for active-branch shortcuts. */
@@ -66,6 +67,12 @@ export const userMutationSchema = z.object({
   phone: z.string().trim().max(16).nullable().optional(),
   age: z.number().int().min(0).max(150).nullable().optional(),
   role: z.enum(userRoleValues).default("customer"),
+  /**
+   * Optional sign-in password. Admin-only (see `assertAdminRole`). Omit to
+   * leave the account without credentials; on update, omit to keep the
+   * existing password untouched.
+   */
+  password: passwordSchema.optional(),
   /** @deprecated Prefer `branchIds`. Kept for single-branch create shortcuts. */
   branchId: z.string().uuid().optional(),
   branchIds: userBranchIdsSchema.optional(),

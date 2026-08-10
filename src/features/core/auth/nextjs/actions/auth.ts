@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -45,7 +45,11 @@ export async function signInAction(
   try {
     const user = await db.query.UsersTable.findFirst({
       columns: { id: true, role: true },
-      where: eq(UsersTable.email, normalizedEmail),
+      // Soft-deleted accounts must not be able to sign back in.
+      where: and(
+        eq(UsersTable.email, normalizedEmail),
+        isNull(UsersTable.deletedAt),
+      ),
       with: {
         credentials: { columns: { passwordHash: true, passwordSalt: true } },
       },
@@ -74,6 +78,11 @@ export async function signInAction(
         message: t("authTranslations.error.credentials"),
       };
     }
+
+    await db
+      .update(UsersTable)
+      .set({ lastSignInAt: new Date() })
+      .where(eq(UsersTable.id, user.id));
 
     await createUserSession(user, await cookies());
     signedInUser = user;

@@ -62,6 +62,8 @@ export type EmployeeBranchRef = {
 
 export type EmployeeGridRow = UserGridRow & {
   branches: EmployeeBranchRef[];
+  /** Whether the account has credentials and can sign in with a password. */
+  hasPassword: boolean;
 };
 
 export const userGridSelect = {
