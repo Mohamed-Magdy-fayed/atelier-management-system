@@ -13,7 +13,12 @@ import {
   sql,
 } from "drizzle-orm";
 
-import { DressesTable, ReservationsTable } from "@/drizzle/schema";
+import {
+  DressesTable,
+  ExpensesTable,
+  PaymentsTable,
+  ReservationsTable,
+} from "@/drizzle/schema";
 import {
   type DressCurrentStatus,
   dressCurrentStatusValues,
@@ -30,11 +35,39 @@ import type { DressListFilterInput } from "./schemas";
 export const DRESS_EXPORT_ROW_LIMIT = 50_000;
 
 /**
- * How many times a dress has actually been rented, derived from reservations.
- * Requires the caller to join `reservations` on `rentalsCountJoin` and group by
- * the dress. Cancelled bookings never became a rental, so they do not count.
+ * What the dress has earned, minus what has been spent on it.
+ *
+ * Earnings use the same rule as the dashboard's revenue figure — a
+ * non-insurance payment on a booking that is neither cancelled nor
+ * soft-deleted — so the grid column and the dashboard cannot disagree.
+ * Insurance is excluded because it is refunded, not earned.
+ *
+ * Correlated subqueries rather than joins: joining two one-to-many tables at
+ * once would multiply rows and inflate both sums.
+ *
+ * Column names are written out instead of interpolated as drizzle columns.
+ * Drizzle renders a column reference unqualified when the expression sits in a
+ * select list (but qualified in ORDER BY), which made the correlation read
+ * `"dressId" = "id"` and Postgres rejected it as ambiguous. Table names are
+ * still interpolated, so only the column spellings are literal here.
  */
-export const DRESS_RENTALS_COUNT_EXPR = sql<number>`COUNT(${ReservationsTable.id})::int`;
+export const DRESS_NET_VALUE_EXPR = sql<number>`(
+  COALESCE((
+    SELECT SUM(p."amount")
+    FROM ${PaymentsTable} p
+    JOIN ${ReservationsTable} r ON p."reservationId" = r."id"
+    WHERE r."dressId" = ${DressesTable}."id"
+      AND r."deletedAt" IS NULL
+      AND r."status" <> 'cancelled'
+      AND p."type" <> 'insurance'
+  ), 0)
+  -
+  COALESCE((
+    SELECT SUM(e."amount")
+    FROM ${ExpensesTable} e
+    WHERE e."dressId" = ${DressesTable}."id"
+  ), 0)
+)::int`;
 
 function parseRangeBoundary(raw: string, mode: "start" | "end"): Date {
   const trimmed = raw.trim();
@@ -158,6 +191,13 @@ export function sortExpr(sorting: { id: string; desc: boolean }[]) {
       return direction(DressesTable.createdAt);
     case "updatedAt":
       return direction(DressesTable.updatedAt);
+    // Sortable now that both are stored columns rather than aggregates.
+    case "timesRented":
+      return direction(DressesTable.timesRented);
+    case "lastReservedAt":
+      return direction(DressesTable.lastReservedAt);
+    case "netValue":
+      return direction(DRESS_NET_VALUE_EXPR);
     case "title":
     default:
       return direction(DressesTable.title);

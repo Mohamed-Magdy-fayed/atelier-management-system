@@ -12,6 +12,7 @@ import {
   listAssignableBranches,
   listCustomers,
   listEmployees,
+  resolveActors,
 } from "./queries";
 import {
   bulkSetVerifiedInput,
@@ -20,6 +21,7 @@ import {
   listCustomersInput,
   listEmployeesInput,
   previewImportInput,
+  resolveActorsInput,
   softDeleteInput,
   userIdInput,
   userMutationSchema,
@@ -39,6 +41,9 @@ export const usersRouter = createTRPCRouter({
   listCustomers: protectedProcedure
     .input(listCustomersInput)
     .query(async ({ ctx, input }) => listCustomers(ctx, input)),
+  resolveActors: protectedProcedure
+    .input(resolveActorsInput)
+    .query(async ({ ctx, input }) => resolveActors(ctx, input)),
   exportRows: protectedProcedure
     .input(exportRowsInput)
     .query(async ({ ctx, input }) => exportRows(ctx, input)),

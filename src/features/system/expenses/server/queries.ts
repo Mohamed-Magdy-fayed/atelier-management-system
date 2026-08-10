@@ -7,6 +7,11 @@ import {
   UsersTable,
 } from "@/drizzle/schema";
 import {
+  columnFiltersExcept,
+  type GridFacetCounts,
+  toFacetCounts,
+} from "@/features/system/shared/facets";
+import {
   assertOperationalStaff,
   resolveListBranchId,
 } from "@/features/system/shared/staff-access";
@@ -48,15 +53,34 @@ export async function listExpenses(ctx: TRPCContext, input: ListExpensesInput) {
 
   const whereClause = buildWhere({ ...input, branchId });
 
-  const [{ value: total }] = await ctx.db
-    .select({ value: count() })
-    .from(ExpensesTable)
-    .where(whereClause);
+  /** Every filter except the facet's own — see `columnFiltersExcept`. */
+  const facetWhere = (columnId: string) =>
+    buildWhere({
+      ...input,
+      branchId,
+      columnFilters: columnFiltersExcept(input.columnFilters, columnId),
+    });
 
-  const [{ value: totalAmount }] = await ctx.db
-    .select({ value: sum(ExpensesTable.amount) })
-    .from(ExpensesTable)
-    .where(whereClause);
+  const [totalRow, totalAmountRow, typeFacet, dressFacet] = await Promise.all([
+    ctx.db.select({ value: count() }).from(ExpensesTable).where(whereClause),
+    ctx.db
+      .select({ value: sum(ExpensesTable.amount) })
+      .from(ExpensesTable)
+      .where(whereClause),
+    ctx.db
+      .select({ key: ExpensesTable.type, value: count() })
+      .from(ExpensesTable)
+      .where(facetWhere("type"))
+      .groupBy(ExpensesTable.type),
+    ctx.db
+      .select({ key: ExpensesTable.dressId, value: count() })
+      .from(ExpensesTable)
+      .where(facetWhere("dressCode"))
+      .groupBy(ExpensesTable.dressId),
+  ]);
+
+  const total = Number(totalRow[0]?.value ?? 0);
+  const totalAmount = totalAmountRow[0]?.value;
 
   const pageCount = Math.max(1, Math.ceil(Number(total) / input.perPage));
   const page = Math.min(input.page, pageCount);
@@ -71,8 +95,12 @@ export async function listExpenses(ctx: TRPCContext, input: ListExpensesInput) {
   return {
     rows: rows as ExpenseGridRow[],
     pageCount,
-    total: Number(total),
+    total,
     totalAmount: Number(totalAmount ?? 0),
+    facets: {
+      type: toFacetCounts(typeFacet),
+      dressCode: toFacetCounts(dressFacet),
+    } satisfies GridFacetCounts,
   };
 }
 

@@ -47,6 +47,13 @@ export type UserGridRow = {
   deletedBy: string | null;
 };
 
+/** Minimal identity used to label audit actors (created/updated/deleted by). */
+export type AuditActor = {
+  id: string;
+  name: string | null;
+  email: string;
+};
+
 export type EmployeeBranchRef = {
   id: string;
   nameEn: string;

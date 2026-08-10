@@ -8,6 +8,8 @@ import {
   DataTableFacetedFilter,
 } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
+import { DressFacetFilter } from "@/features/system/dresses/admin/components/dress-facet-filter";
+import type { GridFacetCounts } from "@/features/system/shared/facets";
 import type { ExpenseGridRow } from "@/integrations/trpc/routers/expenses";
 
 function expenseTypeTranslationId(type: string) {
@@ -25,9 +27,16 @@ function expenseTypeTranslationId(type: string) {
   }
 }
 
-export function ExpensesGridFilters({ table }: { table: Table<ExpenseGridRow> }) {
+export function ExpensesGridFilters({
+  table,
+  facets,
+}: {
+  table: Table<ExpenseGridRow>;
+  facets?: GridFacetCounts;
+}) {
   const { t } = useTranslation();
   const typeColumn = table.getColumn("type");
+  const dressColumn = table.getColumn("dressCode");
   const dateColumn = table.getColumn("date");
 
   const typeOptions = expenseTypes.map((value) => ({
@@ -42,8 +51,10 @@ export function ExpensesGridFilters({ table }: { table: Table<ExpenseGridRow> })
           column={typeColumn}
           title={String(t("systemPages.expensesType"))}
           options={typeOptions}
+          counts={facets?.type}
         />
       ) : null}
+      <DressFacetFilter column={dressColumn} counts={facets?.dressCode} />
       {dateColumn ? (
         <DataTableDateRangeFilter
           column={dateColumn}

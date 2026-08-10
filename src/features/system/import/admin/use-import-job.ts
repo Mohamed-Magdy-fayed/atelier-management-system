@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { useTRPC } from "@/integrations/trpc/client";
 
@@ -50,6 +50,13 @@ export function useImportJob(entitySlug: ImportEntitySlug) {
   const [ignoredColumns, setIgnoredColumns] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Identifies the run a batch loop belongs to. `reset` bumps it, so a loop
+   * whose job was cancelled stops writing state instead of reporting the
+   * server's "job is no longer validating" rejection as a failure.
+   */
+  const runIdRef = useRef(0);
+
   const createJob = useMutation(trpc.import.createJob.mutationOptions());
   const validateBatch = useMutation(
     trpc.import.validateBatch.mutationOptions(),
@@ -59,6 +66,7 @@ export function useImportJob(entitySlug: ImportEntitySlug) {
   const cancelJob = useMutation(trpc.import.cancelJob.mutationOptions());
 
   const reset = useCallback(() => {
+    runIdRef.current += 1;
     setJobId(null);
     setStep("guide");
     setProgress({ processed: 0, total: 0 });
@@ -68,7 +76,7 @@ export function useImportJob(entitySlug: ImportEntitySlug) {
   }, []);
 
   const runValidation = useCallback(
-    async (id: string, startCursor: number) => {
+    async (id: string, startCursor: number, runId: number) => {
       let cursor = startCursor;
 
       for (;;) {
@@ -76,6 +84,8 @@ export function useImportJob(entitySlug: ImportEntitySlug) {
           jobId: id,
           cursor,
         });
+
+        if (runIdRef.current !== runId) return;
 
         cursor = result.processedRows;
         setProgress({
@@ -102,6 +112,8 @@ export function useImportJob(entitySlug: ImportEntitySlug) {
       content: string;
       branchId: string | null;
     }) => {
+      const runId = (runIdRef.current += 1);
+
       setError(null);
       setStep("validating");
 
@@ -113,12 +125,17 @@ export function useImportJob(entitySlug: ImportEntitySlug) {
           branchId: args.branchId,
         });
 
+        if (runIdRef.current !== runId) return;
+
         setJobId(job.id);
         setIgnoredColumns(job.ignoredColumns ?? []);
         setProgress({ processed: 0, total: job.totalRows });
 
-        await runValidation(job.id, 0);
+        await runValidation(job.id, 0, runId);
       } catch (cause) {
+        // A run the admin already abandoned must not surface as a failure.
+        if (runIdRef.current !== runId) return;
+
         setStep("guide");
         setError(cause instanceof Error ? cause.message : String(cause));
       }
@@ -129,6 +146,8 @@ export function useImportJob(entitySlug: ImportEntitySlug) {
   const commit = useCallback(async () => {
     if (!jobId) return;
 
+    const runId = (runIdRef.current += 1);
+
     setError(null);
     setStep("committing");
 
@@ -138,6 +157,8 @@ export function useImportJob(entitySlug: ImportEntitySlug) {
       let cursor = 0;
       for (;;) {
         const result = await commitBatch.mutateAsync({ jobId, cursor });
+
+        if (runIdRef.current !== runId) return;
 
         cursor = result.processedRows;
         setProgress({
@@ -156,6 +177,8 @@ export function useImportJob(entitySlug: ImportEntitySlug) {
       // The grid behind the dialog is now stale in every case.
       await queryClient.invalidateQueries();
     } catch (cause) {
+      if (runIdRef.current !== runId) return;
+
       setStep("review");
       setError(cause instanceof Error ? cause.message : String(cause));
     }
@@ -177,6 +200,8 @@ export function useImportJob(entitySlug: ImportEntitySlug) {
       committedRows: number;
       ignoredColumns: string[] | null;
     }) => {
+      const runId = (runIdRef.current += 1);
+
       setJobId(job.id);
       setIgnoredColumns(job.ignoredColumns ?? []);
       setProgress({ processed: job.processedRows, total: job.totalRows });
@@ -188,7 +213,17 @@ export function useImportJob(entitySlug: ImportEntitySlug) {
 
       if (job.status === "validating") {
         setStep("validating");
-        await runValidation(job.id, job.processedRows);
+
+        try {
+          await runValidation(job.id, job.processedRows, runId);
+        } catch (cause) {
+          if (runIdRef.current !== runId) return;
+
+          // Land on the guide so the admin can cancel or pick another file,
+          // rather than leaving a spinner that never resolves.
+          setStep("guide");
+          setError(cause instanceof Error ? cause.message : String(cause));
+        }
         return;
       }
 
@@ -212,9 +247,14 @@ export function useImportJob(entitySlug: ImportEntitySlug) {
       await cancelJob.mutateAsync({ jobId }).catch(() => {
         // Cancelling is best-effort; the job ages out regardless.
       });
+
+      // Drop the cached job list, otherwise the dialog rejoins the job it was
+      // just told to abandon the next time it opens.
+      await queryClient.invalidateQueries({ queryKey: trpc.import.pathKey() });
     }
+
     reset();
-  }, [cancelJob, jobId, reset]);
+  }, [cancelJob, jobId, queryClient, reset, trpc]);
 
   return {
     jobId,

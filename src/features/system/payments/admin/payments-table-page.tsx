@@ -19,6 +19,7 @@ import {
   DataTableViewOptions,
   EntityPageHeader,
   getEntityColumnPinning,
+  serializeColumnFiltersForServer,
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
@@ -29,9 +30,9 @@ import type { PaymentGridRow } from "@/integrations/trpc/routers/payments";
 import {
   buildPaymentColumns,
   PaymentInfoModal,
+  type PaymentRowActionVariant,
   PaymentsBulkActions,
   PaymentsGridFilters,
-  type PaymentRowActionVariant,
 } from "./components";
 
 type RowAction = {
@@ -66,18 +67,27 @@ export function PaymentsTablePage() {
     getEntityColumnPinning(),
   );
 
+  // Date filters travel as absolute instants anchored to the viewer's midnight.
+  // Sent as bare `YYYY-MM-DD` the server resolved them against ITS own calendar
+  // (UTC in production), so "yesterday" here covered a different 24 hours than
+  // "yesterday" on the dashboard.
+  const wireColumnFilters = useMemo(
+    () => serializeColumnFiltersForServer(columnFilters),
+    [columnFilters],
+  );
+
   const listInput = useMemo(
     () => ({
       page: pagination.pageIndex + 1,
       perPage: pagination.pageSize,
       sorting,
-      columnFilters,
+      columnFilters: wireColumnFilters,
       globalFilter: globalFilter || undefined,
       branchId,
     }),
     [
       branchId,
-      columnFilters,
+      wireColumnFilters,
       globalFilter,
       pagination.pageIndex,
       pagination.pageSize,
@@ -146,14 +156,14 @@ export function PaymentsTablePage() {
     const result = await queryClient.fetchQuery(
       trpc.payments.exportRows.queryOptions({
         sorting,
-        columnFilters,
+        columnFilters: wireColumnFilters,
         globalFilter: globalFilter || undefined,
         branchId,
       }),
     );
 
     return result.rows;
-  }, [branchId, columnFilters, globalFilter, queryClient, sorting, trpc]);
+  }, [branchId, wireColumnFilters, globalFilter, queryClient, sorting, trpc]);
 
   return (
     <div
@@ -171,7 +181,9 @@ export function PaymentsTablePage() {
             globalFilter={resolvedGlobalFilter}
             onGlobalFilterChange={(value) => setResolvedGlobalFilter(value)}
             searchPlaceholder={t("dataTable.searchPaymentsHint")}
-            filterSlot={<PaymentsGridFilters table={table} />}
+            filterSlot={
+              <PaymentsGridFilters table={table} facets={data?.facets} />
+            }
           >
             <DataTableViewOptions table={table} />
             <DataTableExportButton
@@ -179,6 +191,12 @@ export function PaymentsTablePage() {
               exportFileName="payments.csv"
               fetchAllRows={fetchAllRows}
               getExportRow={(row) => ({
+                reservationCode: row.reservationCode,
+                customerName: row.customerName,
+                customerPhone: row.customerPhone,
+                dressTitle: row.dressTitle,
+                totalPrice: row.totalPrice,
+                totalPaid: row.totalPaid,
                 amount: row.amount,
                 type: row.type,
                 method: row.method,

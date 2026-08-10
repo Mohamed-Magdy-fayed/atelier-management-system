@@ -1,4 +1,5 @@
 export {
+  type AuditActor,
   type EmployeeGridRow,
   type UserGridRow,
   type UserImportAction,

@@ -115,6 +115,8 @@ export function sortExpr(sorting: { id: string; desc: boolean }[]) {
       return direction(RentalCustomersTable.phone);
     case "reservationsCount":
       return direction(RESERVATIONS_COUNT_EXPR);
+    case "lastReservationAt":
+      return direction(RentalCustomersTable.lastReservationAt);
     case "createdAt":
       return direction(RentalCustomersTable.createdAt);
     case "name":

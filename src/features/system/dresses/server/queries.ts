@@ -1,7 +1,16 @@
 import { TRPCError } from "@trpc/server";
 import { and, count, eq, isNull, not } from "drizzle-orm";
 
-import { DressesTable, ReservationsTable } from "@/drizzle/schema";
+import {
+  BranchesTable,
+  DressesTable,
+  ReservationsTable,
+} from "@/drizzle/schema";
+import {
+  columnFiltersExcept,
+  type GridFacetCounts,
+  toFacetCounts,
+} from "@/features/system/shared/facets";
 import {
   assertOperationalStaff,
   assertUserCanAccessBranch,
@@ -10,7 +19,7 @@ import {
 import {
   buildWhere,
   DRESS_EXPORT_ROW_LIMIT,
-  DRESS_RENTALS_COUNT_EXPR,
+  DRESS_NET_VALUE_EXPR,
   sortExpr,
 } from "./filters";
 import type {
@@ -34,7 +43,9 @@ const dressGridSelect = {
   pricePerDay: DressesTable.pricePerDay,
   depositAmount: DressesTable.depositAmount,
   insurance: DressesTable.insurance,
-  timesRented: DRESS_RENTALS_COUNT_EXPR,
+  timesRented: DressesTable.timesRented,
+  lastReservedAt: DressesTable.lastReservedAt,
+  netValue: DRESS_NET_VALUE_EXPR,
   isActive: DressesTable.isActive,
   currentStatus: DressesTable.currentStatus,
   createdAt: DressesTable.createdAt,
@@ -45,44 +56,44 @@ const dressGridSelect = {
   deletedBy: DressesTable.deletedBy,
 } as const;
 
-/**
- * Join backing `DRESS_RENTALS_COUNT_EXPR`. The rental count is derived rather
- * than read from the old `dresses.timesRented` counter: nothing in the booking
- * flow ever incremented that column — only the legacy import wrote it — so
- * every dress rented in-app reported 0 forever.
- *
- * A dress belongs to exactly one branch and `createReservation` refuses a dress
- * from another branch, so the join needs no branch scoping of its own.
- */
-const rentalsCountJoin = and(
-  eq(ReservationsTable.dressId, DressesTable.id),
-  isNull(ReservationsTable.deletedAt),
-  not(eq(ReservationsTable.status, "cancelled")),
-);
-
 export async function listDresses(ctx: TRPCContext, input: ListDressesInput) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const whereClause = buildWhere({ ...input, branchId });
-  const [{ value: total }] = await ctx.db
-    .select({ value: count() })
-    .from(DressesTable)
-    .where(whereClause);
 
+  /** Every filter except the facet's own — see `columnFiltersExcept`. */
+  const facetWhere = (columnId: string) =>
+    buildWhere({
+      ...input,
+      branchId,
+      columnFilters: columnFiltersExcept(input.columnFilters, columnId),
+    });
+
+  const [totalRow, activeFacet, currentStatusFacet] = await Promise.all([
+    ctx.db.select({ value: count() }).from(DressesTable).where(whereClause),
+    ctx.db
+      .select({ key: DressesTable.isActive, value: count() })
+      .from(DressesTable)
+      .where(facetWhere("isActive"))
+      .groupBy(DressesTable.isActive),
+    ctx.db
+      .select({ key: DressesTable.currentStatus, value: count() })
+      .from(DressesTable)
+      .where(facetWhere("currentStatus"))
+      .groupBy(DressesTable.currentStatus),
+  ]);
+
+  const total = Number(totalRow[0]?.value ?? 0);
   const pageCount = Math.max(1, Math.ceil(Number(total) / input.perPage));
   const page = Math.min(input.page, pageCount);
   const offset = (page - 1) * input.perPage;
 
-  // The total above stays unjoined: grouping is per dress, so the row count is
-  // unaffected by the join.
   const rows = await ctx.db
     .select(dressGridSelect)
     .from(DressesTable)
-    .leftJoin(ReservationsTable, rentalsCountJoin)
     .where(whereClause)
-    .groupBy(DressesTable.id)
     .orderBy(sortExpr(input.sorting))
     .limit(input.perPage)
     .offset(offset);
@@ -90,7 +101,13 @@ export async function listDresses(ctx: TRPCContext, input: ListDressesInput) {
   return {
     rows: rows as DressGridRow[],
     pageCount,
-    total: Number(total),
+    total,
+    facets: {
+      // The status filter sends "true"/"false" strings, so the boolean keys
+      // have to be stringified the same way to line up with its options.
+      isActive: toFacetCounts(activeFacet),
+      currentStatus: toFacetCounts(currentStatusFacet),
+    } satisfies GridFacetCounts,
   };
 }
 
@@ -105,15 +122,48 @@ export async function exportDresses(
   const rows = await ctx.db
     .select(dressGridSelect)
     .from(DressesTable)
-    .leftJoin(ReservationsTable, rentalsCountJoin)
     .where(buildWhere({ ...input, branchId }))
-    .groupBy(DressesTable.id)
     .orderBy(sortExpr(input.sorting))
     .limit(DRESS_EXPORT_ROW_LIMIT);
 
   return {
     rows: rows as DressGridRow[],
   };
+}
+
+/**
+ * Dress list for the "filter by dress" control on every grid that has one.
+ *
+ * Unlike the reservation form's dress list this keeps inactive dresses: a
+ * payment or expense recorded against a dress that has since been retired must
+ * still be reachable from the filter.
+ */
+export async function listDressFilterOptions(
+  ctx: TRPCContext,
+  input: { branchId?: string },
+) {
+  const session = getRequiredSession(ctx);
+  assertOperationalStaff(session.user.role);
+  const branchId = await resolveListBranchId(ctx, session, input.branchId);
+
+  return ctx.db
+    .select({
+      id: DressesTable.id,
+      code: DressesTable.code,
+      title: DressesTable.title,
+      isActive: DressesTable.isActive,
+      branchNameEn: BranchesTable.nameEn,
+      branchNameAr: BranchesTable.nameAr,
+    })
+    .from(DressesTable)
+    .innerJoin(BranchesTable, eq(DressesTable.branchId, BranchesTable.id))
+    .where(
+      and(
+        isNull(DressesTable.deletedAt),
+        branchId ? eq(DressesTable.branchId, branchId) : undefined,
+      ),
+    )
+    .orderBy(DressesTable.title);
 }
 
 export async function getDressById(ctx: TRPCContext, input: DressByIdInput) {
@@ -133,18 +183,5 @@ export async function getDressById(ctx: TRPCContext, input: DressByIdInput) {
 
   await assertUserCanAccessBranch(ctx, session, dress.branchId);
 
-  // The view dialog shows "times rented", so the detail row needs the same
-  // derived count as the grid rather than the dropped counter column.
-  const [rentals] = await ctx.db
-    .select({ timesRented: DRESS_RENTALS_COUNT_EXPR })
-    .from(ReservationsTable)
-    .where(
-      and(
-        eq(ReservationsTable.dressId, dress.id),
-        isNull(ReservationsTable.deletedAt),
-        not(eq(ReservationsTable.status, "cancelled")),
-      ),
-    );
-
-  return { ...dress, timesRented: Number(rentals?.timesRented ?? 0) };
+  return dress;
 }

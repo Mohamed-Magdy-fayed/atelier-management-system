@@ -53,6 +53,20 @@ function applyExpenseColumnFilters(
       } else if (cleaned.length > 1) {
         conditions.push(inArray(ExpensesTable.type, cleaned));
       }
+    } else if (filter.id === "dressCode") {
+      // Dress ids, matching how the reservations grid filters by dress.
+      const raw = filter.value;
+      const values = Array.isArray(raw)
+        ? raw.map(String)
+        : raw != null && raw !== ""
+          ? [String(raw)]
+          : [];
+
+      if (values.length === 1 && values[0]) {
+        conditions.push(eq(ExpensesTable.dressId, values[0]));
+      } else if (values.length > 1) {
+        conditions.push(inArray(ExpensesTable.dressId, values));
+      }
     } else if (filter.id === "date" && isDateRangeValue(filter.value)) {
       const range = filter.value;
       if (range.from?.trim()) {

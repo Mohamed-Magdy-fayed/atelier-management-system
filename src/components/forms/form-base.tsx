@@ -64,7 +64,11 @@ export function FormBase({
 
   if (controlFirst) {
     return (
-      <Field data-invalid={isInvalid} orientation="horizontal">
+      <Field
+        data-invalid={isInvalid}
+        data-disabled={disabled ? "true" : undefined}
+        orientation="horizontal"
+      >
         {children}
         <FieldContent>
           {labelElement}
@@ -75,7 +79,7 @@ export function FormBase({
   }
 
   return (
-    <Field data-invalid={isInvalid} group-data-disabled={disabled}>
+    <Field data-invalid={isInvalid} data-disabled={disabled ? "true" : undefined}>
       {labelElement}
       {children}
       {errorElement}

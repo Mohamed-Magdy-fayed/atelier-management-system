@@ -18,7 +18,7 @@
     "db:reset": "docker compose down -v && docker compose up -d",
     "db:drop": "drizzle-kit drop",
     "dev": "next dev",
-    "inngest": "npx inngest-cli@latest dev",
+    "inngest": "npx inngest-cli@latest dev -y",
     "seed": "tsx src/drizzle/seed/cli.ts",
     "smoke:dashboard": "tsx scripts/smoke-dashboard.ts",
     "smoke:import": "tsx scripts/smoke-import.ts",

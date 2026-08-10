@@ -24,6 +24,12 @@ export const dressByIdSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const dressFilterOptionsSchema = z.object({
+  branchId: z.string().uuid().optional(),
+});
+
+export type DressFilterOptionsInput = z.infer<typeof dressFilterOptionsSchema>;
+
 export type DressByIdInput = z.infer<typeof dressByIdSchema>;
 
 export const dressMutationSchema = z.object({

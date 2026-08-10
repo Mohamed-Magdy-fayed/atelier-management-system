@@ -195,7 +195,9 @@ export function ExpensesTablePage() {
             globalFilter={resolvedGlobalFilter}
             onGlobalFilterChange={(value) => setResolvedGlobalFilter(value)}
             searchPlaceholder={String(t("forms.descriptionPlaceholder"))}
-            filterSlot={<ExpensesGridFilters table={table} />}
+            filterSlot={
+              <ExpensesGridFilters table={table} facets={data?.facets} />
+            }
           >
             <Tooltip>
               <TooltipTrigger

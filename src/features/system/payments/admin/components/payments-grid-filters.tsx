@@ -11,6 +11,8 @@ import {
   DataTableFacetedFilter,
 } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
+import { DressFacetFilter } from "@/features/system/dresses/admin/components/dress-facet-filter";
+import type { GridFacetCounts } from "@/features/system/shared/facets";
 import type { PaymentGridRow } from "@/integrations/trpc/routers/payments";
 
 function paymentTypeTranslationId(type: string) {
@@ -45,12 +47,15 @@ function paymentMethodTranslationId(method: string) {
 
 export function PaymentsGridFilters({
   table,
+  facets,
 }: {
   table: Table<PaymentGridRow>;
+  facets?: GridFacetCounts;
 }) {
   const { t } = useTranslation();
   const typeColumn = table.getColumn("type");
   const methodColumn = table.getColumn("method");
+  const dressColumn = table.getColumn("dress");
   const createdAtColumn = table.getColumn("createdAt");
 
   const typeOptions = paymentTypes.map((value) => ({
@@ -70,6 +75,7 @@ export function PaymentsGridFilters({
           column={typeColumn}
           title={String(t("systemPages.paymentsType"))}
           options={typeOptions}
+          counts={facets?.type}
         />
       ) : null}
       {methodColumn ? (
@@ -77,8 +83,10 @@ export function PaymentsGridFilters({
           column={methodColumn}
           title={String(t("systemPages.paymentsMethod"))}
           options={methodOptions}
+          counts={facets?.method}
         />
       ) : null}
+      <DressFacetFilter column={dressColumn} counts={facets?.dress} />
       {createdAtColumn ? (
         <DataTableDateRangeFilter
           column={createdAtColumn}

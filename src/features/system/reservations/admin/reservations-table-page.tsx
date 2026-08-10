@@ -179,7 +179,9 @@ export function ReservationsTablePage() {
             globalFilter={resolvedGlobalFilter}
             onGlobalFilterChange={(value) => setResolvedGlobalFilter(value)}
             searchPlaceholder={t("dataTable.searchReservationsHint")}
-            filterSlot={<ReservationsGridFilters table={table} />}
+            filterSlot={
+              <ReservationsGridFilters table={table} facets={data?.facets} />
+            }
           >
             <Tooltip>
               <TooltipTrigger

@@ -41,6 +41,13 @@ export const env = createEnv({
     INNGEST_EVENT_KEY: z.string().min(1).optional(),
     INNGEST_SIGNING_KEY: z.string().min(1).optional(),
 
+    /**
+     * Overrides the dev/cloud mode the client picks from NODE_ENV. `1` forces
+     * the local dev server, `0` forces cloud, and a URL points at a dev server
+     * on a non-default host.
+     */
+    INNGEST_DEV: z.string().min(1).optional(),
+
     SMTP_HOST: z.string().min(1).optional(),
     SMTP_PORT: z.coerce.number().int().positive().optional(),
     SMTP_USER: z.string().min(1).optional(),

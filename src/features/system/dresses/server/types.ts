@@ -11,6 +11,9 @@ export type DressGridRow = {
   depositAmount: number;
   insurance: number;
   timesRented: number;
+  lastReservedAt: Date | null;
+  /** Payments collected on this dress's bookings, minus expenses booked against it. */
+  netValue: number;
   isActive: boolean;
   currentStatus: "available" | "atTailor" | "atDryCleaner" | "underRepair";
   createdAt: Date;

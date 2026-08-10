@@ -10,6 +10,8 @@ import {
 } from "@/features/core/data-table";
 import type { useTranslation } from "@/features/core/i18n/client";
 import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
+import { formatCurrency } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { DressRowActions, type SetDressRowAction } from "./dress-row-actions";
 import { DressViewDialog } from "./dress-view-dialog";
 
@@ -120,6 +122,60 @@ export function buildDressColumns(opts: {
         </Badge>
       ),
       meta: { label: String(t("systemPages.dressesStatus")) },
+    },
+    {
+      accessorKey: "netValue",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={String(t("systemPages.dressesNetValue"))}
+        />
+      ),
+      cell: ({ row }) => {
+        const net = row.original.netValue;
+        return (
+          <span
+            className={cn(
+              "font-medium tabular-nums",
+              net < 0 && "text-destructive",
+            )}
+            title={String(t("systemPages.dressesNetValueHint"))}
+          >
+            {formatCurrency(net, opts.locale === "ar" ? "ar-EG" : "en-EG")}
+          </span>
+        );
+      },
+      meta: { label: String(t("systemPages.dressesNetValue")) },
+    },
+    {
+      accessorKey: "timesRented",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={String(t("systemPages.dressesTimesRented"))}
+        />
+      ),
+      meta: { label: String(t("systemPages.dressesTimesRented")) },
+    },
+    {
+      accessorKey: "lastReservedAt",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title={String(t("systemPages.dressesLastReservedAt"))}
+        />
+      ),
+      cell: ({ row }) => {
+        if (!row.original.lastReservedAt) return "—";
+        const fmt = new Intl.DateTimeFormat(
+          opts.locale === "ar" ? "ar" : "en",
+          {
+            dateStyle: "medium",
+          },
+        );
+        return fmt.format(new Date(row.original.lastReservedAt));
+      },
+      meta: { label: String(t("systemPages.dressesLastReservedAt")) },
     },
     {
       accessorKey: "createdAt",

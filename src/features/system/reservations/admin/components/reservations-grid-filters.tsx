@@ -1,16 +1,15 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import type { Table } from "@tanstack/react-table";
 
 import { reservationStatuses } from "@/drizzle/schemas/system/reservations-table";
-import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import {
   DataTableDateRangeFilter,
   DataTableFacetedFilter,
 } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
-import { useTRPC } from "@/integrations/trpc/client";
+import { DressFacetFilter } from "@/features/system/dresses/admin/components/dress-facet-filter";
+import type { GridFacetCounts } from "@/features/system/shared/facets";
 import type { ReservationGridRow } from "@/integrations/trpc/routers/reservations";
 
 function statusTranslationId(status: string) {
@@ -30,21 +29,12 @@ function statusTranslationId(status: string) {
 
 export function ReservationsGridFilters({
   table,
+  facets,
 }: {
   table: Table<ReservationGridRow>;
+  facets?: GridFacetCounts;
 }) {
-  const { t, locale } = useTranslation();
-  const trpc = useTRPC();
-  const branchState = useBranch();
-  const branchId = branchState?.hasActiveOrg
-    ? branchState.activeBranch.id
-    : undefined;
-  const formDataInput = branchId ? { branchId } : {};
-
-  const { data: formData } = useQuery({
-    ...trpc.reservations.formData.queryOptions(formDataInput),
-    enabled: Boolean(branchId) || branchState != null,
-  });
+  const { t } = useTranslation();
 
   const statusColumn = table.getColumn("status");
   const dressColumn = table.getColumn("dressId");
@@ -58,14 +48,6 @@ export function ReservationsGridFilters({
     label: String(t(statusTranslationId(value))),
   }));
 
-  const dressOptions =
-    formData?.dresses.map((dress) => ({
-      value: dress.id,
-      label: branchId
-        ? `${dress.title} (${dress.code})`
-        : `${dress.title} (${dress.code}) — ${locale === "ar" ? dress.branchNameAr : dress.branchNameEn}`,
-    })) ?? [];
-
   return (
     <>
       {statusColumn ? (
@@ -73,15 +55,10 @@ export function ReservationsGridFilters({
           column={statusColumn}
           title={String(t("systemPages.reservationsStatus"))}
           options={statusOptions}
+          counts={facets?.status}
         />
       ) : null}
-      {dressColumn && dressOptions.length > 0 ? (
-        <DataTableFacetedFilter
-          column={dressColumn}
-          title={String(t("systemPages.reservationsDress"))}
-          options={dressOptions}
-        />
-      ) : null}
+      <DressFacetFilter column={dressColumn} counts={facets?.dressId} />
       {receivingColumn ? (
         <DataTableDateRangeFilter
           column={receivingColumn}

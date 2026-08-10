@@ -6,6 +6,7 @@ import {
   pgEnum,
   pgTable,
   text,
+  timestamp,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -51,6 +52,16 @@ export const DressesTable = pgTable(
     insurance: integer().notNull(),
     isActive: boolean().notNull().default(true),
     currentStatus: dressCurrentStatusEnum().notNull().default("available"),
+    /**
+     * Booking summary, maintained by `refreshReservationStats`
+     * (src/features/system/shared/reservation-stats.ts) on every reservation
+     * write. Recomputed from `reservations`, never incremented, so no write path
+     * can leave these drifting from the rows they summarise. Counts alive,
+     * non-cancelled reservations — the `countableReservation` definition every
+     * other booking figure uses.
+     */
+    timesRented: integer().notNull().default(0),
+    lastReservedAt: timestamp({ withTimezone: true }),
     createdBy,
     createdAt,
     updatedBy,

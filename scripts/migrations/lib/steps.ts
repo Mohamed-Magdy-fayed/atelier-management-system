@@ -436,8 +436,8 @@ export const migrationSteps: MigrationStep[] = [
           const legacyUpdatedBy = pickLegacy<string | null>(raw, "updatedBy");
           const legacyDeletedBy = pickLegacy<string | null>(raw, "deletedBy");
 
-          // `timesRented` is deliberately not carried over: the target derives
-          // the rental count from the migrated reservations, so a legacy total
+          // `timesRented` is deliberately not carried over: the reservations
+          // step recomputes it from the migrated bookings, so a legacy total
           // would only be a second, conflicting answer.
           await target`
             INSERT INTO dresses (
@@ -503,8 +503,9 @@ export const migrationSteps: MigrationStep[] = [
       // dropping a duplicate id here does not orphan them.
       //
       // Legacy `reservationsCount`/`lastReservationAt` are intentionally not
-      // carried over: the target derives both from the migrated reservations, so
-      // importing the legacy totals would only create a second, drifting answer.
+      // carried over: `reservationsCount` is derived per branch at read time and
+      // the reservations step recomputes `lastReservationAt`, so importing the
+      // legacy totals would only create a second, drifting answer.
       const legacyRows = await legacy<
         {
           id: string;
@@ -664,6 +665,37 @@ export const migrationSteps: MigrationStep[] = [
               "updatedAt" = EXCLUDED."updatedAt"
           `;
         }
+      }
+
+      if (!dryRun) {
+        // The cached booking summaries are maintained by the reservation
+        // mutations, which this raw-SQL insert bypasses. Recomputing here in one
+        // pass leaves a migrated tenant in the same state an in-app booking
+        // would have produced.
+        await target`
+          UPDATE dresses SET
+            "timesRented" = (
+              SELECT COUNT(*)::int FROM reservations r
+              WHERE r."dressId" = dresses.id
+                AND r."deletedAt" IS NULL AND r.status <> 'cancelled'
+            ),
+            "lastReservedAt" = (
+              SELECT MAX(r."createdAt") FROM reservations r
+              WHERE r."dressId" = dresses.id
+                AND r."deletedAt" IS NULL AND r.status <> 'cancelled'
+            )
+        `;
+        await target`
+          UPDATE rental_customers SET
+            "lastReservationAt" = (
+              SELECT MAX(r."createdAt") FROM reservations r
+              WHERE r."customerId" = rental_customers.id
+                AND r."deletedAt" IS NULL AND r.status <> 'cancelled'
+            )
+        `;
+        logStep(step, "recomputed dress and customer booking summaries", {
+          dryRun,
+        });
       }
 
       const targetCount = dryRun
