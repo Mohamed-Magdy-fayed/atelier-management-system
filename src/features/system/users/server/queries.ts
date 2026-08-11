@@ -8,10 +8,10 @@ import {
 } from "@/drizzle/schema";
 
 import {
-  getUserBranchIds as fetchUserBranchIds,
   listAssignableBranches as fetchAssignableBranches,
+  getUserBranchIds as fetchUserBranchIds,
 } from "./branch-memberships";
-import { buildWhere, EXPORT_ROW_LIMIT, sortExpr, STAFF_ROLES } from "./filters";
+import { buildWhere, EXPORT_ROW_LIMIT, STAFF_ROLES, sortExpr } from "./filters";
 import type {
   ExportRowsInput,
   ListCustomersInput,
@@ -73,7 +73,6 @@ export async function listEmployees(
   const session = getRequiredSession(ctx);
   assertStaffRole(session.user.role);
 
-  // Admins share this grid with employees — there is no separate admin screen.
   const employeeWhere = and(
     inArray(UsersTable.role, STAFF_ROLES),
     isNull(UsersTable.deletedAt),
@@ -85,12 +84,10 @@ export async function listEmployees(
   };
 
   const branchFilterIds = Array.from(
-    new Set(
-      [
-        ...(input.branchIds ?? []),
-        ...(input.branchId ? [input.branchId] : []),
-      ],
-    ),
+    new Set([
+      ...(input.branchIds ?? []),
+      ...(input.branchId ? [input.branchId] : []),
+    ]),
   );
 
   const rows =

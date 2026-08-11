@@ -25,11 +25,7 @@ import type { ListFilterInput } from "./schemas";
 
 export const EXPORT_ROW_LIMIT = 50_000;
 
-/**
- * Roles shown on the Employees screen. Admins have no screen of their own, so
- * they are listed, filtered and exported alongside employees.
- */
-export const STAFF_ROLES = ["employee", "admin"] as const;
+export const STAFF_ROLES = ["employee"] as const;
 
 function parseRangeBoundary(raw: string, mode: "start" | "end"): Date {
   const trimmed = raw.trim();
@@ -133,9 +129,7 @@ export function buildWhere(
     role === "employee"
       ? inArray(UsersTable.role, STAFF_ROLES)
       : eq(UsersTable.role, role);
-  const conditions: SQL[] = [
-    and(roleCondition, isNull(UsersTable.deletedAt))!,
-  ];
+  const conditions: SQL[] = [and(roleCondition, isNull(UsersTable.deletedAt))!];
   if (input.globalFilter?.trim()) {
     const s = sanitizeLikeFragment(input.globalFilter);
     if (s) {

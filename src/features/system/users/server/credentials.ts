@@ -1,8 +1,8 @@
+import { UserCredentialsTable } from "@/drizzle/schema";
 import {
   generateSalt,
   hashPassword,
 } from "@/features/core/auth/core/passwordHasher";
-import { UserCredentialsTable } from "@/drizzle/schema";
 
 import type { UsersDb } from "./shared";
 

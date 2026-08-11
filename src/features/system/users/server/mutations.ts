@@ -15,6 +15,7 @@ import type {
 } from "./schemas";
 import {
   assertAdminRole,
+  assertNotGrantingAdmin,
   assertStaffRole,
   getRequiredSession,
   type TRPCContext,
@@ -23,7 +24,10 @@ import {
 export async function createUser(ctx: TRPCContext, input: UserMutationInput) {
   const session = getRequiredSession(ctx);
   assertStaffRole(session.user.role);
-  if (input.role === "admin" || input.password !== undefined) {
+  // A brand-new account has no current role, so any request for `admin` here is
+  // a grant, and grants do not happen through this API.
+  assertNotGrantingAdmin(input.role);
+  if (input.password !== undefined) {
     assertAdminRole(session.user.role);
   }
 
@@ -68,13 +72,13 @@ export async function updateUser(ctx: TRPCContext, input: UserUpdateInput) {
     .where(eq(UsersTable.id, input.id))
     .limit(1);
 
+  // Promoting anyone into `admin` is refused; editing someone already there is
+  // not.
+  assertNotGrantingAdmin(input.role, target?.role);
+
   // Editing an existing admin is admin-only too — otherwise an employee could
   // change an admin's email and lock them out of their own account.
-  if (
-    input.role === "admin" ||
-    target?.role === "admin" ||
-    input.password !== undefined
-  ) {
+  if (target?.role === "admin" || input.password !== undefined) {
     assertAdminRole(session.user.role);
   }
 

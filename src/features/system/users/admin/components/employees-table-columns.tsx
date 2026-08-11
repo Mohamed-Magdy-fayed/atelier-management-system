@@ -13,13 +13,14 @@ import { buildUserGridColumns } from "./users-table-columns";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
-export function staffRoleFilterOptions(t: Translate) {
-  return [
-    { label: String(t("systemPages.roleEmployee")), value: "employee" },
-    { label: String(t("systemPages.roleAdmin")), value: "admin" },
-  ];
-}
-
+/**
+ * There is no role column or role filter here on purpose.
+ *
+ * The grid lists `employee` and nothing else (STAFF_ROLES in
+ * users/server/filters.ts), so a role column would print the same badge on
+ * every row and its facet would offer a single option that filters nothing.
+ * Admins are promoted directly in the database and never appear on this screen.
+ */
 export function buildEmployeeGridColumns(opts: {
   t: Translate;
   locale: string;
@@ -48,10 +49,7 @@ export function buildEmployeeGridColumns(opts: {
       options: branchFilterOptions,
     },
     cell: ({ row }) => (
-      <EmployeeBranchBadges
-        branches={row.original.branches}
-        locale={locale}
-      />
+      <EmployeeBranchBadges branches={row.original.branches} locale={locale} />
     ),
     filterFn: (row, _id, value) => {
       const selected = value as string[] | undefined;
@@ -59,37 +57,6 @@ export function buildEmployeeGridColumns(opts: {
       return row.original.branches.some((branch) =>
         selected.includes(branch.id),
       );
-    },
-  };
-
-  const roleOptions = staffRoleFilterOptions(t);
-
-  const roleColumn: ColumnDef<EmployeeGridRow> = {
-    id: "role",
-    accessorFn: (row) => row.role,
-    header: ({ column }) => (
-      <DataTableColumnHeader
-        column={column}
-        title={String(t("systemPages.userRole"))}
-      />
-    ),
-    meta: {
-      label: String(t("systemPages.userRole")),
-      filterVariant: "multiSelect",
-      options: roleOptions,
-    },
-    cell: ({ row }) =>
-      row.original.role === "admin" ? (
-        <Badge>{String(t("systemPages.roleAdmin"))}</Badge>
-      ) : (
-        <Badge variant="outline">
-          {String(t("systemPages.roleEmployee"))}
-        </Badge>
-      ),
-    filterFn: (row, _id, value) => {
-      const selected = value as string[] | undefined;
-      if (!selected?.length) return true;
-      return selected.includes(row.original.role);
     },
   };
 
@@ -128,14 +95,12 @@ export function buildEmployeeGridColumns(opts: {
   };
 
   const phoneIndex = base.findIndex(
-    (column) =>
-      "accessorKey" in column && column.accessorKey === "phone",
+    (column) => "accessorKey" in column && column.accessorKey === "phone",
   );
   const insertAt = phoneIndex >= 0 ? phoneIndex + 1 : 3;
 
   return [
     ...base.slice(0, insertAt),
-    roleColumn,
     branchesColumn,
     hasPasswordColumn,
     ...base.slice(insertAt),

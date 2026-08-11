@@ -33,6 +33,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -44,6 +45,7 @@ import {
 import { H2, Muted } from "@/components/ui/typography";
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useActiveBranchId } from "@/features/core/auth/nextjs/hooks/use-active-branch-id";
+import { isUserId } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
 import {
   ALL_TIME_RANGE_START,
@@ -147,6 +149,53 @@ export function DashboardRentalPage() {
   const { data, isPending, error, refetch } = useQuery(
     trpc.dashboard.getData.queryOptions({ branchId, from, to }),
   );
+
+  // `employee` carries the reservation's `createdBy` actor — a user id, or a
+  // non-user sentinel written by seeds and sign-up flows. Sorted + deduped so
+  // repeat bookings by the same employee share one cache entry; the list is
+  // capped at 6 rows server-side, which keeps this under the resolver's cap.
+  const upcomingActorIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (data?.upcomingReservations ?? [])
+            .map((reservation) => reservation.employee)
+            .filter(isUserId),
+        ),
+      ).sort(),
+    [data?.upcomingReservations],
+  );
+
+  const upcomingActorsQuery = useQuery({
+    ...trpc.users.resolveActors.queryOptions({ ids: upcomingActorIds }),
+    enabled: upcomingActorIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const actorLabelById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const actor of upcomingActorsQuery.data ?? []) {
+      map.set(actor.id, actor.name?.trim() || actor.email);
+    }
+    return map;
+  }, [upcomingActorsQuery.data]);
+
+  /**
+   * Never renders the stored value itself: an id is meaningless to the reader,
+   * and a sentinel has no person behind it.
+   */
+  const renderEmployee = (value: string | null) => {
+    if (!isUserId(value)) return "—";
+
+    const label = actorLabelById.get(value);
+    if (label) return label;
+
+    return upcomingActorsQuery.isPending ? (
+      <Skeleton className="inline-block h-4 w-24 align-middle" />
+    ) : (
+      "—"
+    );
+  };
 
   const rangePresets = useMemo((): DateRangePreset[] => {
     const now = new Date();
@@ -724,7 +773,9 @@ export function DashboardRentalPage() {
                             locale,
                           )}
                         </TableCell>
-                        <TableCell>{reservation.employee ?? "—"}</TableCell>
+                        <TableCell>
+                          {renderEmployee(reservation.employee)}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

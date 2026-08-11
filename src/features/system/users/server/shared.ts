@@ -40,6 +40,31 @@ export function assertAdminRole(role: string) {
   }
 }
 
+/**
+ * Admin accounts are not created or granted through this API.
+ *
+ * The Employees screen lists `employee` only (STAFF_ROLES in `filters.ts`), so
+ * an admin minted here would be invisible in every grid the moment it was
+ * saved — unreachable for editing, password reset or deletion. Promotion is a
+ * deliberate database operation instead.
+ *
+ * Editing someone who is *already* an admin stays allowed, so an existing admin
+ * is not locked out of their own record; only the transition into the role is
+ * refused.
+ */
+export function assertNotGrantingAdmin(
+  requestedRole: string,
+  currentRole?: string,
+) {
+  if (requestedRole === "admin" && currentRole !== "admin") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message:
+        "Admin accounts are created by promoting an employee in the database, not from the Employees screen.",
+    });
+  }
+}
+
 export function getRequiredSession(ctx: TRPCContext): ProtectedTRPCSession {
   if (!ctx.session) {
     throw new TRPCError({ code: "UNAUTHORIZED" });

@@ -48,7 +48,12 @@ function actorSentinelKey(value: string) {
   }
 }
 
-function isUserId(value: string | null | undefined): value is string {
+/**
+ * Actor columns are varchar, not a FK, so a value is only resolvable through
+ * `users.resolveActors` when it is shaped like a user id — the sentinels above
+ * are not.
+ */
+export function isUserId(value: string | null | undefined): value is string {
   return typeof value === "string" && UUID_PATTERN.test(value);
 }
 
