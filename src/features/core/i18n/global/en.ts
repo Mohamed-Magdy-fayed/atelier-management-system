@@ -11,7 +11,7 @@ export default {
   hobby: dt("You chose {hobby:enum} as your hobby.", {
     enum: { hobby: { runner: "runner", developer: "developer" } },
   }),
-  appName: "Ateliér Alaa Elkasry",
+  appName: "Gateling Atelier",
   common: {
     empty: "No data available.",
     menu: "Menu",
@@ -171,7 +171,7 @@ export default {
     },
   },
   landing: {
-    badge: "Luxury evening wear rental",
+    badge: "Luxury dress rental",
     title: "Effortless elegance for your occasion.",
     lead: "Browse our curated dresses, see pricing by branch, and check availability—then visit us to reserve in person.",
     primaryGuest: "View collection",
@@ -953,7 +953,8 @@ export default {
       "Share these sign-in details now — the password is not shown again.",
     userCredentialsCopy: "Copy sign-in details",
     userCredentialsCopied: "Sign-in details copied.",
-    userCredentialsCopyFailed: "Could not copy. Select the text and copy it manually.",
+    userCredentialsCopyFailed:
+      "Could not copy. Select the text and copy it manually.",
     userCreating: "Creating record…",
     userCreated: "Record created.",
     userUpdated: "Record updated.",

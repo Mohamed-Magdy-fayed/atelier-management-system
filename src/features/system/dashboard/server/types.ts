@@ -55,6 +55,11 @@ export type DashboardUpcomingReservation = {
   dressTitle: string;
   customerName: string;
   receivingDateTime: string;
+  /**
+   * The booking's `createdBy` actor — a user id, or a non-user sentinel such as
+   * `system:seed`. Resolve it through `users.resolveActors` before display;
+   * it is not a name.
+   */
   employee: string | null;
 };
 

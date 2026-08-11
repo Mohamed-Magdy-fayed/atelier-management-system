@@ -13,7 +13,7 @@ const SAFE_DB_HOSTS = new Set([
   "host.docker.internal",
 ]);
 
-function getDatabaseHostname(): string {
+export function getDatabaseHostname(): string {
   const databaseUrl = env.DATABASE_URL;
   if (!databaseUrl) {
     throw new Error("DATABASE_URL is required before clearing the database.");
@@ -26,19 +26,30 @@ function getDatabaseHostname(): string {
   }
 }
 
-function assertSafeToClearDb() {
+/**
+ * The destructive-write guard, shared by every seed path that deletes rows.
+ *
+ * `verb` is spliced into the two refusal messages so each caller names what it
+ * was about to do; the checks themselves are identical for all of them and must
+ * stay that way.
+ */
+export function assertSafeToDestroyData(verb: string) {
   const hostname = getDatabaseHostname();
   const allowRemote = process.env.SEED_ALLOW_REMOTE === "1";
 
   if (process.env.NODE_ENV === "production") {
-    throw new Error("Refusing to clear the database in production.");
+    throw new Error(`Refusing to ${verb} in production.`);
   }
 
   if (!allowRemote && !SAFE_DB_HOSTS.has(hostname)) {
     throw new Error(
-      `Refusing to clear a non-local database host (${hostname}). Set SEED_ALLOW_REMOTE=1 to override.`,
+      `Refusing to ${verb} on a non-local database host (${hostname}). Set SEED_ALLOW_REMOTE=1 to override.`,
     );
   }
+}
+
+function assertSafeToClearDb() {
+  assertSafeToDestroyData("clear the database");
 }
 
 export async function clearDb() {

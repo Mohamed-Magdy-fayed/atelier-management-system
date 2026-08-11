@@ -19,7 +19,8 @@ import { seedDefaultSettings } from "./settings";
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
 
-const FIRST_NAMES = [
+/** Shared with the `demo` profile (src/drizzle/seed/demo/fixtures.ts). */
+export const FIRST_NAMES = [
   "Ahmed",
   "Mohamed",
   "Mahmoud",
@@ -52,7 +53,8 @@ const FIRST_NAMES = [
   "Mona",
 ] as const;
 
-const LAST_NAMES = [
+/** Shared with the `demo` profile (src/drizzle/seed/demo/fixtures.ts). */
+export const LAST_NAMES = [
   "Hassan",
   "Saleh",
   "Mostafa",
