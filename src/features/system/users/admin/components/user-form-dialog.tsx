@@ -1,6 +1,5 @@
 "use client";
 
-import { useStore } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CopyIcon,
@@ -78,10 +77,19 @@ export function UserFormDialog({
   const assignsBranches =
     resolvedRole === "employee" || resolvedRole === "admin";
 
-  // Creating admins and setting another user's password are admin-only on the
-  // server (`assertAdminRole`); hide the controls rather than let them 403.
+  /**
+   * Setting another user's password is admin-only on the server
+   * (`assertAdminRole`); hide the control rather than let it 403.
+   *
+   * There is deliberately no role selector. The Employees screen creates
+   * employees only — admins are made by promoting an employee directly in the
+   * database, and the grid lists `employee` alone (STAFF_ROLES in
+   * users/server/filters.ts). A selector here would let someone create an admin
+   * that vanishes from the grid the moment it is saved, leaving an account with
+   * no route back to it through the UI to edit or delete. `createUser` refuses
+   * the role as well, so this is not the only guard.
+   */
   const isAdminSession = session?.user.role === "admin";
-  const canPickStaffRole = assignsBranches && isAdminSession;
   const canSetPassword = isAdminSession;
 
   /** Credentials to hand over after a create; also keeps the dialog open. */
@@ -144,9 +152,10 @@ export function UserFormDialog({
         return;
       }
 
-      // Staff screens let an admin switch between employee and admin; the
-      // customer screen has no selector, so fall back to the opened role.
-      const submittedRole = canPickStaffRole ? value.role : resolvedRole;
+      // No screen offers a role selector, so the role is always the one the
+      // dialog was opened with: `employee` from the staff screen, `customer`
+      // from the customer screen, or the existing role when editing.
+      const submittedRole = resolvedRole;
       const password = canSetPassword ? value.password.trim() : "";
 
       const payload = {
@@ -195,8 +204,6 @@ export function UserFormDialog({
     },
   });
 
-  const selectedRole = useStore(form.store, (s) => s.values.role);
-
   useEffect(() => {
     if (!open) return;
     if (handover) return;
@@ -220,7 +227,7 @@ export function UserFormDialog({
   );
 
   const pending = createMut.isPending || updateMut.isPending;
-  const displayRole = canPickStaffRole ? selectedRole : resolvedRole;
+  const displayRole = resolvedRole;
   const roleLabel = (role: UserFormValues["role"]) =>
     t(
       role === "employee"
@@ -238,14 +245,6 @@ export function UserFormDialog({
     : isEdit
       ? `${t("common.edit")} ${entityLabel.toLowerCase()}.`
       : `${t("common.create")} ${entityLabel.toLowerCase()}.`;
-
-  const roleOptions = useMemo(
-    () => [
-      { value: "employee", label: String(t("systemPages.roleEmployee")) },
-      { value: "admin", label: String(t("systemPages.roleAdmin")) },
-    ],
-    [t],
-  );
 
   const SubmitIcon = pending ? Loader2Icon : isEdit ? SaveIcon : PlusIcon;
   const formId = useId();
@@ -349,22 +348,14 @@ export function UserFormDialog({
                     <form.AppField name="age">
                       {(f) => <f.NumberField label={String(t("forms.age"))} />}
                     </form.AppField>
-                    {canPickStaffRole ? (
-                      <form.AppField name="role">
-                        {(f) => (
-                          <f.SelectField
-                            label={String(t("systemPages.userRole"))}
-                            options={roleOptions}
-                          />
-                        )}
-                      </form.AppField>
-                    ) : null}
                     {assignsBranches ? (
                       <form.AppField name="branchIds">
                         {(f) => (
                           <f.SelectField
                             multiple
-                            label={String(t("systemPages.userAssignedBranches"))}
+                            label={String(
+                              t("systemPages.userAssignedBranches"),
+                            )}
                             placeholder={String(
                               t("systemPages.userAssignedBranchesPlaceholder"),
                             )}
