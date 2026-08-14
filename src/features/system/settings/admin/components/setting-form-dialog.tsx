@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2Icon, SaveIcon, XIcon } from "lucide-react";
+import { Loader2Icon, LockIcon, SaveIcon, XIcon } from "lucide-react";
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useId, useMemo } from "react";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import {
   OverlayFormFooterActions,
   OverlayFormSubmitButton,
 } from "@/components/forms/overlay-form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -33,6 +34,7 @@ import {
 } from "@/features/system/settings/lib/setting-i18n";
 import {
   getSystemSettingDefinition,
+  isBrandingSettingCode,
   SYSTEM_SETTING_CODE,
 } from "@/features/system/settings/lib/system-settings-registry";
 import { getSettingValueOptionLabel } from "@/features/system/settings/lib/setting-value-options";
@@ -45,6 +47,11 @@ type SettingFormDialogProps = {
   onOpenChange: (open: boolean) => void;
   open: boolean;
   setting: SettingGridRow | null;
+  /**
+   * Whether this deployment's contract includes editable branding. The server
+   * refuses the write regardless; this only keeps the form honest about it.
+   */
+  brandingEditable: boolean;
 };
 
 function mapIsActiveToForm(
@@ -90,6 +97,7 @@ export function SettingFormDialog({
   onOpenChange,
   open,
   setting,
+  brandingEditable,
 }: SettingFormDialogProps) {
   const { t } = useTranslation();
   const trpc = useTRPC();
@@ -238,6 +246,7 @@ export function SettingFormDialog({
 
   const displayName = getSettingDisplayName(setting.code, t);
   const displayDescription = getSettingDisplayDescription(setting.code, t);
+  const isLocked = isBrandingSettingCode(setting.code) && !brandingEditable;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -276,7 +285,18 @@ export function SettingFormDialog({
                 </Muted>
               </div>
             </div>
-            <FieldSet disabled={pending}>
+            {isLocked ? (
+              <Alert>
+                <LockIcon className="size-4" />
+                <AlertTitle>
+                  {String(t("systemPages.settingsBrandingLocked"))}
+                </AlertTitle>
+                <AlertDescription>
+                  {String(t("systemPages.settingsBrandingLockedHint"))}
+                </AlertDescription>
+              </Alert>
+            ) : null}
+            <FieldSet disabled={pending || isLocked}>
               <FieldGroup>
                 {definition.editable.isActive ? (
                   <form.AppField name="isActive">
@@ -396,7 +416,7 @@ export function SettingFormDialog({
             <OverlayFormSubmitButton
               formId={formId}
               size="default"
-              disabled={pending}
+              disabled={pending || isLocked}
             >
               {pending ? (
                 <Loader2Icon className="size-3.5 animate-spin" />

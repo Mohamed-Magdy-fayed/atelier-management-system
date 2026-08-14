@@ -259,7 +259,7 @@ export default {
   customerPortal: {
     badge: "Your atelier account",
     title: "My account",
-    lead: "Your rentals with Ateliér Alaa Elkasry—past visits, active bookings, and profile settings.",
+    lead: "Your rentals with {brand}—past visits, active bookings, and profile settings.",
     manageAccount: "Manage profile & security",
     phoneHint:
       "Add your mobile number in profile settings so we can match your in-store reservations to this account.",
@@ -316,7 +316,6 @@ export default {
     dressShareCopied: "Copied!",
   },
   systemPages: {
-    appName: "Ateliér Alaa Elkasry",
     openMenu: "Open menu",
     toggleSidebar: "Toggle sidebar",
     mobileTabBarLabel: "Workspace navigation",
@@ -745,6 +744,18 @@ export default {
     settingName00008: "WhatsApp API token",
     settingDesc00008:
       "Wapilot API token paired with the instance ID above. Stored encrypted and never shown again after saving — to change it, paste a new one. Only used when the sending mode is “Our own number”.",
+    settingName00009: "Business name (English)",
+    settingDesc00009:
+      "Shown in English in the app header, the public catalog, the customer portal and printed receipts. Leave empty to keep the name this deployment ships with.",
+    settingName00010: "Business name (Arabic)",
+    settingDesc00010:
+      "Shown in Arabic in the app header, the public catalog, the customer portal and printed receipts. Leave empty to keep the name this deployment ships with.",
+    settingName00011: "Logo URL",
+    settingDesc00011:
+      "Absolute https link to the logo shown in the public catalog and customer portal headers. Leave empty to use the logo this deployment ships with.",
+    settingsBrandingLocked: "Branding is fixed on this plan",
+    settingsBrandingLockedHint:
+      "Your plan does not include editable branding. Contact support to change your business name or logo.",
     settingsWhatsAppModeOff: "Do not send",
     settingsWhatsAppModePlatform: "Gateling Atelier number",
     settingsWhatsAppModeOwn: "Our own number",
@@ -796,6 +807,7 @@ export default {
     settingsCategory: "Category",
     settingsLabelPolicy: "Policy",
     settingsLabelIntegration: "Integration",
+    settingsLabelBranding: "Branding",
     settingsDescriptionPlaceholder: "Optional description",
     settingsValue: "Value",
     settingsValuePlaceholder: "Text value",

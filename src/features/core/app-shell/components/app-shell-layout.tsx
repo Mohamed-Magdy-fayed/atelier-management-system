@@ -14,6 +14,7 @@ import {
 import type { User } from "@/drizzle/schema";
 import { hasPermission } from "@/features/core/auth/core/permissions";
 import { useTranslation } from "@/features/core/i18n/client";
+import { useBrandName } from "@/features/system/settings/client/branding-provider";
 
 import type { SystemNavItem } from "../lib/nav";
 import { SYSTEM_NAV_ITEMS } from "../lib/nav";
@@ -38,6 +39,7 @@ export function AppShellLayout({
 }: AppShellLayoutProps) {
   const pathname = usePathname() ?? "/";
   const { t } = useTranslation();
+  const brandName = useBrandName();
 
   const visibleNav = useMemo(
     () =>
@@ -76,7 +78,7 @@ export function AppShellLayout({
             <ol className="flex items-center gap-1">
               <li>
                 <Link href="/" className="hover:text-foreground">
-                  {t("appName")}
+                  {brandName}
                 </Link>
               </li>
               {breadcrumbLabel ? (

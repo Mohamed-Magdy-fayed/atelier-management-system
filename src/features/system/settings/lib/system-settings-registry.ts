@@ -18,7 +18,7 @@ export const WHATSAPP_SENDING_MODES = ["off", "platform", "own"] as const;
 export type WhatsAppSendingMode = (typeof WHATSAPP_SENDING_MODES)[number];
 export const DEFAULT_WHATSAPP_SENDING_MODE: WhatsAppSendingMode = "platform";
 
-/** Fixed system setting codes (policy / integration parameters). */
+/** Fixed system setting codes (policy / integration / branding parameters). */
 export const SYSTEM_SETTING_CODE = {
   SHOW_CATALOG_PRICES: "00001",
   BUSINESS_TIMEZONE: "00002",
@@ -28,7 +28,28 @@ export const SYSTEM_SETTING_CODE = {
   WHATSAPP_SENDING_MODE: "00006",
   WHATSAPP_INSTANCE_ID: "00007",
   WHATSAPP_API_TOKEN: "00008",
+  BRAND_NAME_EN: "00009",
+  BRAND_NAME_AR: "00010",
+  BRAND_LOGO_URL: "00011",
 } as const;
+
+/**
+ * Settings that carry the deployment's identity rather than its behaviour.
+ *
+ * Each client runs its own deployment against its own database, so these are
+ * what make one install "Ateliér Alaa Elkasry" and another the Gateling demo.
+ * Whether the client may edit them is a contract term, not a product decision —
+ * see `BRANDING_EDITABLE` in `src/env/server.ts`.
+ */
+export const BRANDING_SETTING_CODES = [
+  SYSTEM_SETTING_CODE.BRAND_NAME_EN,
+  SYSTEM_SETTING_CODE.BRAND_NAME_AR,
+  SYSTEM_SETTING_CODE.BRAND_LOGO_URL,
+] as const;
+
+export function isBrandingSettingCode(code: string): boolean {
+  return (BRANDING_SETTING_CODES as readonly string[]).includes(code);
+}
 
 export type SystemSettingCode =
   (typeof SYSTEM_SETTING_CODE)[keyof typeof SYSTEM_SETTING_CODE];
@@ -42,6 +63,9 @@ export const SYSTEM_SETTING_CODES: SystemSettingCode[] = [
   SYSTEM_SETTING_CODE.WHATSAPP_SENDING_MODE,
   SYSTEM_SETTING_CODE.WHATSAPP_INSTANCE_ID,
   SYSTEM_SETTING_CODE.WHATSAPP_API_TOKEN,
+  SYSTEM_SETTING_CODE.BRAND_NAME_EN,
+  SYSTEM_SETTING_CODE.BRAND_NAME_AR,
+  SYSTEM_SETTING_CODE.BRAND_LOGO_URL,
 ];
 
 const LEGACY_SETTING_CODES = {
@@ -61,7 +85,10 @@ export type SystemSettingDefinition = {
     | "settingName00005"
     | "settingName00006"
     | "settingName00007"
-    | "settingName00008";
+    | "settingName00008"
+    | "settingName00009"
+    | "settingName00010"
+    | "settingName00011";
   /** i18n key under `systemPages` */
   descriptionKey:
     | "settingDesc00001"
@@ -71,7 +98,10 @@ export type SystemSettingDefinition = {
     | "settingDesc00005"
     | "settingDesc00006"
     | "settingDesc00007"
-    | "settingDesc00008";
+    | "settingDesc00008"
+    | "settingDesc00009"
+    | "settingDesc00010"
+    | "settingDesc00011";
   /** English fallback stored in DB on seed (not user-editable). */
   descriptionEn: string;
   /**
@@ -176,6 +206,36 @@ export const SYSTEM_SETTINGS: SystemSettingDefinition[] = [
     descriptionEn:
       "Wapilot API token paired with the instance id above. Stored encrypted and never shown again after saving. Only used when the sending mode is own.",
     isSecret: true,
+    editable: { value: true },
+    seed: { isActive: null, value: null },
+  },
+  {
+    code: SYSTEM_SETTING_CODE.BRAND_NAME_EN,
+    label: "branding",
+    nameKey: "settingName00009",
+    descriptionKey: "settingDesc00009",
+    descriptionEn:
+      "Business name shown in English across the app shell, public catalog, customer portal and printed receipts. Leave empty to fall back to the name built into this deployment.",
+    editable: { value: true },
+    seed: { isActive: null, value: null },
+  },
+  {
+    code: SYSTEM_SETTING_CODE.BRAND_NAME_AR,
+    label: "branding",
+    nameKey: "settingName00010",
+    descriptionKey: "settingDesc00010",
+    descriptionEn:
+      "Business name shown in Arabic across the app shell, public catalog, customer portal and printed receipts. Leave empty to fall back to the name built into this deployment.",
+    editable: { value: true },
+    seed: { isActive: null, value: null },
+  },
+  {
+    code: SYSTEM_SETTING_CODE.BRAND_LOGO_URL,
+    label: "branding",
+    nameKey: "settingName00011",
+    descriptionKey: "settingDesc00011",
+    descriptionEn:
+      "Absolute https URL of the logo shown in the public catalog and customer portal headers. Leave empty to use the logo bundled with this deployment.",
     editable: { value: true },
     seed: { isActive: null, value: null },
   },

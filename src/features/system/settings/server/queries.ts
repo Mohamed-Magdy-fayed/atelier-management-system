@@ -17,6 +17,7 @@ import {
   SYSTEM_SETTING_CODES,
 } from "@/features/system/settings/lib/system-settings-registry";
 
+import { isBrandingEditable } from "./branding";
 import type { ListSettingsInput } from "./schemas";
 import { secretHintFromStored } from "./secret-crypto";
 import {
@@ -133,6 +134,9 @@ export async function listSettings(ctx: TRPCContext, input: ListSettingsInput) {
     rows: rows.map(toGridRow),
     pageCount,
     total: Number(total),
+    // Sent with the rows so the grid can render branding read-only without a
+    // second round trip. The server enforces this independently on update.
+    brandingEditable: isBrandingEditable(),
   };
 }
 

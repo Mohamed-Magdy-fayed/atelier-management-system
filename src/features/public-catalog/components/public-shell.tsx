@@ -2,13 +2,25 @@
 import Link from "next/link";
 import { Muted } from "@/components/ui/typography";
 import { AuthManagerHeaderTrigger } from "@/features/core/auth/nextjs/components/auth-manager-header-trigger";
-import { getT } from "@/features/core/i18n/server";
+import { getLocaleCookie, getT } from "@/features/core/i18n/server";
 import { PublicSignedInLink } from "@/features/public-catalog/components/public-signed-in-link";
+import {
+  isRemoteLogo,
+  resolveBrandName,
+  resolveLogoSrc,
+} from "@/features/system/settings/lib/branding";
+import { getBranding } from "@/features/system/settings/server/branding";
 import { PublicDesktopNav } from "./public-desktop-nav";
 import { PublicMobileTabBar } from "./public-mobile-tab-bar";
 
 export async function PublicShell({ children }: { children: React.ReactNode }) {
   const { t } = await getT();
+  const [locale, branding] = await Promise.all([
+    getLocaleCookie(),
+    getBranding(),
+  ]);
+  const brandName = resolveBrandName(branding, locale, String(t("appName")));
+  const logoSrc = resolveLogoSrc(branding);
   const year = new Date().getFullYear();
 
   return (
@@ -17,15 +29,16 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4 sm:gap-6 sm:px-6 lg:px-8">
           <Link className="flex items-center gap-2" href="/">
             <Image
-              src="/logo.png"
-              alt={t("appName")}
+              src={logoSrc}
+              alt={brandName}
               width={512}
               height={512}
               className="w-12 aspect-square"
+              unoptimized={isRemoteLogo(logoSrc)}
             />
             <div className="min-w-0 flex-1 transition-opacity hover:opacity-90">
               <div className="font-serif text-xl font-semibold tracking-tight">
-                {t("appName")}
+                {brandName}
               </div>
               <Muted className="text-xs">{t("landing.badge")}</Muted>
             </div>
@@ -48,7 +61,7 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
           <Muted className="max-w-xl text-sm leading-relaxed">
             {t("landing.footerTagline")}
           </Muted>
-          <Muted className="text-xs">{`\u00A9 ${year} ${t("appName")}`}</Muted>
+          <Muted className="text-xs">{`\u00A9 ${year} ${brandName}`}</Muted>
         </div>
       </footer>
     </div>

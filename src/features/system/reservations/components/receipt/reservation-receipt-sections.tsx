@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
+import { useBrandName } from "@/features/system/settings/client/branding-provider";
 import { getStatusVariant } from "@/features/system/reservations/utils";
 import { useTRPC } from "@/integrations/trpc/client";
 import { formatCurrency } from "@/lib/format";
@@ -30,6 +31,7 @@ type SectionProps = {
 
 export function ReceiptBrand({ data, branchName }: SectionProps) {
   const { t } = useTranslation();
+  const brandName = useBrandName();
 
   return (
     <section
@@ -39,9 +41,7 @@ export function ReceiptBrand({ data, branchName }: SectionProps) {
       )}
     >
       <div className="grid gap-1">
-        <span className="font-semibold text-base text-black">
-          {t("appName")}
-        </span>
+        <span className="font-semibold text-base text-black">{brandName}</span>
         {branchName ? (
           <span className={cn(bodyTextClass, "text-center")}>
             {String(

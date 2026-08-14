@@ -4,9 +4,13 @@ import { eq, inArray } from "drizzle-orm";
 import { SettingsTable } from "@/drizzle/schema";
 import {
   getSystemSettingDefinition,
+  isBrandingSettingCode,
   isSystemSettingCode,
+  SYSTEM_SETTING_CODE,
 } from "@/features/system/settings/lib/system-settings-registry";
 import { handleDatabaseError } from "@/integrations/trpc/db-error";
+
+import { isBrandingEditable } from "./branding";
 
 import { encryptSecret, SettingSecretError } from "./secret-crypto";
 
@@ -20,6 +24,47 @@ import {
   getRequiredSession,
   type TRPCContext,
 } from "./shared";
+
+/**
+ * Branding is locked by contract, not by UI.
+ *
+ * The Settings screen hides the affordance, but `settings.update` is reachable
+ * by a direct tRPC call from any signed-in admin — so the UI must not be the
+ * only guard, or the lock is decorative.
+ */
+function assertBrandingEditable(code: string): void {
+  if (!isBrandingSettingCode(code)) return;
+  if (isBrandingEditable()) return;
+
+  throw new TRPCError({
+    code: "FORBIDDEN",
+    message: "Branding is not editable on this plan",
+  });
+}
+
+/**
+ * The logo URL is rendered straight into an `img src`, so the scheme is a
+ * security boundary rather than a formatting preference: `javascript:` and
+ * `data:` both execute or embed in that position.
+ */
+function assertHttpsUrl(value: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Logo URL must be a full URL, starting with https://",
+    });
+  }
+
+  if (parsed.protocol !== "https:") {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Logo URL must start with https://",
+    });
+  }
+}
 
 function assertEditableFields(
   code: string,
@@ -36,6 +81,8 @@ function assertEditableFields(
       message: "Unknown system setting",
     });
   }
+
+  assertBrandingEditable(code);
 
   const patch: Partial<{
     isActive: boolean | null;
@@ -68,6 +115,10 @@ function assertEditableFields(
         code: "BAD_REQUEST",
         message: `Value must be one of: ${def.valueEnum.join(", ")}`,
       });
+    }
+
+    if (trimmed && code === SYSTEM_SETTING_CODE.BRAND_LOGO_URL) {
+      assertHttpsUrl(trimmed);
     }
 
     // Encrypted here rather than at the call site so no future caller can
@@ -179,6 +230,8 @@ export async function setSettingActive(
     });
   }
 
+  assertBrandingEditable(existing.code);
+
   await ctx.db
     .update(SettingsTable)
     .set({
@@ -217,6 +270,7 @@ export async function bulkSetSettingsActive(
         message: "One or more settings cannot change status",
       });
     }
+    assertBrandingEditable(row.code);
   }
 
   await ctx.db

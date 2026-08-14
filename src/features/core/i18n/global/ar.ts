@@ -11,7 +11,7 @@ export default {
   hobby: dt("اخترت {hobby:enum} كهوايتك.", {
     enum: { hobby: { runner: "عداء", developer: "مطور" } },
   }),
-  appName: "اتيليه بُويَب",
+  appName: "Gateling Atelier",
   common: {
     empty: "لا توجد بيانات متاحة.",
     menu: "القائمة",
@@ -254,7 +254,7 @@ export default {
   customerPortal: {
     badge: "حسابك في الأتيليه",
     title: "حسابي",
-    lead: "إيجاراتك مع أتيليه آلاء القصري—زيارات سابقة، حجوزات نشطة، وإعدادات الملف.",
+    lead: "إيجاراتك مع {brand}—زيارات سابقة، حجوزات نشطة، وإعدادات الملف.",
     manageAccount: "إدارة الملف والأمان",
     phoneHint: "أضف رقم هاتفك في الملف الشخصي لربط حجوزات المتجر بهذا الحساب.",
     overviewTitle: "ملخصك مع الأتيليه",
@@ -310,7 +310,6 @@ export default {
     dressShareCopied: "تم النسخ!",
   },
   systemPages: {
-    appName: "اتيليه آلاء القصري",
     openMenu: "فتح القائمة",
     toggleSidebar: "طي الشريط الجانبي",
     mobileTabBarLabel: "تنقل مساحة العمل",
@@ -725,6 +724,18 @@ export default {
     settingName00008: "رمز الوصول لواتساب",
     settingDesc00008:
       "رمز الوصول لـ Wapilot المرتبط بمعرّف الحساب أعلاه. يُخزَّن مشفّرًا ولا يُعرض مرة أخرى بعد الحفظ — لتغييره الصق رمزًا جديدًا. يُستخدم فقط عندما تكون طريقة الإرسال «رقمنا الخاص».",
+    settingName00009: "اسم النشاط (بالإنجليزية)",
+    settingDesc00009:
+      "يظهر بالإنجليزية في ترويسة التطبيق والكتالوج العام وبوابة العملاء وإيصالات الطباعة. اتركه فارغًا للإبقاء على الاسم المضمَّن في هذا التنصيب.",
+    settingName00010: "اسم النشاط (بالعربية)",
+    settingDesc00010:
+      "يظهر بالعربية في ترويسة التطبيق والكتالوج العام وبوابة العملاء وإيصالات الطباعة. اتركه فارغًا للإبقاء على الاسم المضمَّن في هذا التنصيب.",
+    settingName00011: "رابط الشعار",
+    settingDesc00011:
+      "رابط https كامل للشعار الذي يظهر في ترويسة الكتالوج العام وبوابة العملاء. اتركه فارغًا لاستخدام الشعار المضمَّن في هذا التنصيب.",
+    settingsBrandingLocked: "الهوية البصرية ثابتة في هذه الباقة",
+    settingsBrandingLockedHint:
+      "باقتك لا تتضمن تعديل الهوية البصرية. تواصل مع الدعم لتغيير اسم النشاط أو الشعار.",
     settingsWhatsAppModeOff: "عدم الإرسال",
     settingsWhatsAppModePlatform: "رقم Gateling Atelier",
     settingsWhatsAppModeOwn: "رقمنا الخاص",
@@ -774,6 +785,7 @@ export default {
     settingsCategory: "التصنيف",
     settingsLabelPolicy: "سياسة",
     settingsLabelIntegration: "تكامل",
+    settingsLabelBranding: "الهوية البصرية",
     settingsDescriptionPlaceholder: "وصف اختياري",
     settingsValue: "القيمة",
     settingsValuePlaceholder: "قيمة نصية",

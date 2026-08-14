@@ -16,7 +16,7 @@ import {
   updatedBy,
 } from "@/drizzle/schemas/helpers";
 
-export const settingsLabels = ["policy", "integration"] as const;
+export const settingsLabels = ["policy", "integration", "branding"] as const;
 export const settingsLabelEnum = pgEnum("settings_label", settingsLabels);
 export type SettingsLabel = (typeof settingsLabels)[number];
 
