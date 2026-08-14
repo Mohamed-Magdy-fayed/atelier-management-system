@@ -2,10 +2,10 @@
 
 import { FingerprintPattern, LockIcon, ShieldCheckIcon } from "lucide-react";
 import { Lead } from "@/components/ui/typography";
-import { useTranslation } from "@/features/core/i18n/client";
+import { useBrandName } from "@/features/system/settings/client/branding-provider";
 
 export function AuthPlaceholder() {
-  const { t } = useTranslation();
+  const brandName = useBrandName();
 
   return (
     <div className="grid h-full w-full place-content-center gap-4 p-6">
@@ -15,7 +15,7 @@ export function AuthPlaceholder() {
         <LockIcon className="col-span-2" />
       </div>
       <Lead className="text-center font-mono text-2xl text-foreground text-shadow-lg text-shadow-primary">
-        {t("appName")}
+        {brandName}
       </Lead>
     </div>
   );

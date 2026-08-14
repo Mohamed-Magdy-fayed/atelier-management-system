@@ -1,0 +1,1 @@
+ALTER TYPE "public"."settings_label" ADD VALUE 'branding';

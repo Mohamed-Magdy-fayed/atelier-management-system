@@ -6,7 +6,9 @@ import { Suspense } from "react";
 
 import { Providers } from "@/app/_providers";
 import { getThemeCookie } from "@/features/core/color-theme/server";
-import { getLocaleCookie } from "@/features/core/i18n/server";
+import { getLocaleCookie, getT } from "@/features/core/i18n/server";
+import { resolveBrandName } from "@/features/system/settings/lib/branding";
+import { getBranding } from "@/features/system/settings/server/branding";
 import { cn } from "@/lib/utils";
 
 const openSans = Open_Sans({
@@ -24,12 +26,20 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Ateliér Alaa Elkasry",
-  description:
-    "Browse curated evening wear, explore boutiques, check availability by date—reserve in person.",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  const [locale, branding] = await Promise.all([
+    getLocaleCookie(),
+    getBranding(),
+  ]);
+
+  return {
+    title: resolveBrandName(branding, locale, String(t("appName"))),
+    description:
+      "Browse curated evening wear, explore boutiques, check availability by date—reserve in person.",
+    icons: [{ rel: "icon", url: "/favicon.ico" }],
+  };
+}
 
 export default function RootLayout({
   children,

@@ -4,9 +4,14 @@ import { eq, inArray } from "drizzle-orm";
 import { SettingsTable } from "@/drizzle/schema";
 import {
   getSystemSettingDefinition,
+  isBrandingSettingCode,
   isSystemSettingCode,
+  SYSTEM_SETTING_CODE,
 } from "@/features/system/settings/lib/system-settings-registry";
+import { isSupportedLogoUrl } from "@/features/system/settings/lib/branding";
 import { handleDatabaseError } from "@/integrations/trpc/db-error";
+
+import { isBrandingEditable } from "./branding";
 
 import { encryptSecret, SettingSecretError } from "./secret-crypto";
 
@@ -20,6 +25,41 @@ import {
   getRequiredSession,
   type TRPCContext,
 } from "./shared";
+
+/**
+ * Branding is locked by contract, not by UI.
+ *
+ * The Settings screen hides the affordance, but `settings.update` is reachable
+ * by a direct tRPC call from any signed-in admin — so the UI must not be the
+ * only guard, or the lock is decorative.
+ */
+function assertBrandingEditable(code: string): void {
+  if (!isBrandingSettingCode(code)) return;
+  if (isBrandingEditable()) return;
+
+  throw new TRPCError({
+    code: "FORBIDDEN",
+    message: "Branding is not editable on this plan",
+  });
+}
+
+/**
+ * The logo must be an upload, not an arbitrary link.
+ *
+ * Two reasons it is checked here rather than left to render time: the value
+ * goes into an `img src`, where `javascript:` and `data:` execute or embed;
+ * and `next/image` only optimises the hosts in `images.remotePatterns`, so a
+ * URL from anywhere else would be stored happily and then render broken.
+ */
+function assertUploadedLogoUrl(value: string): void {
+  if (isSupportedLogoUrl(value)) return;
+
+  throw new TRPCError({
+    code: "BAD_REQUEST",
+    message:
+      "Upload the logo with the upload button — a link from elsewhere cannot be displayed",
+  });
+}
 
 function assertEditableFields(
   code: string,
@@ -36,6 +76,8 @@ function assertEditableFields(
       message: "Unknown system setting",
     });
   }
+
+  assertBrandingEditable(code);
 
   const patch: Partial<{
     isActive: boolean | null;
@@ -68,6 +110,10 @@ function assertEditableFields(
         code: "BAD_REQUEST",
         message: `Value must be one of: ${def.valueEnum.join(", ")}`,
       });
+    }
+
+    if (trimmed && code === SYSTEM_SETTING_CODE.BRAND_LOGO_URL) {
+      assertUploadedLogoUrl(trimmed);
     }
 
     // Encrypted here rather than at the call site so no future caller can
@@ -179,6 +225,8 @@ export async function setSettingActive(
     });
   }
 
+  assertBrandingEditable(existing.code);
+
   await ctx.db
     .update(SettingsTable)
     .set({
@@ -217,6 +265,7 @@ export async function bulkSetSettingsActive(
         message: "One or more settings cannot change status",
       });
     }
+    assertBrandingEditable(row.code);
   }
 
   await ctx.db

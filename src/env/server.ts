@@ -56,6 +56,16 @@ export const env = createEnv({
     SMTP_FROM_EMAIL: z.email().optional(),
     SMTP_FROM_NAME: z.string().min(1).optional(),
 
+    /**
+     * Whether this client may edit their own branding (settings `00009`–`00011`).
+     *
+     * A contract term, not a product decision: some clients pay for a branded
+     * install, others take the name and logo we set for them. Defaults to `"0"`
+     * so a deployment that forgets the variable locks branding rather than
+     * silently handing it over — the safe direction to fail.
+     */
+    BRANDING_EDITABLE: z.enum(["0", "1"]).default("0"),
+
     FIREBASE_PROJECT_ID: z.string().min(1),
     FIREBASE_CLIENT_EMAIL: z.string().min(1),
     FIREBASE_PRIVATE_KEY: z.string().min(1),

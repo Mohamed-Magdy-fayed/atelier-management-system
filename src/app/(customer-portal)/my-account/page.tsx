@@ -19,6 +19,8 @@ import { CustomerPhotoUpload } from "@/features/customer-portal/components/custo
 import { DressQrShare } from "@/features/customer-portal/components/dress-qr-share";
 import { ReservationReceiptSheet } from "@/features/customer-portal/components/reservation-receipt-sheet";
 import { getCustomerPortalData } from "@/features/customer-portal/server/queries";
+import { resolveBrandName } from "@/features/system/settings/lib/branding";
+import { getBranding } from "@/features/system/settings/server/branding";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +53,11 @@ export default async function MyAccountPage() {
 
   const { t } = await getT();
   const locale = await getLocaleCookie();
+  const brandName = resolveBrandName(
+    await getBranding(),
+    locale,
+    String(t("appName")),
+  );
   const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
   const { stats, reservations } = await getCustomerPortalData(
     auth.session.user.id,
@@ -174,7 +181,7 @@ export default async function MyAccountPage() {
           {t("customerPortal.title")}
         </H1>
         <Lead className="text-muted-foreground">
-          {t("customerPortal.lead")}
+          {t("customerPortal.lead", { brand: brandName })}
         </Lead>
         <CustomerAccountActions />
         {!stats.linkedByPhone ? (

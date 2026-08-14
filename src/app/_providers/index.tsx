@@ -8,6 +8,8 @@ import { BranchProvider } from "@/features/core/auth/nextjs/components/branch-pr
 import { ThemeProvider } from "@/features/core/color-theme/client";
 import type { Theme } from "@/features/core/color-theme/server";
 import { TranslationProvider } from "@/features/core/i18n/client";
+import { BrandingProvider } from "@/features/system/settings/client/branding-provider";
+import { getBranding } from "@/features/system/settings/server/branding";
 import { TRPCReactProvider } from "@/integrations/trpc/client";
 
 type ProvidersProps = PropsWithChildren<{
@@ -17,6 +19,7 @@ type ProvidersProps = PropsWithChildren<{
 
 export async function Providers({ children, locale, theme }: ProvidersProps) {
   const authState = await getAuth();
+  const branding = await getBranding();
   const branchsState = authState.session?.user.id
     ? await getBranches(authState.session.user.id, {
         includeAllBranches: authState.session.user.role === "admin",
@@ -26,18 +29,20 @@ export async function Providers({ children, locale, theme }: ProvidersProps) {
   return (
     <ThemeProvider theme={theme}>
       <TranslationProvider defaultLocale={locale} fallbackLocale="en">
-        <AuthProvider value={authState}>
-          <BranchProvider value={branchsState}>
-            <TRPCReactProvider>
-              <DirectionProvider direction={locale === "ar" ? "rtl" : "ltr"}>
-                <TooltipProvider>
-                  {children}
-                  <Toaster visibleToasts={3} />
-                </TooltipProvider>
-              </DirectionProvider>
-            </TRPCReactProvider>
-          </BranchProvider>
-        </AuthProvider>
+        <BrandingProvider value={branding}>
+          <AuthProvider value={authState}>
+            <BranchProvider value={branchsState}>
+              <TRPCReactProvider>
+                <DirectionProvider direction={locale === "ar" ? "rtl" : "ltr"}>
+                  <TooltipProvider>
+                    {children}
+                    <Toaster visibleToasts={3} />
+                  </TooltipProvider>
+                </DirectionProvider>
+              </TRPCReactProvider>
+            </BranchProvider>
+          </AuthProvider>
+        </BrandingProvider>
       </TranslationProvider>
     </ThemeProvider>
   );

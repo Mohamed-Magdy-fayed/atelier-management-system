@@ -120,6 +120,13 @@
       "when": 1786308994709,
       "tag": "0016_equal_miss_america",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1786709477592,
+      "tag": "0017_striped_proemial_gods",
+      "breakpoints": true
     }
   ]
 }

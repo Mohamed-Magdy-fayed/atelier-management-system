@@ -3,7 +3,12 @@ import Link from "next/link";
 
 import { Muted } from "@/components/ui/typography";
 import { AuthManagerHeaderTrigger } from "@/features/core/auth/nextjs/components/auth-manager-header-trigger";
-import { getT } from "@/features/core/i18n/server";
+import { getLocaleCookie, getT } from "@/features/core/i18n/server";
+import {
+  resolveBrandName,
+  resolveLogoSrc,
+} from "@/features/system/settings/lib/branding";
+import { getBranding } from "@/features/system/settings/server/branding";
 import { CustomerMobileTabBar } from "./customer-mobile-tab-bar";
 
 export async function CustomerPortalShell({
@@ -12,6 +17,12 @@ export async function CustomerPortalShell({
   children: React.ReactNode;
 }) {
   const { t } = await getT();
+  const [locale, branding] = await Promise.all([
+    getLocaleCookie(),
+    getBranding(),
+  ]);
+  const brandName = resolveBrandName(branding, locale, String(t("appName")));
+  const logoSrc = resolveLogoSrc(branding);
   const year = new Date().getFullYear();
 
   return (
@@ -20,15 +31,15 @@ export async function CustomerPortalShell({
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4">
           <Link className="flex items-center gap-2" href="/">
             <Image
-              src="/logo.png"
-              alt={t("appName")}
+              src={logoSrc}
+              alt={brandName}
               width={512}
               height={512}
               className="w-12 aspect-square"
             />
             <div className="min-w-0 flex-1 transition-opacity hover:opacity-90">
               <div className="font-serif text-xl font-semibold tracking-tight">
-                {t("appName")}
+                {brandName}
               </div>
               <Muted className="text-xs">{t("customerPortal.badge")}</Muted>
             </div>
@@ -46,7 +57,7 @@ export async function CustomerPortalShell({
 
       <footer className="hidden shrink-0 border-t border-border/60 py-8 md:block">
         <div className="mx-auto max-w-7xl px-4 text-center">
-          <Muted className="text-xs">{`\u00A9 ${year} ${t("appName")}`}</Muted>
+          <Muted className="text-xs">{`\u00A9 ${year} ${brandName}`}</Muted>
         </div>
       </footer>
     </div>

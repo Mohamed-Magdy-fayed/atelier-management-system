@@ -163,6 +163,7 @@ export function SettingsTablePage() {
           if (!open) closeRowAction();
         }}
         setting={rowAction?.variant === "edit" ? rowAction.row : null}
+        brandingEditable={data?.brandingEditable ?? false}
       />
       <SettingInfoModal
         open={rowAction?.variant === "info"}

@@ -42,7 +42,9 @@ import type {
   RegistrationOptionsResult,
   TypedResponse,
 } from "@/features/core/auth/types";
-import { getT } from "@/features/core/i18n/server";
+import { getLocaleCookie, getT } from "@/features/core/i18n/server";
+import { resolveBrandName } from "@/features/system/settings/lib/branding";
+import { getBranding } from "@/features/system/settings/server/branding";
 
 const PASSKEY_CHALLENGE_TTL_MS = 1000 * 60 * 10;
 const EXPECTED_ORIGIN = new URL(env.BASE_URL).origin;
@@ -268,7 +270,14 @@ export async function beginPasskeyRegistrationAction(): Promise<RegistrationOpti
 
   const options: PublicKeyCredentialCreationOptionsJSON =
     await generateRegistrationOptions({
-      rpName: t("appName"),
+      // Display-only: the authenticator shows this next to the saved passkey.
+      // `rpID` below is the field credentials are actually bound to, so a
+      // client renaming their business does not invalidate existing passkeys.
+      rpName: resolveBrandName(
+        await getBranding(),
+        await getLocaleCookie(),
+        String(t("appName")),
+      ),
       rpID: rpId,
       userID: userIdBytes,
       userName: user.email ?? user.name ?? user.id,
