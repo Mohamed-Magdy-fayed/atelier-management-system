@@ -2,8 +2,13 @@ import { z } from "zod";
 
 import { LOCALE_COOKIE_NAME } from "@/features/core/i18n/lib";
 import { dashboardRouter } from "@/features/system/dashboard/server";
-import { deleteImage, uploadImage } from "@/integrations/firebase/storage";
-import { baseProcedure, createTRPCRouter } from "../init";
+import {
+  deleteImage,
+  uploadFolderForUser,
+  uploadImage,
+} from "@/integrations/firebase/storage";
+import { assertUploadWithinRateLimit } from "@/integrations/firebase/upload-rate-limit";
+import { baseProcedure, createTRPCRouter, protectedProcedure } from "../init";
 import { branchesRouter } from "./branches";
 import { customerPortalRouter } from "./customer-portal";
 import { dressesRouter } from "./dresses";
@@ -34,7 +39,14 @@ export const appRouter = createTRPCRouter({
       return { currentLocale };
     }),
   },
-  uploadImage: baseProcedure
+  /**
+   * Authenticated, not admin-only: the profile photo field on
+   * `profile-form.tsx` is reachable by any signed-in user, including
+   * customers. The dress gallery and the branding logo are admin screens, but
+   * their own procedures already gate those writes — this one only needs to
+   * establish that a real session is behind the upload.
+   */
+  uploadImage: protectedProcedure
     .input(
       z.object({
         fileName: z.string().min(1),
@@ -43,11 +55,18 @@ export const appRouter = createTRPCRouter({
         oldUrl: z.string().nullable().optional(),
       }),
     )
-    .mutation(async ({ input }) => {
-      const url = await uploadImage(input.base64, input.mimeType, "uploads");
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      await assertUploadWithinRateLimit(userId);
 
+      const folder = uploadFolderForUser(userId);
+      const url = await uploadImage(input.base64, input.mimeType, folder);
+
+      // `oldUrl` is client-supplied, so the delete is confined to this user's
+      // own folder. Without that it is an instruction to delete any object in
+      // the bucket, which authentication alone does not fix.
       if (input.oldUrl) {
-        await deleteImage(input.oldUrl);
+        await deleteImage(input.oldUrl, `${folder}/`);
       }
 
       return { url };
