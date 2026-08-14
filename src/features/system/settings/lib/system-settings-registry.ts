@@ -235,7 +235,7 @@ export const SYSTEM_SETTINGS: SystemSettingDefinition[] = [
     nameKey: "settingName00011",
     descriptionKey: "settingDesc00011",
     descriptionEn:
-      "Absolute https URL of the logo shown in the public catalog and customer portal headers. Leave empty to use the logo bundled with this deployment.",
+      "Logo shown in the public catalog and customer portal headers. Upload it with the upload button — a link from elsewhere cannot be displayed. Leave empty to use the logo bundled with this deployment.",
     editable: { value: true },
     seed: { isActive: null, value: null },
   },

@@ -47,13 +47,20 @@ export function resolveLogoSrc(branding: Branding): string {
 }
 
 /**
- * Remote logos skip Next's optimizer.
+ * The host Firebase Storage serves uploads from.
  *
- * The alternative is an `images.remotePatterns` entry, and the only pattern
- * broad enough to accept whatever host a client uploads to is a wildcard —
- * which turns the deployment into an open image proxy. A logo is small enough
- * that the optimizer earns little here.
+ * A logo is uploaded through the same path as dress images, so it always lands
+ * here. `next/image` only optimises hosts listed in `images.remotePatterns`,
+ * so a URL from anywhere else renders broken — which is why the write path
+ * rejects one rather than storing it.
  */
-export function isRemoteLogo(src: string): boolean {
-  return src.startsWith("http://") || src.startsWith("https://");
+export const FIREBASE_STORAGE_HOST = "storage.googleapis.com";
+
+export function isSupportedLogoUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" && parsed.hostname === FIREBASE_STORAGE_HOST;
+  } catch {
+    return false;
+  }
 }

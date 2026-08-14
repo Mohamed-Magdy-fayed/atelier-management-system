@@ -366,6 +366,22 @@ export function SettingFormDialog({
                         );
                       }
 
+                      // Uploads through the same Firebase path as dress images,
+                      // so the logo lands on the one host `next/image` is
+                      // configured to optimise.
+                      if (
+                        setting.code === SYSTEM_SETTING_CODE.BRAND_LOGO_URL
+                      ) {
+                        return (
+                          <field.ImageField
+                            label={String(t("systemPages.settingsValue"))}
+                            placeholder={String(
+                              t("systemPages.settingsLogoPlaceholder"),
+                            )}
+                          />
+                        );
+                      }
+
                       return setting.code ===
                         SYSTEM_SETTING_CODE.RESERVATION_USAGE_POLICY ? (
                         <field.TextareaField

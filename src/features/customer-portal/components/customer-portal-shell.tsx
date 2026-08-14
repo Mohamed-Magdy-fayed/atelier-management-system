@@ -5,7 +5,6 @@ import { Muted } from "@/components/ui/typography";
 import { AuthManagerHeaderTrigger } from "@/features/core/auth/nextjs/components/auth-manager-header-trigger";
 import { getLocaleCookie, getT } from "@/features/core/i18n/server";
 import {
-  isRemoteLogo,
   resolveBrandName,
   resolveLogoSrc,
 } from "@/features/system/settings/lib/branding";
@@ -37,7 +36,6 @@ export async function CustomerPortalShell({
               width={512}
               height={512}
               className="w-12 aspect-square"
-              unoptimized={isRemoteLogo(logoSrc)}
             />
             <div className="min-w-0 flex-1 transition-opacity hover:opacity-90">
               <div className="font-serif text-xl font-semibold tracking-tight">

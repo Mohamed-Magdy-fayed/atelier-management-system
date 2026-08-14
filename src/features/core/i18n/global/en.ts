@@ -752,7 +752,8 @@ export default {
       "Shown in Arabic in the app header, the public catalog, the customer portal and printed receipts. Leave empty to keep the name this deployment ships with.",
     settingName00011: "Logo URL",
     settingDesc00011:
-      "Absolute https link to the logo shown in the public catalog and customer portal headers. Leave empty to use the logo this deployment ships with.",
+      "The logo shown in the public catalog and customer portal headers. Use the upload button — a link from anywhere else cannot be displayed. Leave empty to keep the logo this deployment ships with.",
+    settingsLogoPlaceholder: "Upload a logo, or paste its link",
     settingsBrandingLocked: "Branding is fixed on this plan",
     settingsBrandingLockedHint:
       "Your plan does not include editable branding. Contact support to change your business name or logo.",

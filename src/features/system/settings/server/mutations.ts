@@ -8,6 +8,7 @@ import {
   isSystemSettingCode,
   SYSTEM_SETTING_CODE,
 } from "@/features/system/settings/lib/system-settings-registry";
+import { isSupportedLogoUrl } from "@/features/system/settings/lib/branding";
 import { handleDatabaseError } from "@/integrations/trpc/db-error";
 
 import { isBrandingEditable } from "./branding";
@@ -43,27 +44,21 @@ function assertBrandingEditable(code: string): void {
 }
 
 /**
- * The logo URL is rendered straight into an `img src`, so the scheme is a
- * security boundary rather than a formatting preference: `javascript:` and
- * `data:` both execute or embed in that position.
+ * The logo must be an upload, not an arbitrary link.
+ *
+ * Two reasons it is checked here rather than left to render time: the value
+ * goes into an `img src`, where `javascript:` and `data:` execute or embed;
+ * and `next/image` only optimises the hosts in `images.remotePatterns`, so a
+ * URL from anywhere else would be stored happily and then render broken.
  */
-function assertHttpsUrl(value: string): void {
-  let parsed: URL;
-  try {
-    parsed = new URL(value);
-  } catch {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Logo URL must be a full URL, starting with https://",
-    });
-  }
+function assertUploadedLogoUrl(value: string): void {
+  if (isSupportedLogoUrl(value)) return;
 
-  if (parsed.protocol !== "https:") {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: "Logo URL must start with https://",
-    });
-  }
+  throw new TRPCError({
+    code: "BAD_REQUEST",
+    message:
+      "Upload the logo with the upload button — a link from elsewhere cannot be displayed",
+  });
 }
 
 function assertEditableFields(
@@ -118,7 +113,7 @@ function assertEditableFields(
     }
 
     if (trimmed && code === SYSTEM_SETTING_CODE.BRAND_LOGO_URL) {
-      assertHttpsUrl(trimmed);
+      assertUploadedLogoUrl(trimmed);
     }
 
     // Encrypted here rather than at the call site so no future caller can
