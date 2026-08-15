@@ -18,8 +18,8 @@ import {
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import {
   DataTable,
-  type DataTableControlledState,
   DataTableActionBar,
+  type DataTableControlledState,
   DataTableExportButton,
   DataTablePagination,
   DataTableToolbar,
@@ -28,6 +28,7 @@ import {
   formatCsvDate,
   formatCsvDateTime,
   getEntityColumnPinning,
+  serializeColumnFiltersForServer,
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
@@ -76,18 +77,27 @@ export function ReservationsTablePage() {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [createOpen, setCreateOpen] = useState(false);
 
+  // Date filters travel as absolute instants anchored to the viewer's midnight.
+  // Sent as bare `YYYY-MM-DD` the server resolved them against ITS own calendar
+  // (UTC in production), so an occasion date of "16 Aug" missed every row whose
+  // occasion is Cairo midnight — that instant is 21:00Z on the 15th.
+  const wireColumnFilters = useMemo(
+    () => serializeColumnFiltersForServer(columnFilters),
+    [columnFilters],
+  );
+
   const listInput = useMemo(
     () => ({
       page: pagination.pageIndex + 1,
       perPage: pagination.pageSize,
       sorting,
-      columnFilters,
+      columnFilters: wireColumnFilters,
       globalFilter: globalFilter || undefined,
       branchId,
     }),
     [
       branchId,
-      columnFilters,
+      wireColumnFilters,
       globalFilter,
       pagination.pageIndex,
       pagination.pageSize,
@@ -154,14 +164,14 @@ export function ReservationsTablePage() {
     const result = await queryClient.fetchQuery(
       trpc.reservations.exportRows.queryOptions({
         sorting,
-        columnFilters,
+        columnFilters: wireColumnFilters,
         globalFilter: globalFilter || undefined,
         branchId,
       }),
     );
 
     return result.rows;
-  }, [branchId, columnFilters, globalFilter, queryClient, sorting, trpc]);
+  }, [branchId, wireColumnFilters, globalFilter, queryClient, sorting, trpc]);
 
   return (
     <div

@@ -29,6 +29,7 @@
     "seed:clear": "tsx src/drizzle/seed/cli.ts clear",
     "migrate:legacy": "tsx scripts/migrations/migrate-legacy.ts",
     "migrate:legacy:dry": "tsx scripts/migrations/migrate-legacy.ts -- --dry-run",
+    "fix:tz-shift": "tsx scripts/migrations/fix-timestamp-shift.ts",
     "preview": "next build && next start",
     "start": "next start",
     "typecheck": "tsc --noEmit"

@@ -15,6 +15,15 @@
 import "dotenv/config";
 
 import { loadMigrationEnv, parseCliOptions } from "./lib/config";
+
+// Legacy date columns are `timestamp WITHOUT time zone` holding a UTC wall
+// clock. postgres.js turns them into `Date` using the **process** timezone, so
+// running this from a machine on Africa/Cairo shifted every migrated timestamp
+// 2-3 hours early and pushed day-anchored values like `occasionDate` onto the
+// previous day. Pinning UTC here makes the conversion a no-op regardless of
+// which machine the migration runs from.
+process.env.TZ = "UTC";
+
 import { createLegacySql, createTargetSql } from "./lib/connections";
 import { truncateDomainTables } from "./lib/fresh";
 import { clearState, ensureStateTable, isStepCompleted } from "./lib/state";
