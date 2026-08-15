@@ -16,6 +16,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useScreenPermission } from "@/features/core/auth/nextjs/hooks/use-screen-permission";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { useTRPC } from "@/integrations/trpc/client";
@@ -34,6 +35,7 @@ export function DressesBulkActions({ table }: { table: Table<DressGridRow> }) {
     trpc.dresses.bulkSetActive.mutationOptions(),
   );
   const archiveMut = useMutation(trpc.dresses.bulkArchive.mutationOptions());
+  const { canUpdate, canDelete } = useScreenPermission("dresses");
 
   async function bulkSetActive(isActive: boolean) {
     const ids = selectedIds(table);
@@ -77,71 +79,77 @@ export function DressesBulkActions({ table }: { table: Table<DressGridRow> }) {
 
   return (
     <>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              className="size-8"
-              disabled={setActiveMut.isPending}
-              onClick={() => void bulkSetActive(true)}
-            >
-              {setActiveMut.isPending ? (
-                <Loader2Icon className="size-3.5 animate-spin" />
-              ) : (
-                <CheckCircle2Icon className="size-3.5" />
-              )}
-            </Button>
-          }
-        />
-        <TooltipContent>
-          {String(t("systemPages.bulkActivateDresses"))}
-        </TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              className="size-8"
-              disabled={setActiveMut.isPending}
-              onClick={() => void bulkSetActive(false)}
-            >
-              <PauseCircleIcon className="size-3.5" />
-            </Button>
-          }
-        />
-        <TooltipContent>
-          {String(t("systemPages.bulkDeactivateDresses"))}
-        </TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-sm"
-              className="size-8"
-              disabled={archiveMut.isPending}
-              onClick={() => void bulkArchive()}
-            >
-              {archiveMut.isPending ? (
-                <Loader2Icon className="size-3.5 animate-spin" />
-              ) : (
-                <Trash2Icon className="size-3.5" />
-              )}
-            </Button>
-          }
-        />
-        <TooltipContent>
-          {String(t("systemPages.bulkArchiveDresses"))}
-        </TooltipContent>
-      </Tooltip>
+      {canUpdate ? (
+        <>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  className="size-8"
+                  disabled={setActiveMut.isPending}
+                  onClick={() => void bulkSetActive(true)}
+                >
+                  {setActiveMut.isPending ? (
+                    <Loader2Icon className="size-3.5 animate-spin" />
+                  ) : (
+                    <CheckCircle2Icon className="size-3.5" />
+                  )}
+                </Button>
+              }
+            />
+            <TooltipContent>
+              {String(t("systemPages.bulkActivateDresses"))}
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon-sm"
+                  className="size-8"
+                  disabled={setActiveMut.isPending}
+                  onClick={() => void bulkSetActive(false)}
+                >
+                  <PauseCircleIcon className="size-3.5" />
+                </Button>
+              }
+            />
+            <TooltipContent>
+              {String(t("systemPages.bulkDeactivateDresses"))}
+            </TooltipContent>
+          </Tooltip>
+        </>
+      ) : null}
+      {canDelete ? (
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-sm"
+                className="size-8"
+                disabled={archiveMut.isPending}
+                onClick={() => void bulkArchive()}
+              >
+                {archiveMut.isPending ? (
+                  <Loader2Icon className="size-3.5 animate-spin" />
+                ) : (
+                  <Trash2Icon className="size-3.5" />
+                )}
+              </Button>
+            }
+          />
+          <TooltipContent>
+            {String(t("systemPages.bulkArchiveDresses"))}
+          </TooltipContent>
+        </Tooltip>
+      ) : null}
     </>
   );
 }

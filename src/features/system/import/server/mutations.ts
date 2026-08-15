@@ -8,13 +8,19 @@ import {
   assertUserCanAccessBranch,
 } from "@/features/system/shared/staff-access";
 
+import { assertScreenPermissionForEntitySlug } from "@/features/system/shared/screen-access";
+
 import { parseImportCsv, toKeyedRow } from "../lib/csv";
 import type { ImportEntitySpec } from "../specs";
 import { getImportSpec, MAX_IMPORT_ROWS, matchImportHeaders } from "../specs";
 import type { ImportReason, ResolvedRow } from "./handlers";
 import { getImportHandler } from "./handlers";
 import type { CreateImportJobInput, ImportBatchInput } from "./schemas";
-import { getRequiredSession, type TRPCContext } from "./shared";
+import {
+  getRequiredSession,
+  type ProtectedTRPCSession,
+  type TRPCContext,
+} from "./shared";
 
 /** Jobs are kept for audit and re-runs, then aged out. */
 const JOB_RETENTION_DAYS = 30;
@@ -49,6 +55,22 @@ function assertSpecRole(spec: ImportEntitySpec, role: string) {
   }
 }
 
+/**
+ * Screen grants for an import of `entitySlug`.
+ *
+ * Both `create` and `update` are required: every handler upserts, so a commit
+ * can insert new rows and rewrite existing ones in the same pass. This sits on
+ * top of `assertSpecRole`, which enforces the spec's own admin floor.
+ */
+async function assertImportScreenPermission(
+  ctx: TRPCContext,
+  session: ProtectedTRPCSession,
+  entitySlug: string,
+) {
+  await assertScreenPermissionForEntitySlug(ctx, session, entitySlug, "create");
+  await assertScreenPermissionForEntitySlug(ctx, session, entitySlug, "update");
+}
+
 async function loadJobForActor(ctx: TRPCContext, jobId: string) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
@@ -67,6 +89,10 @@ async function loadJobForActor(ctx: TRPCContext, jobId: string) {
   if (jobSpec) {
     assertSpecRole(jobSpec, session.user.role);
   }
+
+  // Handlers insert *and* update rows (see handlers/customers.ts), and a single
+  // commit can rewrite thousands — `create` alone would under-describe it.
+  await assertImportScreenPermission(ctx, session, job.entitySlug);
 
   // An import writes across the tenant, so only its creator (or an admin) may
   // drive it forward.
@@ -94,6 +120,7 @@ export async function createImportJob(
   }
 
   assertSpecRole(spec, session.user.role);
+  await assertImportScreenPermission(ctx, session, input.entitySlug);
 
   if (input.branchId) {
     await assertUserCanAccessBranch(ctx, session, input.branchId);

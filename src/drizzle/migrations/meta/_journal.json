@@ -127,6 +127,20 @@
       "when": 1786709477592,
       "tag": "0017_striped_proemial_gods",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1786828007421,
+      "tag": "0018_dear_slapstick",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1786828155484,
+      "tag": "0019_petite_pete_wisdom",
+      "breakpoints": true
     }
   ]
 }

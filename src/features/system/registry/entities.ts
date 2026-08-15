@@ -88,7 +88,7 @@ export const SYSTEM_ENTITY_REGISTRY = [
     supportsRowSelection: false,
     supportsBulkActions: false,
     filters: ["createdAt"],
-    rowActions: [],
+    rowActions: ["edit"],
     bulkActions: [],
     showInDashboard: true,
     seedProfiles: ["baseline", "demo", "performance"],

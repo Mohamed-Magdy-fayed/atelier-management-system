@@ -24,7 +24,8 @@ import {
 } from "@/features/core/auth/core/session";
 import { validateInput } from "@/features/core/auth/nextjs/actions/helpers";
 import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
-import { getPostAuthRedirect } from "@/features/core/auth/nextjs/lib/post-auth-redirect";
+import { resolvePostAuthRedirect } from "@/features/core/auth/nextjs/lib/resolve-post-auth-redirect";
+import { getUserScreenPermissionsCached } from "@/features/core/auth/nextjs/screen-permissions";
 import { signInSchema, signUpSchema } from "@/features/core/auth/schemas";
 import type {
   AuthState,
@@ -97,7 +98,7 @@ export async function signInAction(
     };
   }
 
-  redirect(getPostAuthRedirect(signedInUser));
+  redirect(await resolvePostAuthRedirect(signedInUser));
 }
 
 export async function signUpAction(
@@ -160,7 +161,7 @@ export async function signUpAction(
   );
   await linkRentalCustomersToUser(result.user.id);
 
-  redirect(getPostAuthRedirect(result.user));
+  redirect(await resolvePostAuthRedirect(result.user));
 }
 
 export async function oAuthSignIn(provider: OAuthProvider) {
@@ -178,15 +179,21 @@ export async function getAuth(): Promise<AuthState> {
   const user = await getCurrentUser({ withFullUser: true });
   if (!user) return { isAuthenticated: false, session: null };
 
-  const userCredentials = await db.query.UserCredentialsTable.findFirst({
-    where: eq(UserCredentialsTable.userId, user.id),
-    columns: { expiresAt: true },
-  });
+  const [userCredentials, screenPermissions] = await Promise.all([
+    db.query.UserCredentialsTable.findFirst({
+      where: eq(UserCredentialsTable.userId, user.id),
+      columns: { expiresAt: true },
+    }),
+    getUserScreenPermissionsCached(user.id),
+  ]);
 
+  // Attaching the grants here is what makes every downstream `hasPermission`
+  // call respect them: the sidebar, the mobile tab bar, the breadcrumb, and the
+  // client `useScreenPermission` hook all read this same user object.
   return {
     isAuthenticated: true,
     session: {
-      user,
+      user: { ...user, screenPermissions },
       hasPassword: !!(
         userCredentials &&
         (!userCredentials.expiresAt || userCredentials.expiresAt > new Date())

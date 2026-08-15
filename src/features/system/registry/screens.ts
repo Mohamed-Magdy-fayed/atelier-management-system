@@ -39,6 +39,16 @@ type SystemScreenRecord = {
   Icon: LucideIcon;
   showInNav: boolean;
   protected: boolean;
+  /**
+   * Whether an admin can hand this screen to an individual employee.
+   *
+   * `false` for `branches`, `employee` and `settings`: their mutations are
+   * guarded by `assertAdminRole` on the server, so a grant would be cosmetic —
+   * the row is left out of the permissions matrix rather than shown as a
+   * control that does nothing. Also `false` for `my-account`, which belongs to
+   * the customer portal.
+   */
+  grantable: boolean;
   navTranslationKey: NavTranslationKey | null;
   breadcrumbTranslationKey: BreadcrumbTranslationKey | null;
 };
@@ -51,6 +61,7 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     Icon: LayoutDashboard,
     showInNav: true,
     protected: true,
+    grantable: true,
     navTranslationKey: "navDashboard",
     breadcrumbTranslationKey: "breadcrumbDashboard",
   },
@@ -61,6 +72,7 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     Icon: Users,
     showInNav: true,
     protected: true,
+    grantable: false,
     navTranslationKey: "navEmployees",
     breadcrumbTranslationKey: "breadcrumbEmployees",
   },
@@ -71,6 +83,7 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     Icon: UserCircle,
     showInNav: true,
     protected: true,
+    grantable: true,
     navTranslationKey: "navCustomers",
     breadcrumbTranslationKey: "breadcrumbCustomers",
   },
@@ -81,6 +94,7 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     Icon: Building2,
     showInNav: true,
     protected: true,
+    grantable: false,
     navTranslationKey: "navBranches",
     breadcrumbTranslationKey: "breadcrumbBranches",
   },
@@ -91,6 +105,7 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     Icon: Shirt,
     showInNav: true,
     protected: true,
+    grantable: true,
     navTranslationKey: "navDresses",
     breadcrumbTranslationKey: "breadcrumbDresses",
   },
@@ -101,6 +116,7 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     Icon: CalendarDays,
     showInNav: true,
     protected: true,
+    grantable: true,
     navTranslationKey: "navReservations",
     breadcrumbTranslationKey: "breadcrumbReservations",
   },
@@ -111,6 +127,7 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     Icon: CreditCard,
     showInNav: true,
     protected: true,
+    grantable: true,
     navTranslationKey: "navPayments",
     breadcrumbTranslationKey: "breadcrumbPayments",
   },
@@ -121,6 +138,7 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     Icon: Receipt,
     showInNav: true,
     protected: true,
+    grantable: true,
     navTranslationKey: "navExpenses",
     breadcrumbTranslationKey: "breadcrumbExpenses",
   },
@@ -131,6 +149,7 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     Icon: Settings,
     showInNav: true,
     protected: true,
+    grantable: false,
     navTranslationKey: "navSettings",
     breadcrumbTranslationKey: "breadcrumbSettings",
   },
@@ -141,6 +160,7 @@ export const SYSTEM_SCREEN_DEFINITIONS = [
     Icon: UserCircle,
     showInNav: false,
     protected: true,
+    grantable: false,
     navTranslationKey: null,
     breadcrumbTranslationKey: null,
   },
@@ -152,6 +172,23 @@ export type SystemScreenDefinition = (typeof SYSTEM_SCREEN_DEFINITIONS)[number];
 export const screenKeys = SYSTEM_SCREEN_DEFINITIONS.map(
   (screen) => screen.key,
 ) as readonly ScreenKey[];
+
+/**
+ * Screens an admin can assign to an individual employee — the matrix rows.
+ *
+ * The annotation is load-bearing: without it TypeScript infers a type predicate
+ * from the callback and narrows the result to `never`.
+ */
+export const GRANTABLE_SCREEN_DEFINITIONS: readonly SystemScreenDefinition[] =
+  SYSTEM_SCREEN_DEFINITIONS.filter((screen) => screen.grantable);
+
+export const GRANTABLE_SCREEN_KEYS = GRANTABLE_SCREEN_DEFINITIONS.map(
+  (screen) => screen.key,
+) as readonly ScreenKey[];
+
+export function isGrantableScreenKey(screenKey: string): screenKey is ScreenKey {
+  return (GRANTABLE_SCREEN_KEYS as readonly string[]).includes(screenKey);
+}
 
 export type SystemNavItem = {
   href: string;

@@ -9,7 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { UsersTable } from "@/drizzle/schemas/auth/users-table";
-import { createdAt, id } from "@/drizzle/schemas/helpers";
+import { createdAt, id, updatedAt, updatedBy } from "@/drizzle/schemas/helpers";
 
 /**
  * Operational walk-in customers (Option A — not auth users).
@@ -38,6 +38,8 @@ export const RentalCustomersTable = pgTable(
     note: text(),
     lastReservationAt: timestamp({ withTimezone: true }),
     createdAt,
+    updatedAt,
+    updatedBy,
   },
   (table) => ({
     userIdx: index("rental_customers_user_id_idx").on(table.userId),

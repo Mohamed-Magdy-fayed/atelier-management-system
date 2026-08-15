@@ -11,6 +11,7 @@ import {
   type GridFacetCounts,
   toFacetCounts,
 } from "@/features/system/shared/facets";
+import { assertScreenPermission } from "@/features/system/shared/screen-access";
 import {
   assertOperationalStaff,
   assertUserCanAccessBranch,
@@ -59,6 +60,7 @@ const dressGridSelect = {
 export async function listDresses(ctx: TRPCContext, input: ListDressesInput) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "dresses", "view");
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const whereClause = buildWhere({ ...input, branchId });
@@ -117,6 +119,7 @@ export async function exportDresses(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "dresses", "view");
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const rows = await ctx.db
@@ -144,6 +147,7 @@ export async function listDressFilterOptions(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "dresses", "view");
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   return ctx.db
@@ -169,6 +173,7 @@ export async function listDressFilterOptions(
 export async function getDressById(ctx: TRPCContext, input: DressByIdInput) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "dresses", "view");
 
   const dress = await ctx.db.query.DressesTable.findFirst({
     where: and(eq(DressesTable.id, input.id), isNull(DressesTable.deletedAt)),

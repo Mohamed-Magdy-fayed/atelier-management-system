@@ -29,15 +29,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FieldGroup, FieldSet } from "@/components/ui/field";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/features/core/auth/nextjs/components/auth-provider";
+import {
+  SCREEN_ACTIONS,
+  type ScreenPermissionMap,
+} from "@/features/core/auth/core/screen-permission-map";
 import { passwordSchema } from "@/features/core/auth/schemas";
 import { useTranslation } from "@/features/core/i18n/client";
+import { GRANTABLE_SCREEN_KEYS } from "@/features/system/registry";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { UserGridRow } from "@/integrations/trpc/routers/users";
 
 import { generatePassword } from "./generate-password";
+import { ScreenPermissionsField } from "./screen-permissions-field";
 
 const userFormSchema = z.object({
   name: z.string().trim().min(1).max(256),
@@ -46,11 +53,25 @@ const userFormSchema = z.object({
   age: z.number().int().min(0).max(150).nullable(),
   role: z.enum(["admin", "employee", "customer"]),
   branchIds: z.array(z.string().uuid()),
+  screenPermissions: z.record(
+    z.enum(GRANTABLE_SCREEN_KEYS as [string, ...string[]]),
+    z.array(z.enum(SCREEN_ACTIONS)),
+  ),
   /** Empty means "don't touch credentials"; anything else must be strong. */
   password: z.literal("").or(passwordSchema),
 });
 
-type UserFormValues = z.infer<typeof userFormSchema>;
+/**
+ * `screenPermissions` is retyped off the zod inference: the schema validates a
+ * loose `Record<string, ScreenAction[]>`, while the matrix and the engine both
+ * speak `ScreenPermissionMap` (keyed by `ScreenKey`).
+ */
+type UserFormValues = Omit<
+  z.infer<typeof userFormSchema>,
+  "screenPermissions"
+> & {
+  screenPermissions: ScreenPermissionMap;
+};
 
 export type UserFormDialogProps = {
   open: boolean;
@@ -92,6 +113,15 @@ export function UserFormDialog({
   const isAdminSession = session?.user.role === "admin";
   const canSetPassword = isAdminSession;
 
+  /**
+   * Narrower than `assignsBranches`, which also admits `admin`: admins are
+   * unrestricted by the permission engine, so offering them a matrix would be a
+   * lie. They get an explanatory Alert instead.
+   */
+  const showsScreenPermissions = isAdminSession && resolvedRole === "employee";
+  const showsAdminUnrestrictedNote =
+    isAdminSession && resolvedRole === "admin";
+
   /** Credentials to hand over after a create; also keeps the dialog open. */
   const [handover, setHandover] = useState<{
     email: string;
@@ -109,6 +139,11 @@ export function UserFormDialog({
   const userBranchIdsQuery = useQuery({
     ...trpc.users.getBranchIds.queryOptions({ id: user?.id ?? "" }),
     enabled: open && isEdit && assignsBranches && Boolean(user?.id),
+  });
+
+  const screenPermissionsQuery = useQuery({
+    ...trpc.users.getScreenPermissions.queryOptions({ id: user?.id ?? "" }),
+    enabled: open && isEdit && showsScreenPermissions && Boolean(user?.id),
   });
 
   const branchOptions = useMemo(
@@ -130,6 +165,13 @@ export function UserFormDialog({
     return [];
   }, [branchId, isEdit, userBranchIdsQuery.data]);
 
+  const initialScreenPermissions = useMemo<ScreenPermissionMap>(() => {
+    if (isEdit && screenPermissionsQuery.data) {
+      return screenPermissionsQuery.data as ScreenPermissionMap;
+    }
+    return {};
+  }, [isEdit, screenPermissionsQuery.data]);
+
   const defaultValues = useMemo<UserFormValues>(
     () => ({
       name: user?.name ?? "",
@@ -138,9 +180,10 @@ export function UserFormDialog({
       age: user?.age ?? null,
       role: resolvedRole,
       branchIds: initialBranchIds,
+      screenPermissions: initialScreenPermissions,
       password: "",
     }),
-    [initialBranchIds, resolvedRole, user],
+    [initialBranchIds, initialScreenPermissions, resolvedRole, user],
   );
 
   const form = useAppForm({
@@ -165,6 +208,11 @@ export function UserFormDialog({
         age: value.age,
         role: submittedRole,
         ...(assignsBranches ? { branchIds: value.branchIds } : {}),
+        // Omitted means "leave existing grants alone"; `{}` is a real
+        // instruction to clear them and fall back to role defaults.
+        ...(showsScreenPermissions
+          ? { screenPermissions: value.screenPermissions }
+          : {}),
         ...(password ? { password } : {}),
       };
       const action =
@@ -208,6 +256,11 @@ export function UserFormDialog({
     if (!open) return;
     if (handover) return;
     if (isEdit && userBranchIdsQuery.isPending) return;
+    // Without this the matrix renders empty for a beat and then repopulates,
+    // which reads as "this employee has no grants".
+    if (isEdit && showsScreenPermissions && screenPermissionsQuery.isPending) {
+      return;
+    }
     form.reset(defaultValues);
   }, [
     defaultValues,
@@ -215,6 +268,8 @@ export function UserFormDialog({
     handover,
     isEdit,
     open,
+    screenPermissionsQuery.isPending,
+    showsScreenPermissions,
     userBranchIdsQuery.isPending,
   ]);
 
@@ -271,7 +326,14 @@ export function UserFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md">
+      {/* The matrix is four columns wide; sm:max-w-md crushes it on desktop. */}
+      <DialogContent
+        className={
+          showsScreenPermissions && !handover
+            ? "gap-0 overflow-hidden p-0 sm:max-w-2xl"
+            : "gap-0 overflow-hidden p-0 sm:max-w-md"
+        }
+      >
         <DialogHeader className="shrink-0 px-4 pt-4">
           <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>{dialogDescription}</DialogDescription>
@@ -363,6 +425,26 @@ export function UserFormDialog({
                           />
                         )}
                       </form.AppField>
+                    ) : null}
+                    {showsScreenPermissions ? (
+                      <form.AppField name="screenPermissions">
+                        {(f) => (
+                          <ScreenPermissionsField
+                            value={f.state.value}
+                            onChange={(next) => f.handleChange(next)}
+                            disabled={pending}
+                          />
+                        )}
+                      </form.AppField>
+                    ) : null}
+                    {showsAdminUnrestrictedNote ? (
+                      <Alert>
+                        <AlertDescription>
+                          {t(
+                            "systemPages.userScreenPermissionsAdminUnrestricted",
+                          )}
+                        </AlertDescription>
+                      </Alert>
                     ) : null}
                     {canSetPassword ? (
                       <div className="space-y-2">

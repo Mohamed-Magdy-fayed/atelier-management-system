@@ -11,6 +11,7 @@ import {
   type GridFacetCounts,
   toFacetCounts,
 } from "@/features/system/shared/facets";
+import { assertScreenPermission } from "@/features/system/shared/screen-access";
 import {
   assertOperationalStaff,
   resolveListBranchId,
@@ -49,6 +50,7 @@ function expenseBaseQuery(ctx: TRPCContext) {
 export async function listExpenses(ctx: TRPCContext, input: ListExpensesInput) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "expenses", "view");
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const whereClause = buildWhere({ ...input, branchId });
@@ -110,6 +112,7 @@ export async function exportExpenses(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "expenses", "view");
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const rows = await expenseBaseQuery(ctx)
@@ -126,6 +129,7 @@ export async function getExpenseFormData(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "expenses", "view");
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const dressesWhere = branchId

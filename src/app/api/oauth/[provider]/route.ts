@@ -18,7 +18,7 @@ import {
   normalizeEmail,
 } from "@/features/core/auth/core";
 import { getUserIdTag } from "@/features/core/auth/db-cache";
-import { getPostAuthRedirect } from "@/features/core/auth/nextjs/lib/post-auth-redirect";
+import { resolvePostAuthRedirect } from "@/features/core/auth/nextjs/lib/resolve-post-auth-redirect";
 import type { PartialUser } from "@/features/core/auth/types";
 
 const OAUTH_POPUP_MODE_COOKIE = "oAuthPopupMode";
@@ -119,7 +119,7 @@ export async function GET(
     redirect("/sign-in");
   }
 
-  redirect(getPostAuthRedirect(authenticatedUser));
+  redirect(await resolvePostAuthRedirect(authenticatedUser));
 }
 
 function getOAuthCompleteUrl({
