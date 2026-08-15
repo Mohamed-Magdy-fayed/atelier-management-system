@@ -25,6 +25,7 @@ import {
   DataTableToolbar,
   DataTableViewOptions,
   getEntityColumnPinning,
+  serializeColumnFiltersForServer,
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
@@ -68,19 +69,27 @@ export function CustomersTablePage() {
   const [rowAction, setRowAction] = useState<RowAction>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
+  // Date filters travel as absolute instants anchored to the viewer's midnight.
+  // Sent as bare `YYYY-MM-DD` the server resolved them against ITS own calendar
+  // (UTC in production), so rows near a day boundary fell into the wrong day.
+  const wireColumnFilters = useMemo(
+    () => serializeColumnFiltersForServer(columnFilters),
+    [columnFilters],
+  );
+
   const listInput = useMemo(
     () => ({
       page: pagination.pageIndex + 1,
       perPage: pagination.pageSize,
       sorting,
-      columnFilters,
+      columnFilters: wireColumnFilters,
       globalFilter: globalFilter || undefined,
     }),
     [
       pagination.pageIndex,
       pagination.pageSize,
       sorting,
-      columnFilters,
+      wireColumnFilters,
       globalFilter,
     ],
   );
@@ -144,12 +153,12 @@ export function CustomersTablePage() {
       trpc.users.exportRows.queryOptions({
         role: "customer",
         sorting,
-        columnFilters,
+        columnFilters: wireColumnFilters,
         globalFilter: globalFilter || undefined,
       }),
     );
     return r.rows;
-  }, [queryClient, trpc, sorting, columnFilters, globalFilter]);
+  }, [queryClient, trpc, sorting, wireColumnFilters, globalFilter]);
 
   const closeRowAction = () => setRowAction(null);
 

@@ -18,6 +18,7 @@ import {
   DataTableViewOptions,
   EntityPageHeader,
   getEntityColumnPinning,
+  serializeColumnFiltersForServer,
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
@@ -56,18 +57,26 @@ export function RentalCustomersTablePage() {
     getEntityColumnPinning(),
   );
 
+  // Date filters travel as absolute instants anchored to the viewer's midnight.
+  // Sent as bare `YYYY-MM-DD` the server resolved them against ITS own calendar
+  // (UTC in production), so rows near a day boundary fell into the wrong day.
+  const wireColumnFilters = useMemo(
+    () => serializeColumnFiltersForServer(columnFilters),
+    [columnFilters],
+  );
+
   const listInput = useMemo(
     () => ({
       page: pagination.pageIndex + 1,
       perPage: pagination.pageSize,
       sorting,
-      columnFilters,
+      columnFilters: wireColumnFilters,
       globalFilter: globalFilter || undefined,
       branchId,
     }),
     [
       branchId,
-      columnFilters,
+      wireColumnFilters,
       globalFilter,
       pagination.pageIndex,
       pagination.pageSize,
@@ -134,14 +143,14 @@ export function RentalCustomersTablePage() {
     const result = await queryClient.fetchQuery(
       trpc.rentalCustomers.exportRows.queryOptions({
         sorting,
-        columnFilters,
+        columnFilters: wireColumnFilters,
         globalFilter: globalFilter || undefined,
         branchId,
       }),
     );
 
     return result.rows;
-  }, [branchId, columnFilters, globalFilter, queryClient, sorting, trpc]);
+  }, [branchId, wireColumnFilters, globalFilter, queryClient, sorting, trpc]);
 
   return (
     <div
