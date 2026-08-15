@@ -20,10 +20,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import type { User } from "@/drizzle/schema";
 import { SYSTEM_MOBILE_PRIMARY_SCREEN_KEYS } from "@/features/core/app-shell/lib/mobile-nav";
 import { SYSTEM_NAV_ITEMS } from "@/features/core/app-shell/lib/nav";
 import { hasPermission } from "@/features/core/auth/core/permissions";
+import type { AuthUser } from "@/features/core/auth/types";
 import { useTranslation } from "@/features/core/i18n/client";
 import { getPublicAccountDestination } from "@/features/public-catalog/lib/public-account-destination";
 import { cn } from "@/lib/utils";
@@ -37,7 +37,7 @@ function navLabelKey(
 const sheetLinkClass =
   "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium hover:bg-muted";
 
-export function SystemMobileTabBar({ user }: { user: User }) {
+export function SystemMobileTabBar({ user }: { user: AuthUser }) {
   const pathname = usePathname() ?? "/";
   const { t } = useTranslation();
 

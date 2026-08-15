@@ -20,10 +20,25 @@ export const listRentalCustomersInput = z.object({
 
 export const exportRentalCustomersInput = rentalCustomerListFilterInput;
 
+/**
+ * Correcting an existing walk-in record. There is no create/delete counterpart:
+ * customers are still born from a reservation or a CSV import, and reservations
+ * reference them, so removal is not offered from the grid.
+ */
+export const updateRentalCustomerInput = z.object({
+  id: z.string().uuid(),
+  name: z.string().trim().min(1).max(256),
+  phone: z.string().trim().min(1).max(32),
+  note: z.string().trim().max(1000).nullish(),
+});
+
 export type RentalCustomerListFilterInput = z.infer<
   typeof rentalCustomerListFilterInput
 >;
 export type ListRentalCustomersInput = z.infer<typeof listRentalCustomersInput>;
 export type ExportRentalCustomersInput = z.infer<
   typeof exportRentalCustomersInput
+>;
+export type UpdateRentalCustomerInput = z.infer<
+  typeof updateRentalCustomerInput
 >;

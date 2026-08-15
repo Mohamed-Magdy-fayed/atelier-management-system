@@ -28,6 +28,7 @@ import {
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
+import { useScreenPermission } from "@/features/core/auth/nextjs/hooks/use-screen-permission";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ExpenseGridRow } from "@/integrations/trpc/routers/expenses";
@@ -49,6 +50,7 @@ export function ExpensesTablePage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { t, locale } = useTranslation();
+  const { canCreate } = useScreenPermission("expenses");
   const branchState = useBranch();
   const branchId = branchState?.hasActiveOrg
     ? branchState.activeBranch.id
@@ -208,22 +210,24 @@ export function ExpensesTablePage() {
               <ExpensesGridFilters table={table} facets={data?.facets} />
             }
           >
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    type="button"
-                    size="icon"
-                    className="size-8"
-                    onClick={() => setCreateOpen(true)}
-                    aria-label={addLabel}
-                  >
-                    <PlusIcon className="size-3.5" />
-                  </Button>
-                }
-              />
-              <TooltipContent>{addLabel}</TooltipContent>
-            </Tooltip>
+            {canCreate ? (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      type="button"
+                      size="icon"
+                      className="size-8"
+                      onClick={() => setCreateOpen(true)}
+                      aria-label={addLabel}
+                    >
+                      <PlusIcon className="size-3.5" />
+                    </Button>
+                  }
+                />
+                <TooltipContent>{addLabel}</TooltipContent>
+              </Tooltip>
+            ) : null}
             <DataTableViewOptions table={table} />
             <DataTableExportButton
               table={table}

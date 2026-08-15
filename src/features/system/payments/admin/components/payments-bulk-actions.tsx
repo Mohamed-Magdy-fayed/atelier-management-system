@@ -9,6 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useScreenPermission } from "@/features/core/auth/nextjs/hooks/use-screen-permission";
 import { downloadCsv, rowsToCsv } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
 import type { PaymentGridRow } from "@/integrations/trpc/routers/payments";
@@ -19,6 +20,7 @@ export function PaymentsBulkActions({
   table: Table<PaymentGridRow>;
 }) {
   const { t } = useTranslation();
+  const { canView } = useScreenPermission("payments");
 
   function exportSelected() {
     const rows = table.getFilteredSelectedRowModel().rows;
@@ -50,6 +52,8 @@ export function PaymentsBulkActions({
     downloadCsv("payments-selected.csv", csv);
     table.resetRowSelection();
   }
+
+  if (!canView) return null;
 
   return (
     <Tooltip>

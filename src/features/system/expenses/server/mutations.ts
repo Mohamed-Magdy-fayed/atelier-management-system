@@ -6,6 +6,7 @@ import {
   DressesTable,
   ExpensesTable,
 } from "@/drizzle/schema";
+import { assertScreenPermission } from "@/features/system/shared/screen-access";
 import {
   assertOperationalStaff,
   assertUserCanAccessBranch,
@@ -70,6 +71,7 @@ export async function createExpense(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "expenses", "create");
   await assertUserCanAccessBranch(ctx, session, input.branchId);
   await assertLinksBelongToBranch(ctx, input.branchId, input);
 
@@ -97,6 +99,7 @@ export async function updateExpense(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "expenses", "update");
 
   const existing = await ctx.db.query.ExpensesTable.findFirst({
     where: eq(ExpensesTable.id, input.id),
@@ -135,6 +138,7 @@ export async function deleteExpense(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "expenses", "delete");
 
   const existing = await ctx.db.query.ExpensesTable.findFirst({
     where: eq(ExpensesTable.id, input.id),

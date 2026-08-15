@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 
 import { DressesTable } from "@/drizzle/schema";
+import { assertScreenPermission } from "@/features/system/shared/screen-access";
 import {
   assertDressIdsAccessible,
   assertOperationalStaff,
@@ -50,6 +51,7 @@ async function ensureUniqueActiveCode(
 export async function createDress(ctx: TRPCContext, input: DressMutationInput) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "dresses", "create");
   await assertUserCanAccessBranch(ctx, session, input.branchId);
 
   const code = normalizeCode(input.code);
@@ -81,6 +83,7 @@ export async function createDress(ctx: TRPCContext, input: DressMutationInput) {
 export async function updateDress(ctx: TRPCContext, input: DressUpdateInput) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "dresses", "update");
 
   const dress = await ctx.db.query.DressesTable.findFirst({
     columns: { id: true, branchId: true },
@@ -132,6 +135,7 @@ export async function updateDress(ctx: TRPCContext, input: DressUpdateInput) {
 export async function deleteDress(ctx: TRPCContext, input: DressDeleteInput) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "dresses", "delete");
 
   const dress = await ctx.db.query.DressesTable.findFirst({
     columns: { id: true, branchId: true },
@@ -165,6 +169,7 @@ export async function setDressActive(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "dresses", "update");
 
   const dress = await ctx.db.query.DressesTable.findFirst({
     columns: { id: true, branchId: true },
@@ -197,6 +202,7 @@ export async function bulkSetDressesActive(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "dresses", "update");
   await assertDressIdsAccessible(ctx, session, input.ids);
 
   await ctx.db
@@ -218,6 +224,7 @@ export async function bulkArchiveDresses(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "dresses", "delete");
   await assertDressIdsAccessible(ctx, session, input.ids);
 
   await ctx.db
@@ -241,6 +248,7 @@ export async function updateDressCurrentStatus(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "dresses", "update");
 
   const dress = await ctx.db.query.DressesTable.findFirst({
     columns: { id: true, branchId: true },

@@ -34,7 +34,7 @@ import {
 } from "@/features/core/auth/db-cache";
 import { validateInput } from "@/features/core/auth/nextjs/actions/helpers";
 import { getCurrentUser } from "@/features/core/auth/nextjs/currentUser";
-import { getPostAuthRedirect } from "@/features/core/auth/nextjs/lib/post-auth-redirect";
+import { resolvePostAuthRedirect } from "@/features/core/auth/nextjs/lib/resolve-post-auth-redirect";
 import type {
   AuthenticationOptionsResult,
   PartialUser,
@@ -447,7 +447,7 @@ export async function completePasskeyAuthenticationAction(
 
   await createUserSession(user, await cookies());
 
-  redirect(getPostAuthRedirect(user));
+  redirect(await resolvePostAuthRedirect(user));
 }
 
 export async function completePasskeyRegistrationAction(

@@ -1,9 +1,11 @@
 import { createTRPCRouter, protectedProcedure } from "@/integrations/trpc/init";
 
+import { updateRentalCustomer } from "./mutations";
 import { exportRentalCustomers, listRentalCustomers } from "./queries";
 import {
   exportRentalCustomersInput,
   listRentalCustomersInput,
+  updateRentalCustomerInput,
 } from "./schemas";
 
 export const rentalCustomersRouter = createTRPCRouter({
@@ -13,4 +15,7 @@ export const rentalCustomersRouter = createTRPCRouter({
   exportRows: protectedProcedure
     .input(exportRentalCustomersInput)
     .query(async ({ ctx, input }) => exportRentalCustomers(ctx, input)),
+  update: protectedProcedure
+    .input(updateRentalCustomerInput)
+    .mutation(async ({ ctx, input }) => updateRentalCustomer(ctx, input)),
 });

@@ -5,15 +5,40 @@ import z, { ZodError } from "zod";
 
 import { db } from "@/drizzle";
 import { getUserSession } from "@/features/core/auth/core";
+import type { ScreenPermissionMap } from "@/features/core/auth/core/screen-permission-map";
 import { getT } from "@/features/core/i18n/server";
+import { loadScreenPermissionMap } from "@/features/system/users/server/screen-permissions";
 import { handleDatabaseError } from "./db-error";
+
+/**
+ * Per-request loader for the caller's screen grants, memoised so a resolver that
+ * checks two screens (or a query and a mutation guard) still pays one round trip.
+ *
+ * Reads the database, not the Redis mirror: Postgres is authoritative, and a
+ * mirror edited out-of-band must never be able to widen a server-side check.
+ */
+function createScreenPermissionLoader(userId: string | undefined) {
+  let inFlight: Promise<ScreenPermissionMap> | null = null;
+
+  return () => {
+    if (!userId) return Promise.resolve<ScreenPermissionMap>({});
+    inFlight ??= loadScreenPermissionMap(db, userId);
+    return inFlight;
+  };
+}
 
 export const createTRPCContext = async () => {
   const cookieStore = await cookies();
   const session = await getUserSession(cookieStore);
   const { t } = await getT();
 
-  return { session, cookies: cookieStore, t, db };
+  return {
+    session,
+    cookies: cookieStore,
+    t,
+    db,
+    loadScreenPermissions: createScreenPermissionLoader(session?.user.id),
+  };
 };
 
 const t = initTRPC
