@@ -32,6 +32,7 @@ import {
 } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
 import { ExpenseFormDialog } from "@/features/system/expenses/admin/components";
+import { useScreenPermission } from "@/features/core/auth/nextjs/hooks/use-screen-permission";
 import { ImportButton } from "@/features/system/import/admin";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
@@ -55,6 +56,7 @@ export function DressesTablePage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { t, locale } = useTranslation();
+  const { canCreate } = useScreenPermission("dresses");
   const branchState = useBranch();
   const branchId = branchState?.hasActiveOrg
     ? branchState.activeBranch.id
@@ -202,22 +204,24 @@ export function DressesTablePage() {
               <DressesGridFilters table={table} facets={data?.facets} />
             }
           >
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <Button
-                    type="button"
-                    size="icon"
-                    className="size-8"
-                    onClick={() => setCreateOpen(true)}
-                    aria-label={addDressLabel}
-                  >
-                    <PlusIcon className="size-3.5" />
-                  </Button>
-                }
-              />
-              <TooltipContent>{addDressLabel}</TooltipContent>
-            </Tooltip>
+            {canCreate ? (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Button
+                      type="button"
+                      size="icon"
+                      className="size-8"
+                      onClick={() => setCreateOpen(true)}
+                      aria-label={addDressLabel}
+                    >
+                      <PlusIcon className="size-3.5" />
+                    </Button>
+                  }
+                />
+                <TooltipContent>{addDressLabel}</TooltipContent>
+              </Tooltip>
+            ) : null}
             <DataTableViewOptions table={table} />
             <DataTableExportButton
               table={table}
@@ -233,7 +237,8 @@ export function DressesTablePage() {
                 createdAt: row.createdAt,
               })}
             />
-            <ImportButton entitySlug="dresses" />
+            {/* Import writes rows, so it needs the same grant as Add. */}
+            {canCreate ? <ImportButton entitySlug="dresses" /> : null}
           </DataTableToolbar>
         }
         footer={<DataTablePagination table={table} />}

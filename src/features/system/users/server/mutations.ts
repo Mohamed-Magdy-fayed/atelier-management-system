@@ -1,12 +1,16 @@
 import { eq, inArray } from "drizzle-orm";
 
 import { UsersTable } from "@/drizzle/schema";
+import { writeScreenPermissionsCache } from "@/features/core/auth/core/screen-permission-cache";
+import type { ScreenPermissionMap } from "@/features/core/auth/core/screen-permission-map";
+import { revalidateAuthCache } from "@/features/core/auth/db-cache";
 
 import {
   resolveBranchIds,
   syncUserBranchMemberships,
 } from "./branch-memberships";
 import { setUserPassword } from "./credentials";
+import { syncUserScreenPermissions } from "./screen-permissions";
 import type {
   BulkSetVerifiedInput,
   SoftDeleteInput,
@@ -21,6 +25,25 @@ import {
   type TRPCContext,
 } from "./shared";
 
+/**
+ * Pushes freshly-saved grants out to the places that read them.
+ *
+ * The Redis mirror is **overwritten, never deleted**: a delete would leave a
+ * window where the proxy sees a miss and falls back to role defaults — briefly
+ * granting more than the admin just saved. `revalidateAuthCache` busts the
+ * `"use cache"` read behind `getAuth()`, which shares the same user tag.
+ *
+ * The target's own session is untouched, and does not need to be: their next
+ * request re-reads both the mirror and the database.
+ */
+async function publishScreenPermissions(
+  userId: string,
+  map: ScreenPermissionMap,
+) {
+  await writeScreenPermissionsCache(userId, map);
+  revalidateAuthCache({ id: userId });
+}
+
 export async function createUser(ctx: TRPCContext, input: UserMutationInput) {
   const session = getRequiredSession(ctx);
   assertStaffRole(session.user.role);
@@ -28,6 +51,11 @@ export async function createUser(ctx: TRPCContext, input: UserMutationInput) {
   // a grant, and grants do not happen through this API.
   assertNotGrantingAdmin(input.role);
   if (input.password !== undefined) {
+    assertAdminRole(session.user.role);
+  }
+  // Handing out screen access is admin-only, for the same reason as passwords:
+  // an employee editing a peer must not be able to widen anyone's access.
+  if (input.screenPermissions !== undefined) {
     assertAdminRole(session.user.role);
   }
 
@@ -56,8 +84,18 @@ export async function createUser(ctx: TRPCContext, input: UserMutationInput) {
       await syncUserBranchMemberships(trx, row.id, branchIds);
     }
 
+    // Admins are unrestricted by the engine, so storing rows for one would be
+    // dead data that later reads have to remember to ignore.
+    if (input.screenPermissions !== undefined && input.role === "employee") {
+      await syncUserScreenPermissions(trx, row.id, input.screenPermissions);
+    }
+
     return row.id;
   });
+
+  if (input.screenPermissions !== undefined && input.role === "employee") {
+    await publishScreenPermissions(id, input.screenPermissions);
+  }
 
   return { id };
 }
@@ -78,7 +116,11 @@ export async function updateUser(ctx: TRPCContext, input: UserUpdateInput) {
 
   // Editing an existing admin is admin-only too — otherwise an employee could
   // change an admin's email and lock them out of their own account.
-  if (target?.role === "admin" || input.password !== undefined) {
+  if (
+    target?.role === "admin" ||
+    input.password !== undefined ||
+    input.screenPermissions !== undefined
+  ) {
     assertAdminRole(session.user.role);
   }
 
@@ -112,6 +154,17 @@ export async function updateUser(ctx: TRPCContext, input: UserUpdateInput) {
     ) {
       await syncUserBranchMemberships(ctx.db, input.id, branchIds);
     }
+  }
+
+  // Omitted means "don't touch", the same contract as `password`. An empty map
+  // is a real instruction: clear every row and fall back to role defaults.
+  if (input.screenPermissions !== undefined && input.role === "employee") {
+    const stored = await syncUserScreenPermissions(
+      ctx.db,
+      input.id,
+      input.screenPermissions,
+    );
+    await publishScreenPermissions(input.id, stored);
   }
 
   return { id: input.id };

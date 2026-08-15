@@ -10,6 +10,7 @@ import {
 } from "@/drizzle/schema";
 import { LOCALE_COOKIE_NAME } from "@/features/core/i18n/lib";
 import { refreshReservationStats } from "@/features/system/shared/reservation-stats";
+import { assertScreenPermission } from "@/features/system/shared/screen-access";
 import {
   assertOperationalStaff,
   assertReservationIdsAccessible,
@@ -181,6 +182,7 @@ export async function generateReservationCodeForBranch(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "reservations", "create");
   await assertUserCanAccessBranch(ctx, session, input.branchId);
 
   const startOfDay = new Date();
@@ -218,6 +220,7 @@ export async function createReservation(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "reservations", "create");
   await assertUserCanAccessBranch(ctx, session, input.branchId);
 
   if (input.depositPaid < 100) {
@@ -393,6 +396,7 @@ export async function updateReservation(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "reservations", "update");
 
   const existing = await ctx.db.query.ReservationsTable.findFirst({
     // dressId/customerId are read so the summary on whoever the booking is
@@ -483,6 +487,7 @@ export async function updateReservationStatus(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "reservations", "update");
 
   const existing = await ctx.db.query.ReservationsTable.findFirst({
     columns: { id: true, branchId: true, dressId: true, customerId: true },
@@ -525,6 +530,10 @@ export async function collectReservationPayment(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  // Mapped to reservations:update rather than payments:create — it is a
+  // reservation row action, and the Payments grid has no create affordance at
+  // all, so gating it there would make taking money undelegatable.
+  await assertScreenPermission(ctx, session, "reservations", "update");
 
   const reservation = await ctx.db.query.ReservationsTable.findFirst({
     where: and(
@@ -580,7 +589,10 @@ export async function deleteReservation(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "reservations", "delete");
 
+  // Additive, not a replacement: a `delete` grant does not promote an employee
+  // past the existing admin-only rule.
   if (session.user.role !== "admin") {
     throw new TRPCError({
       code: "FORBIDDEN",
@@ -626,6 +638,7 @@ export async function bulkUpdateReservationStatus(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "reservations", "update");
   await assertReservationIdsAccessible(ctx, session, input.ids);
 
   const affected = await loadReservationOwners(ctx, input.ids);
@@ -654,7 +667,9 @@ export async function bulkDeleteReservations(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "reservations", "delete");
 
+  // Additive — the admin-only rule stands regardless of the grant.
   if (session.user.role !== "admin") {
     throw new TRPCError({
       code: "FORBIDDEN",

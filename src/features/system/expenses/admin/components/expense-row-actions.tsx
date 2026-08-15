@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useScreenPermission } from "@/features/core/auth/nextjs/hooks/use-screen-permission";
 import { useTranslation } from "@/features/core/i18n/client";
 import type { ExpenseGridRow } from "@/integrations/trpc/routers/expenses";
 
@@ -26,6 +27,9 @@ type ExpenseRowActionsProps = {
 
 export function ExpenseRowActions({ row, setRowAction }: ExpenseRowActionsProps) {
   const { t } = useTranslation();
+  const { canUpdate, canDelete } = useScreenPermission("expenses");
+
+  if (!canUpdate && !canDelete) return null;
 
   return (
     <DropdownMenu>
@@ -42,18 +46,26 @@ export function ExpenseRowActions({ row, setRowAction }: ExpenseRowActionsProps)
         }
       />
       <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem onClick={() => setRowAction({ row, variant: "edit" })}>
-          <EditIcon className="size-3.5" />
-          {String(t("common.edit"))}
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          onClick={() => setRowAction({ row, variant: "delete" })}
-        >
-          <Trash2Icon className="size-3.5" />
-          {String(t("common.delete"))}
-        </DropdownMenuItem>
+        {canUpdate ? (
+          <DropdownMenuItem
+            onClick={() => setRowAction({ row, variant: "edit" })}
+          >
+            <EditIcon className="size-3.5" />
+            {String(t("common.edit"))}
+          </DropdownMenuItem>
+        ) : null}
+        {canDelete ? (
+          <>
+            {canUpdate ? <DropdownMenuSeparator /> : null}
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => setRowAction({ row, variant: "delete" })}
+            >
+              <Trash2Icon className="size-3.5" />
+              {String(t("common.delete"))}
+            </DropdownMenuItem>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

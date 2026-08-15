@@ -11,8 +11,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import type { User } from "@/drizzle/schema";
 import { hasPermission } from "@/features/core/auth/core/permissions";
+import type { AuthUser } from "@/features/core/auth/types";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useBrandName } from "@/features/system/settings/client/branding-provider";
 
@@ -22,7 +22,8 @@ import { AppSidebar } from "./app-sidebar";
 import { SystemMobileTabBar } from "./system-mobile-tab-bar";
 
 type AppShellLayoutProps = {
-  user: User;
+  /** Carries `screenPermissions`, so nav filtering respects per-user grants. */
+  user: AuthUser;
   /** Resolved from the `sidebar_state` cookie on the server. */
   defaultSidebarOpen?: boolean;
   children: ReactNode;

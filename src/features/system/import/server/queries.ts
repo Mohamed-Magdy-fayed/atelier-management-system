@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { and, asc, count, desc, eq } from "drizzle-orm";
 
 import { ImportJobRowsTable, ImportJobsTable } from "@/drizzle/schema";
+import { assertScreenPermissionForEntitySlug } from "@/features/system/shared/screen-access";
 import { assertOperationalStaff } from "@/features/system/shared/staff-access";
 
 import type {
@@ -28,6 +29,14 @@ export async function getImportJob(ctx: TRPCContext, input: ImportJobIdInput) {
   if (job.createdBy !== session.user.id && session.user.role !== "admin") {
     throw new TRPCError({ code: "FORBIDDEN" });
   }
+
+  // You can only inspect an import of an entity you could have started.
+  await assertScreenPermissionForEntitySlug(
+    ctx,
+    session,
+    job.entitySlug,
+    "create",
+  );
 
   return job;
 }

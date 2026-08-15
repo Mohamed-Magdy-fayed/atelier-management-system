@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { ReservationStatus } from "@/drizzle/schemas/system/reservations-table";
 import { reservationStatuses } from "@/drizzle/schemas/system/reservations-table";
+import { useScreenPermission } from "@/features/core/auth/nextjs/hooks/use-screen-permission";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { useTRPC } from "@/integrations/trpc/client";
@@ -73,6 +74,10 @@ export function ReservationRowActions({ row }: ReservationRowActionsProps) {
     trpc.reservations.updateStatus.mutationOptions(),
   );
 
+  // `collectPayment` is mapped to reservations:update, not payments:create — it
+  // is a reservation row action, and the Payments grid offers no create at all.
+  const { canView, canUpdate, canDelete } = useScreenPermission("reservations");
+
   const collectDisabled =
     row.totalPrice <= (row.depositPaid || 0) + (row.discount || 0);
 
@@ -97,6 +102,8 @@ export function ReservationRowActions({ row }: ReservationRowActionsProps) {
       // surfaced by toast
     }
   }
+
+  if (!canView && !canUpdate && !canDelete) return null;
 
   return (
     <>
@@ -143,53 +150,65 @@ export function ReservationRowActions({ row }: ReservationRowActionsProps) {
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuGroup>
             <DropdownMenuLabel>{String(t("common.actions"))}</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => setInfoOpen(true)}>
-              <InfoIcon className="size-3.5" />
-              {String(t("common.info"))}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setReceiptOpen(true)}>
-              <ReceiptTextIcon className="size-3.5" />
-              {String(t("systemPages.reservationsReservationReceipt"))}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={row.status !== "reserved"}
-              onClick={() => setEditOpen(true)}
-            >
-              <Edit2Icon className="size-3.5" />
-              {String(t("common.edit"))}
-            </DropdownMenuItem>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <ArrowUpRightIcon className="size-3.5" />
-                {String(t("systemPages.reservationsUpdatedStatus"))}
-              </DropdownMenuSubTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuSubContent>
-                  {reservationStatuses.map((status) => (
-                    <DropdownMenuItem
-                      key={status}
-                      onClick={() => void handleStatusChange(status)}
-                    >
-                      {String(t(statusLabelKey(status)))}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuPortal>
-            </DropdownMenuSub>
-            <DropdownMenuItem
-              disabled={collectDisabled}
-              onClick={() => setPaymentOpen(true)}
-            >
-              <DollarSignIcon className="size-3.5" />
-              {String(t("systemPages.reservationsCollectPayment"))}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setDeleteOpen(true)}>
-              <Trash2Icon className="size-3.5 text-destructive" />
-              <span className="text-destructive">
-                {String(t("common.delete"))}
-              </span>
-            </DropdownMenuItem>
+            {canView ? (
+              <>
+                <DropdownMenuItem onClick={() => setInfoOpen(true)}>
+                  <InfoIcon className="size-3.5" />
+                  {String(t("common.info"))}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setReceiptOpen(true)}>
+                  <ReceiptTextIcon className="size-3.5" />
+                  {String(t("systemPages.reservationsReservationReceipt"))}
+                </DropdownMenuItem>
+              </>
+            ) : null}
+            {canUpdate ? (
+              <>
+                <DropdownMenuItem
+                  disabled={row.status !== "reserved"}
+                  onClick={() => setEditOpen(true)}
+                >
+                  <Edit2Icon className="size-3.5" />
+                  {String(t("common.edit"))}
+                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <ArrowUpRightIcon className="size-3.5" />
+                    {String(t("systemPages.reservationsUpdatedStatus"))}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      {reservationStatuses.map((status) => (
+                        <DropdownMenuItem
+                          key={status}
+                          onClick={() => void handleStatusChange(status)}
+                        >
+                          {String(t(statusLabelKey(status)))}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+                <DropdownMenuItem
+                  disabled={collectDisabled}
+                  onClick={() => setPaymentOpen(true)}
+                >
+                  <DollarSignIcon className="size-3.5" />
+                  {String(t("systemPages.reservationsCollectPayment"))}
+                </DropdownMenuItem>
+              </>
+            ) : null}
+            {canDelete ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setDeleteOpen(true)}>
+                  <Trash2Icon className="size-3.5 text-destructive" />
+                  <span className="text-destructive">
+                    {String(t("common.delete"))}
+                  </span>
+                </DropdownMenuItem>
+              </>
+            ) : null}
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>

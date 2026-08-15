@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 import { userRoleValues } from "@/drizzle/schema";
+import { SCREEN_ACTIONS } from "@/features/core/auth/core/screen-permission-map";
 import { passwordSchema } from "@/features/core/auth/schemas";
+import { GRANTABLE_SCREEN_KEYS } from "@/features/system/registry";
 
 export const listEmployeesInput = z.object({
   /** @deprecated Prefer `branchIds`. Kept for active-branch shortcuts. */
@@ -56,6 +58,16 @@ export const commitImportInput = z.object({
 
 export const userBranchIdsSchema = z.array(z.string().uuid());
 
+/**
+ * Per-screen grants, keyed by screen. Only grantable screens are accepted —
+ * `branches`, `employee` and `settings` stay admin-only on the server, so a row
+ * for one of them would be stored and then ignored.
+ */
+export const screenPermissionsSchema = z.record(
+  z.enum(GRANTABLE_SCREEN_KEYS as [string, ...string[]]),
+  z.array(z.enum(SCREEN_ACTIONS)),
+);
+
 /** Audit dialogs resolve at most three actors (created/updated/deleted). */
 export const resolveActorsInput = z.object({
   ids: z.array(z.string().uuid()).max(8),
@@ -76,6 +88,12 @@ export const userMutationSchema = z.object({
   /** @deprecated Prefer `branchIds`. Kept for single-branch create shortcuts. */
   branchId: z.string().uuid().optional(),
   branchIds: userBranchIdsSchema.optional(),
+  /**
+   * Per-screen grants. Admin-only (see `assertAdminRole`). Omit to leave the
+   * user's existing grants untouched; send `{}` to clear them, which returns the
+   * account to its role defaults.
+   */
+  screenPermissions: screenPermissionsSchema.optional(),
 });
 
 export const userIdInput = z.object({

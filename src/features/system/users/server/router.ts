@@ -14,6 +14,7 @@ import {
   listEmployees,
   resolveActors,
 } from "./queries";
+import { getUserScreenPermissions } from "./screen-permissions";
 import {
   bulkSetVerifiedInput,
   commitImportInput,
@@ -35,6 +36,9 @@ export const usersRouter = createTRPCRouter({
   getBranchIds: protectedProcedure
     .input(userIdInput)
     .query(async ({ ctx, input }) => getUserBranchIds(ctx, input.id)),
+  getScreenPermissions: protectedProcedure
+    .input(userIdInput)
+    .query(async ({ ctx, input }) => getUserScreenPermissions(ctx, input.id)),
   listEmployees: protectedProcedure
     .input(listEmployeesInput)
     .query(async ({ ctx, input }) => listEmployees(ctx, input)),

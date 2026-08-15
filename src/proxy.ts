@@ -4,9 +4,13 @@ import {
   hasPermission,
   updateUserSessionExpiration,
 } from "@/features/core/auth/core";
+import { readScreenPermissionsCache } from "@/features/core/auth/core/screen-permission-cache";
 import { PUBLIC_SITE_PATHS } from "@/features/public-catalog/lib/public-tabs";
 import { getProtectedScreenDefinitionByPathname } from "@/features/system/registry";
 import { env } from "./env/server";
+
+/** Lets the system layout re-check the screen against the database. */
+export const PATHNAME_HEADER = "x-pathname";
 
 const authRoutes = [
   "/sign-in",
@@ -47,15 +51,36 @@ async function middlewareAuth(request: NextRequest) {
       return NextResponse.next();
     } else {
       const screen = getProtectedScreenDefinitionByPathname(pathname);
+
+      // Only employees can carry per-user grants, so admins and customers skip
+      // the extra Upstash round trip entirely.
+      //
+      // On a cache miss this falls back to role defaults for one request. That
+      // is deliberate — the proxy is an optimistic check and must not lock
+      // people out on a Redis blip — and it is backstopped by the layout gate in
+      // (system-pages)/layout.tsx, which reads the database and also repairs the
+      // mirror.
+      const user =
+        session.user.role === "employee"
+          ? {
+              ...session.user,
+              screenPermissions: await readScreenPermissionsCache(
+                session.user.id,
+              ),
+            }
+          : session.user;
+
       if (
         !screen ||
-        !hasPermission(session.user, "screens", "view", {
+        !hasPermission(user, "screens", "view", {
           screenKey: screen.key,
         })
       ) {
         return NextResponse.rewrite(new URL("/unauthorized", request.url));
       } else {
-        return NextResponse.next();
+        const headers = new Headers(request.headers);
+        headers.set(PATHNAME_HEADER, pathname);
+        return NextResponse.next({ request: { headers } });
       }
     }
   }

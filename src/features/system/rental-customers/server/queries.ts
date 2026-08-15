@@ -2,6 +2,7 @@ import { and, count, eq } from "drizzle-orm";
 
 import { RentalCustomersTable, ReservationsTable } from "@/drizzle/schema";
 import { countableReservation } from "@/features/system/shared/reservation-scope";
+import { assertScreenPermission } from "@/features/system/shared/screen-access";
 import {
   assertOperationalStaff,
   resolveListBranchId,
@@ -24,6 +25,7 @@ const rentalCustomerGridSelect = {
   id: RentalCustomersTable.id,
   name: RentalCustomersTable.name,
   phone: RentalCustomersTable.phone,
+  note: RentalCustomersTable.note,
   reservationsCount: RESERVATIONS_COUNT_EXPR,
   createdAt: RentalCustomersTable.createdAt,
   lastReservationAt: RentalCustomersTable.lastReservationAt,
@@ -53,6 +55,7 @@ export async function listRentalCustomers(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "customers", "view");
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const whereClause = buildWhere({ ...input, branchId });
@@ -92,6 +95,7 @@ export async function exportRentalCustomers(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "customers", "view");
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const rows = await ctx.db

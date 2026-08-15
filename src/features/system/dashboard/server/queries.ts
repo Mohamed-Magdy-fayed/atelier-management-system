@@ -33,6 +33,7 @@ import {
   OWING_STATUSES,
   remainingBalanceSql,
 } from "@/features/system/shared/reservation-scope";
+import { assertScreenPermission } from "@/features/system/shared/screen-access";
 import {
   assertOperationalStaff,
   resolveListBranchId,
@@ -67,6 +68,7 @@ export async function getDashboardData(
 ): Promise<DashboardData> {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "dashboard", "view");
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
   const dates = buildDashboardDateContext();
   const { rangeStart, rangeEnd } = parseDashboardRange(input, dates);

@@ -23,18 +23,28 @@ import {
   useTableUrlState,
 } from "@/features/core/data-table";
 import { useTranslation } from "@/features/core/i18n/client";
+import { useScreenPermission } from "@/features/core/auth/nextjs/hooks/use-screen-permission";
 import { ImportButton } from "@/features/system/import/admin";
 import { useTRPC } from "@/integrations/trpc/client";
+import type { RentalCustomerGridRow } from "@/integrations/trpc/routers/rental-customers";
 
 import {
   buildRentalCustomerColumns,
+  RentalCustomerFormDialog,
+  type RentalCustomerRowActionVariant,
   RentalCustomersGridFilters,
 } from "./components";
+
+type RowAction = {
+  row: RentalCustomerGridRow;
+  variant: RentalCustomerRowActionVariant;
+} | null;
 
 export function RentalCustomersTablePage() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { t, locale } = useTranslation();
+  const { canCreate } = useScreenPermission("customers");
   const branchState = useBranch();
   const branchId = branchState?.hasActiveOrg
     ? branchState.activeBranch.id
@@ -51,6 +61,7 @@ export function RentalCustomersTablePage() {
     setGlobalFilter,
   } = useTableUrlState({ page: 1, perPage: 20 });
 
+  const [rowAction, setRowAction] = useState<RowAction>(null);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnPinning, setColumnPinning] = useState<ColumnPinningState>(() =>
@@ -121,7 +132,7 @@ export function RentalCustomersTablePage() {
   );
 
   const columns = useMemo(
-    () => buildRentalCustomerColumns({ locale, t }),
+    () => buildRentalCustomerColumns({ locale, setRowAction, t }),
     [locale, t],
   );
 
@@ -182,10 +193,19 @@ export function RentalCustomersTablePage() {
                 createdAt: row.createdAt,
               })}
             />
-            <ImportButton entitySlug="customers" />
+            {/* Import writes rows, so it needs the create grant. */}
+            {canCreate ? <ImportButton entitySlug="customers" /> : null}
           </DataTableToolbar>
         }
         footer={<DataTablePagination table={table} />}
+      />
+
+      <RentalCustomerFormDialog
+        open={rowAction?.variant === "edit"}
+        onOpenChange={(open) => {
+          if (!open) setRowAction(null);
+        }}
+        customer={rowAction?.variant === "edit" ? rowAction.row : null}
       />
     </div>
   );

@@ -471,6 +471,16 @@ export default {
       "Walk-in customers for the active branch. They are not login accounts—manage staff access under Employees.",
     customersReservationsCount: "Reservations",
     customerLastReservationAt: "Last reservation",
+    customersNote: "Note",
+    editCustomer: "Edit customer",
+    editCustomerDescription:
+      "Correct a walk-in customer's details. Reservations already booked keep pointing at this record.",
+    customerUpdated: "Customer updated.",
+    customerSaveFailed: "Could not save the customer.",
+    customerNotFound: "Customer not found.",
+    customerPhoneInvalid: "Enter a valid phone number.",
+    customerPhoneDuplicate:
+      "Another customer already uses this phone number, even if it is written differently.",
     branchesTitle: "Branches",
     branchesLead:
       "Manage operational branches, keep ownership clear, and review branch coverage from one admin screen.",
@@ -950,6 +960,22 @@ export default {
     userAssignedBranches: "Assigned branches",
     userAssignedBranchesPlaceholder: "Select branches…",
     userBranchesRequired: "Assign at least one branch for this user.",
+    userScreenPermissions: "Screen permissions",
+    userScreenPermissionsHint:
+      "Leave every box unchecked to keep the default employee access. Tick anything and this becomes the complete list — screens with nothing ticked are hidden.",
+    userScreenPermissionsAdminUnrestricted:
+      "Administrators always have full access to every screen.",
+    userScreenPermissionsScreenColumn: "Screen",
+    userScreenPermissionsSelectAllRow: "Select all for this screen",
+    userScreenPermissionsClearAll: "Clear all",
+    screenActionView: "View",
+    screenActionCreate: "Create",
+    screenActionUpdate: "Edit",
+    screenActionDelete: "Delete",
+    screenPermissionDenied:
+      "You do not have permission to perform this action on this screen.",
+    screenPermissionDeniedScreen:
+      "You do not have permission to open this screen.",
     roleEmployee: "Employee",
     roleCustomer: "Customer",
     userRole: "Role",

@@ -2,17 +2,26 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { DataTableColumnHeader } from "@/features/core/data-table";
+import {
+  createEntityActionsColumn,
+  DataTableColumnHeader,
+} from "@/features/core/data-table";
 import type { useTranslation } from "@/features/core/i18n/client";
 import type { RentalCustomerGridRow } from "@/integrations/trpc/routers/rental-customers";
+
+import {
+  RentalCustomerRowActions,
+  type SetRentalCustomerRowAction,
+} from "./rental-customer-row-actions";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
 export function buildRentalCustomerColumns(opts: {
   locale: string;
+  setRowAction: SetRentalCustomerRowAction;
   t: Translate;
 }): ColumnDef<RentalCustomerGridRow>[] {
-  const { locale, t } = opts;
+  const { locale, setRowAction, t } = opts;
   const dateFmt = new Intl.DateTimeFormat(locale === "ar" ? "ar" : "en", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -77,5 +86,15 @@ export function buildRentalCustomerColumns(opts: {
           ? dateFmt.format(new Date(row.original.createdAt))
           : "—",
     },
+    createEntityActionsColumn<RentalCustomerGridRow>({
+      t,
+      size: 48,
+      cell: ({ row }) => (
+        <RentalCustomerRowActions
+          row={row.original}
+          setRowAction={setRowAction}
+        />
+      ),
+    }),
   ];
 }

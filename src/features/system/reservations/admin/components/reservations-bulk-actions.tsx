@@ -29,6 +29,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { reservationStatuses } from "@/drizzle/schemas/system/reservations-table";
+import { useScreenPermission } from "@/features/core/auth/nextjs/hooks/use-screen-permission";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { useTRPC } from "@/integrations/trpc/client";
@@ -68,6 +69,8 @@ export function ReservationsBulkActions({
   const bulkDeleteMut = useMutation(
     trpc.reservations.bulkDelete.mutationOptions(),
   );
+
+  const { canUpdate, canDelete } = useScreenPermission("reservations");
 
   const ids = selectedIds(table);
   const pending = bulkStatusMut.isPending || bulkDeleteMut.isPending;
@@ -134,61 +137,65 @@ export function ReservationsBulkActions({
 
   return (
     <>
-      <DropdownMenu>
+      {canUpdate ? (
+        <DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      disabled={pending || !ids.length}
+                      aria-label={String(
+                        t("systemPages.reservationsUpdatedStatus"),
+                      )}
+                    >
+                      <CheckCircle2Icon className="size-3.5" />
+                    </Button>
+                  }
+                />
+              }
+            />
+            <TooltipContent>
+              {String(t("systemPages.reservationsUpdatedStatus"))}
+            </TooltipContent>
+          </Tooltip>
+          <DropdownMenuContent align="center">
+            {reservationStatuses.map((status) => (
+              <DropdownMenuItem
+                key={status}
+                onClick={() => void bulkUpdateStatus(status)}
+              >
+                {String(t(statusLabelKey(status)))}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
+
+      {canDelete ? (
         <Tooltip>
           <TooltipTrigger
             render={
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    disabled={pending || !ids.length}
-                    aria-label={String(
-                      t("systemPages.reservationsUpdatedStatus"),
-                    )}
-                  >
-                    <CheckCircle2Icon className="size-3.5" />
-                  </Button>
-                }
-              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                disabled={pending || !ids.length}
+                onClick={() => setDeleteOpen(true)}
+                aria-label={String(t("common.delete"))}
+              >
+                <Trash2Icon className="size-3.5" />
+              </Button>
             }
           />
-          <TooltipContent>
-            {String(t("systemPages.reservationsUpdatedStatus"))}
-          </TooltipContent>
+          <TooltipContent>{String(t("common.delete"))}</TooltipContent>
         </Tooltip>
-        <DropdownMenuContent align="center">
-          {reservationStatuses.map((status) => (
-            <DropdownMenuItem
-              key={status}
-              onClick={() => void bulkUpdateStatus(status)}
-            >
-              {String(t(statusLabelKey(status)))}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-              disabled={pending || !ids.length}
-              onClick={() => setDeleteOpen(true)}
-              aria-label={String(t("common.delete"))}
-            >
-              <Trash2Icon className="size-3.5" />
-            </Button>
-          }
-        />
-        <TooltipContent>{String(t("common.delete"))}</TooltipContent>
-      </Tooltip>
+      ) : null}
 
       <AlertDialog onOpenChange={setDeleteOpen} open={deleteOpen}>
         <AlertDialogContent>

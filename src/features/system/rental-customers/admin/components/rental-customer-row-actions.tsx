@@ -1,6 +1,6 @@
 "use client";
 
-import { InfoIcon, MoreHorizontalIcon } from "lucide-react";
+import { EditIcon, MoreHorizontalIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,28 +11,31 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useScreenPermission } from "@/features/core/auth/nextjs/hooks/use-screen-permission";
 import { useTranslation } from "@/features/core/i18n/client";
-import type { PaymentGridRow } from "@/integrations/trpc/routers/payments";
+import type { RentalCustomerGridRow } from "@/integrations/trpc/routers/rental-customers";
 
-export type PaymentRowActionVariant = "info";
+export type RentalCustomerRowActionVariant = "edit";
 
-export type SetPaymentRowAction = (
-  next: { row: PaymentGridRow; variant: PaymentRowActionVariant } | null,
+export type SetRentalCustomerRowAction = (
+  next: {
+    row: RentalCustomerGridRow;
+    variant: RentalCustomerRowActionVariant;
+  } | null,
 ) => void;
 
-type PaymentRowActionsProps = {
-  row: PaymentGridRow;
-  setRowAction: SetPaymentRowAction;
+type RentalCustomerRowActionsProps = {
+  row: RentalCustomerGridRow;
+  setRowAction: SetRentalCustomerRowAction;
 };
 
-export function PaymentRowActions({
+export function RentalCustomerRowActions({
   row,
   setRowAction,
-}: PaymentRowActionsProps) {
+}: RentalCustomerRowActionsProps) {
   const { t } = useTranslation();
-  const { canView } = useScreenPermission("payments");
+  const { canUpdate } = useScreenPermission("customers");
 
-  // Info is the only action on this grid, so no view grant means no menu.
-  if (!canView) return null;
+  // Edit is the only action on this grid, so no update grant means no menu.
+  if (!canUpdate) return null;
 
   return (
     <DropdownMenu>
@@ -49,11 +52,9 @@ export function PaymentRowActions({
         }
       />
       <DropdownMenuContent align="end" className="w-40">
-        <DropdownMenuItem
-          onClick={() => setRowAction({ row, variant: "info" })}
-        >
-          <InfoIcon className="size-3.5" />
-          {String(t("common.info"))}
+        <DropdownMenuItem onClick={() => setRowAction({ row, variant: "edit" })}>
+          <EditIcon className="size-3.5" />
+          {String(t("common.edit"))}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

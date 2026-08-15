@@ -1,6 +1,7 @@
 import type z from "zod";
 
 import type { OAuthProvider, User } from "@/drizzle/schema";
+import type { ScreenPermissionMap } from "@/features/core/auth/core/screen-permission-map";
 import type { FullBranch } from "@/features/core/auth/nextjs/actions";
 import type {
   createBranchSchema,
@@ -10,7 +11,25 @@ import type {
 } from "./schemas";
 
 export type SessionPayload = z.infer<typeof sessionSchema>;
-export type PartialUser = z.infer<typeof sessionSchema>["user"];
+export type SessionUser = z.infer<typeof sessionSchema>["user"];
+
+/**
+ * The session's user, plus this user's explicit screen grants when the caller
+ * was able to load them.
+ *
+ * `screenPermissions` is optional because not every producer can reach the
+ * database (the proxy reads a Redis mirror and may miss). Absent means "unknown"
+ * and the permission engine falls back to role defaults — see
+ * `ScreenPermissionMap`.
+ */
+export type PartialUser = SessionUser & {
+  screenPermissions?: ScreenPermissionMap | null;
+};
+
+export type AuthUser = User & {
+  screenPermissions?: ScreenPermissionMap | null;
+};
+
 export type AuthState =
   | {
       isAuthenticated: false;
@@ -18,7 +37,7 @@ export type AuthState =
     }
   | {
       isAuthenticated: true;
-      session: { user: User; hasPassword: boolean };
+      session: { user: AuthUser; hasPassword: boolean };
     };
 export type BranchState =
   | {

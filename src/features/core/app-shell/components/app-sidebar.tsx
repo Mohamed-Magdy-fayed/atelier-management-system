@@ -19,8 +19,8 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
-import type { User } from "@/drizzle/schema";
 import { hasPermission } from "@/features/core/auth/core/permissions";
+import type { AuthUser } from "@/features/core/auth/types";
 import { AuthManager } from "@/features/core/auth/nextjs/components/auth-manager";
 import { BranchManager } from "@/features/core/auth/nextjs/components/branch-manager";
 import { useTranslation } from "@/features/core/i18n/client";
@@ -29,14 +29,14 @@ import type { SystemNavItem } from "../lib/nav";
 import { SYSTEM_NAV_ITEMS } from "../lib/nav";
 
 type AppSidebarProps = {
-  user: User;
+  user: AuthUser;
 };
 
 function navLabelKey(translationKey: SystemNavItem["translationKey"]) {
   return `systemPages.${translationKey}` as const;
 }
 
-function userInitials(user: User): string {
+function userInitials(user: AuthUser): string {
   const name = user.name?.trim();
   if (name) {
     const parts = name.split(/\s+/).filter(Boolean);

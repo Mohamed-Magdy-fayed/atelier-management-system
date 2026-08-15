@@ -12,6 +12,7 @@ import {
   type GridFacetCounts,
   toFacetCounts,
 } from "@/features/system/shared/facets";
+import { assertScreenPermission } from "@/features/system/shared/screen-access";
 import {
   assertOperationalStaff,
   resolveListBranchId,
@@ -97,6 +98,7 @@ function paymentFacetQuery(ctx: TRPCContext, key: PgColumn) {
 export async function listPayments(ctx: TRPCContext, input: ListPaymentsInput) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "payments", "view");
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const whereClause = buildWhere({ ...input, branchId });
@@ -151,6 +153,7 @@ export async function exportPayments(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "payments", "view");
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const rows = await paymentListQuery(ctx)

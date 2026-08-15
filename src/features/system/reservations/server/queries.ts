@@ -10,6 +10,7 @@ import {
   type GridFacetCounts,
   toFacetCounts,
 } from "@/features/system/shared/facets";
+import { assertScreenPermission } from "@/features/system/shared/screen-access";
 import {
   assertOperationalStaff,
   assertUserCanAccessBranch,
@@ -72,6 +73,7 @@ export async function listReservations(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "reservations", "view");
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const whereClause = buildWhere({ ...input, branchId });
@@ -132,6 +134,7 @@ export async function exportReservations(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "reservations", "view");
   const branchId = await resolveListBranchId(ctx, session, input.branchId);
 
   const rows = await reservationListQuery(ctx)
@@ -150,6 +153,7 @@ export async function getReservationById(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "reservations", "view");
 
   const reservation = await ctx.db.query.ReservationsTable.findFirst({
     where: eq(ReservationsTable.id, input.id),
@@ -226,6 +230,7 @@ export async function getReservationFormData(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "reservations", "view");
 
   const scopedBranchId = await resolveListBranchId(
     ctx,
@@ -281,6 +286,7 @@ export async function getDressOccasionBlockedRanges(
 ) {
   const session = getRequiredSession(ctx);
   assertOperationalStaff(session.user.role);
+  await assertScreenPermission(ctx, session, "reservations", "view");
 
   const dress = await ctx.db.query.DressesTable.findFirst({
     where: and(
