@@ -50,7 +50,7 @@ export function BaseEmail(props: BaseEmailProps) {
                 <Button
                   href={props.ctaUrl}
                   style={{
-                    backgroundColor: "#111111",
+                    backgroundColor: "#84253D",
                     color: "#ffffff",
                     padding: "12px 24px",
                     borderRadius: "6px",

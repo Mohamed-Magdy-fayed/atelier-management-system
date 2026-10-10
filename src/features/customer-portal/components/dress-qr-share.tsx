@@ -63,7 +63,7 @@ export function DressQrShare({
       </div>
       <p className="text-muted-foreground text-xs">{scanLabel}</p>
       <Button onClick={handleShare} size="sm" variant="outline">
-        {copied ? <CheckIcon className="text-secondary" /> : <Share2Icon />}
+        {copied ? <CheckIcon className="text-emerald-600 dark:text-emerald-400" /> : <Share2Icon />}
         {copied ? copiedLabel : shareLabel}
       </Button>
     </div>

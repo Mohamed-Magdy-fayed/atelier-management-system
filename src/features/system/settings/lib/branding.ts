@@ -19,7 +19,7 @@ export const EMPTY_BRANDING: Branding = {
 };
 
 /** Logo bundled with the build, used when no logo URL is configured. */
-export const BUNDLED_LOGO_SRC = "/logo.png";
+export const BUNDLED_LOGO_SRC = "/logo.svg";
 
 /**
  * Picks the configured name for a locale, falling back to the build's own.

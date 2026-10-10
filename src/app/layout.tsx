@@ -37,7 +37,13 @@ export async function generateMetadata(): Promise<Metadata> {
     title: resolveBrandName(branding, locale, String(t("appName"))),
     description:
       "Browse curated evening wear, explore boutiques, check availability by date—reserve in person.",
-    icons: [{ rel: "icon", url: "/favicon.ico" }],
+    icons: {
+      icon: [
+        { url: "/logo.svg", type: "image/svg+xml" },
+        { url: "/favicon.ico", sizes: "any" },
+      ],
+      apple: "/apple-touch-icon.png",
+    },
   };
 }
 

@@ -152,7 +152,7 @@ export default async function MyAccountPage() {
       preposition: t("customerPortal.reminderBy"),
     },
     returnSoon: {
-      className: "border-accent bg-accent/10 text-accent-foreground",
+      className: "border-secondary bg-secondary/10 text-secondary",
       title: t("customerPortal.reminderReturnSoon"),
       preposition: t("customerPortal.reminderBy"),
     },

@@ -211,7 +211,7 @@ export function ReservationReceiptSheet({
                 {discount ? (
                   <div className="flex justify-between">
                     <Muted>{discountLabel}</Muted>
-                    <span className="tabular-nums text-secondary">
+                    <span className="tabular-nums text-emerald-600 dark:text-emerald-400">
                       -{discount}
                     </span>
                   </div>
