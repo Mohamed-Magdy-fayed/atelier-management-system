@@ -158,8 +158,9 @@ One JSON per client, the single input to provisioning — reviewed by you before
 }
 ```
 
-Stored at `demos/<slug>/manifest.json` in Firebase Storage next to the images (so a demo can be
-re-seeded from anywhere), and the path is noted on the lead. Not committed to git.
+Stored locally at `.demos/<slug>/manifest.json` (git-ignored); the skill adds the Neon project
+and endpoint ids to it, and the lead's note in gateling.com records the URL, login and Neon id, so
+a demo can be torn down even without the local file.
 
 ---
 
@@ -234,7 +235,44 @@ Expected wall time: ~10 min research + ~5 min provisioning/build per client.
 
 ---
 
-## 8. Build order
+## 8. Status (2026-11-01)
+
+| Step | State |
+|---|---|
+| 1 Code | Done on `feat/demo-personalization`: `DEMO_MODE`, `REDIS_KEY_PREFIX`, brand colour `00012`, `client-demo` seed profile, `demo:logo-color`. |
+| 3 Scripts | Done: provisioning runs through the Neon and Vercel MCPs from the skill, so the only scripts are `demo:assets` (Firebase copy/delete) and `demo:logo-color`. |
+| 4 Skill | Done: `.claude/skills/atelier-demo/SKILL.md` (`/atelier-demo <name>`, `list`, `teardown <slug>`). |
+| 2 Infra | **Blocked on you** — see below. |
+| 5 Dry run | After step 2. |
+
+### One-time setup still to do
+
+1. **Get the code on `demo`:** merge `feat/demo-personalization` to `main`, then create `demo` from
+   `main` and push it. (Until this lands, the live projects run without the new code — and the new
+   env vars all default off, so merging changes nothing for them.)
+2. **Create the Vercel project `atelier-demos`** (the Vercel MCP returns 403 for project creation;
+   the local Vercel CLI is not logged in):
+   - Import `Mohamed-Magdy-fayed/atelier-management-system`, framework Next.js.
+   - *Settings → Git → Ignored Build Step*, custom command:
+     `case "$VERCEL_GIT_COMMIT_REF" in demo/*) exit 1;; *) exit 0;; esac`
+   - *Settings → Deployment Protection → Vercel Authentication*: **off** (prospects must not see a
+     Vercel login).
+   - *Settings → Functions → Region*: `fra1` (next to Neon `eu-central-1`).
+   - *Environment Variables*, **Preview** only, all branches:
+     `DEMO_MODE=1`, `BRANDING_EDITABLE=1`, `GOOGLE_CLIENT_ID=disabled-in-demo-mode`,
+     `GOOGLE_CLIENT_SECRET=disabled-in-demo-mode`, a fresh `JWT_SECRET_KEY` (≥ 32 chars),
+     and the same values the in-house project uses for `REDIS_URL`, `REDIS_TOKEN`,
+     `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`,
+     `FIREBASE_STORAGE_BUCKET`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `NEXT_PUBLIC_CLOUDINARY_API_KEY`.
+     Per-client `DATABASE_URL`, `BASE_URL`, `OAUTH_REDIRECT_URL_BASE` and `REDIS_KEY_PREFIX` are added
+     by the skill, scoped to each `demo/<slug>` branch.
+3. **Optional — `vercel login`** once on this machine, so teardown can remove the domain and branch
+   env vars itself (the MCP has no remove call for either).
+4. **Neon project count:** the org has 20 projects on what looks like the free plan. If creating a
+   demo project hits the plan's cap, archive unused ones (`example`, `tanstack-start-app`, …) or
+   upgrade — the skill stops rather than deleting anything.
+
+## 9. Build order
 
 | Step | Work | Output |
 |---|---|---|
