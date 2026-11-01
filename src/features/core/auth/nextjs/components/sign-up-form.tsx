@@ -20,7 +20,12 @@ import { useOauthProviderIcon } from "@/features/core/auth/nextjs/components/use
 import { signUpSchema } from "@/features/core/auth/schemas";
 import { useTranslation } from "@/features/core/i18n/client";
 
-export function SignUpForm() {
+type SignUpFormProps = {
+  /** Off on demo hosts, whose OAuth redirect URI is not registered. */
+  isOAuthEnabled?: boolean;
+};
+
+export function SignUpForm({ isOAuthEnabled = true }: SignUpFormProps) {
   const { t } = useTranslation();
 
   const [isPending, startTransition] = useTransition();
@@ -75,27 +80,31 @@ export function SignUpForm() {
         <FormAlert message={searchParams.get("error") || ""} />
       )}
 
-      {oAuthProviderValues.length > 0 && (
-        <div className="grid gap-2">
-          {oAuthProviderValues.map((provider) => (
-            <Button
-              className="h-11 w-full justify-center gap-2"
-              disabled={isPending}
-              key={provider}
-              onClick={async () => await handleOAuthClick(provider)}
-              type="button"
-              variant="outline"
-            >
-              {getOauthProviderIcon(provider)}
-              <span className="font-medium text-sm capitalize">{provider}</span>
-            </Button>
-          ))}
-        </div>
-      )}
+      {isOAuthEnabled && oAuthProviderValues.length > 0 && (
+        <>
+          <div className="grid gap-2">
+            {oAuthProviderValues.map((provider) => (
+              <Button
+                className="h-11 w-full justify-center gap-2"
+                disabled={isPending}
+                key={provider}
+                onClick={async () => await handleOAuthClick(provider)}
+                type="button"
+                variant="outline"
+              >
+                {getOauthProviderIcon(provider)}
+                <span className="font-medium text-sm capitalize">
+                  {provider}
+                </span>
+              </Button>
+            ))}
+          </div>
 
-      <FieldSeparator className="mb-2 *:data-[slot=field-separator-content]:bg-card">
-        {t("authTranslations.signIn.continueWith")}
-      </FieldSeparator>
+          <FieldSeparator className="mb-2 *:data-[slot=field-separator-content]:bg-card">
+            {t("authTranslations.signIn.continueWith")}
+          </FieldSeparator>
+        </>
+      )}
 
       <FieldSet
         className="grid gap-2"

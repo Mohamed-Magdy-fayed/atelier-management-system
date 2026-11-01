@@ -17,8 +17,13 @@ export function isBrandingEditable(): boolean {
   return env.BRANDING_EDITABLE === "1";
 }
 
+/** Whether this deployment is a throwaway sales demo — see `DEMO_MODE`. */
+export function isDemoMode(): boolean {
+  return env.DEMO_MODE === "1";
+}
+
 /**
- * Reads the three branding rows in one query.
+ * Reads the branding rows in one query.
  *
  * Wrapped in `cache()` because the root layout resolves branding for every
  * route: without it the same three rows would be fetched again by each server
@@ -36,5 +41,6 @@ export const getBranding = cache(async (): Promise<Branding> => {
     nameEn: byCode.get(SYSTEM_SETTING_CODE.BRAND_NAME_EN) ?? null,
     nameAr: byCode.get(SYSTEM_SETTING_CODE.BRAND_NAME_AR) ?? null,
     logoUrl: byCode.get(SYSTEM_SETTING_CODE.BRAND_LOGO_URL) ?? null,
+    primaryColor: byCode.get(SYSTEM_SETTING_CODE.BRAND_PRIMARY_COLOR) ?? null,
   };
 });

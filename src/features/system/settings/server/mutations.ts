@@ -8,7 +8,10 @@ import {
   isSystemSettingCode,
   SYSTEM_SETTING_CODE,
 } from "@/features/system/settings/lib/system-settings-registry";
-import { isSupportedLogoUrl } from "@/features/system/settings/lib/branding";
+import {
+  isHexColor,
+  isSupportedLogoUrl,
+} from "@/features/system/settings/lib/branding";
 import { handleDatabaseError } from "@/integrations/trpc/db-error";
 
 import { isBrandingEditable } from "./branding";
@@ -114,6 +117,17 @@ function assertEditableFields(
 
     if (trimmed && code === SYSTEM_SETTING_CODE.BRAND_LOGO_URL) {
       assertUploadedLogoUrl(trimmed);
+    }
+
+    if (
+      trimmed &&
+      code === SYSTEM_SETTING_CODE.BRAND_PRIMARY_COLOR &&
+      !isHexColor(trimmed)
+    ) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Brand colour must be a hex code such as #84253D",
+      });
     }
 
     // Encrypted here rather than at the call site so no future caller can

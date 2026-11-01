@@ -2,7 +2,7 @@ import "server-only";
 
 import { TRPCError } from "@trpc/server";
 
-import { redisClient } from "@/integrations/redis";
+import { redisClient, redisKey } from "@/integrations/redis";
 
 /**
  * A signed-in user may start this many uploads per window.
@@ -25,7 +25,9 @@ const WINDOW_SECONDS = 60;
 export async function assertUploadWithinRateLimit(
   userId: string,
 ): Promise<void> {
-  const key = `upload-rate:${userId}:${Math.floor(Date.now() / (WINDOW_SECONDS * 1000))}`;
+  const key = redisKey(
+    `upload-rate:${userId}:${Math.floor(Date.now() / (WINDOW_SECONDS * 1000))}`,
+  );
 
   let used: number;
   try {

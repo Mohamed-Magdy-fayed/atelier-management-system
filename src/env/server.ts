@@ -66,6 +66,26 @@ export const env = createEnv({
      */
     BRANDING_EDITABLE: z.enum(["0", "1"]).default("0"),
 
+    /**
+     * Marks a throwaway sales demo (see `docs/client-demos/PLAN.md`).
+     *
+     * A demo is seeded with synthetic customers whose phones and emails must
+     * never be contacted, and it is shown to a prospect who should not find it
+     * in a search engine. So `"1"` hides the site from crawlers, turns every
+     * outbound channel off at its send boundary — not merely by leaving keys
+     * unset — and hides OAuth sign-in, whose redirect URI is not registered
+     * for demo hosts.
+     */
+    DEMO_MODE: z.enum(["0", "1"]).default("0"),
+
+    /**
+     * Prepended to every Redis key. Demos share one Upstash database and are
+     * seeded with the same deterministic user ids, so without a per-deployment
+     * prefix one demo's cached permissions would be served to another. Empty
+     * by default so the live deployments keep their existing keys and sessions.
+     */
+    REDIS_KEY_PREFIX: z.string().default(""),
+
     FIREBASE_PROJECT_ID: z.string().min(1),
     FIREBASE_CLIENT_EMAIL: z.string().min(1),
     FIREBASE_PRIVATE_KEY: z.string().min(1),

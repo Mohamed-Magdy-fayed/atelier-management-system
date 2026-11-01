@@ -3,7 +3,7 @@ import { env } from "@/env/server";
 import { sessionSchema } from "@/features/core/auth/schemas";
 
 import type { Cookies, PartialUser } from "@/features/core/auth/types";
-import { redisClient } from "@/integrations/redis";
+import { redisClient, redisKey } from "@/integrations/redis";
 
 // Seven days in seconds
 const SESSION_EXPIRATION_SECONDS = 60 * 60 * 24 * 7;
@@ -31,7 +31,7 @@ export async function updateUserSessionData(
   if (sessionId == null) return null;
 
   await redisClient.set(
-    `session:${sessionId}`,
+    redisKey(`session:${sessionId}`),
     sessionSchema.parse({
       sessionId,
       exp: getSessionExpirationSeconds(),
@@ -49,7 +49,7 @@ export async function createUserSession(
 ) {
   const sessionId = crypto.randomBytes(512).toString("hex").normalize();
   await redisClient.set(
-    `session:${sessionId}`,
+    redisKey(`session:${sessionId}`),
     sessionSchema.parse({
       sessionId,
       exp: getSessionExpirationSeconds(),
@@ -76,7 +76,7 @@ export async function updateUserSessionExpiration(
   const nextExp = getSessionExpirationSeconds();
 
   await redisClient.set(
-    `session:${sessionId}`,
+    redisKey(`session:${sessionId}`),
     sessionSchema.parse({ ...session, exp: nextExp }),
     {
       ex: SESSION_EXPIRATION_SECONDS,
@@ -91,7 +91,7 @@ export async function removeUserFromSession(
   const sessionId = cookies.get(COOKIE_SESSION_KEY)?.value;
   if (sessionId == null) return null;
 
-  await redisClient.del(`session:${sessionId}`);
+  await redisClient.del(redisKey(`session:${sessionId}`));
   cookies.delete(COOKIE_SESSION_KEY);
 }
 
@@ -106,7 +106,7 @@ function setCookie(sessionId: string, cookies: Pick<Cookies, "set">) {
 }
 
 async function getUserSessionById(sessionId: string) {
-  const rawSession = await redisClient.get(`session:${sessionId}`);
+  const rawSession = await redisClient.get(redisKey(`session:${sessionId}`));
 
   const { success, data: session } = sessionSchema.safeParse(rawSession);
 
