@@ -104,6 +104,12 @@ export async function seedClientDemoDataset(manifestPath: string) {
   // `seedDemoDataset` creates the admin through the `admin` profile, which
   // reads its email from here. The password comes from the caller's env only.
   process.env.SEED_ADMIN_EMAIL = manifest.adminEmail;
+  // The CLI loads `.env.local`, which on a dev machine may set
+  // SEED_ADMIN_RESET_PASSWORD=1 for local convenience. Inherited here, every
+  // re-seed would silently replace the password the prospect was given, so a
+  // demo rotates it only when this run explicitly asks.
+  process.env.SEED_ADMIN_RESET_PASSWORD =
+    process.env.DEMO_ROTATE_PASSWORD === "1" ? "1" : "0";
 
   const result = await seedDemoDataset();
 

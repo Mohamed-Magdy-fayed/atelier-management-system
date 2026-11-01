@@ -167,6 +167,8 @@ builds.
    ```
    The CLI prints `🎯 Target:` — it must be the new endpoint's host. Anything else →
    it will refuse; stop and report.
+   Re-seeding later (e.g. after fixing the manifest) keeps the admin password; pass
+   `DEMO_ROTATE_PASSWORD=1` with a new `SEED_ADMIN_PASSWORD` only to change it on purpose.
 
 ## 7. Verify (read-only)
 
