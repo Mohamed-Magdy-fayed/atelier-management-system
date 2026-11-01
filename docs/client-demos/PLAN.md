@@ -49,15 +49,15 @@ Sections below are updated to match; where they disagree with this table, this t
 
 ```
 main ──merge──▶ demo (base for all demos)
-                 ├── demo/nour-bridal      → nour-bridal-atelier.gateling.com  → Neon branch nour-bridal
-                 ├── demo/layali-atelier   → layali-atelier-atelier...          → Neon branch layali-atelier
+                 ├── demos/nour-bridal     → nour-bridal-atelier.gateling.com  → Neon branch nour-bridal
+                 ├── demos/layali-atelier  → layali-atelier-atelier...          → Neon branch layali-atelier
                  └── …
 ```
 
 - **Vercel project `atelier-demos`** (new, same repo, same team). Separate from the in-house and the
   Alaa El-Kasry projects so demo env vars and deploys can never touch them.
   - Production branch: `demo` (never assigned a client domain).
-  - Each client = git branch `demo/<slug>`, built as a Preview deployment.
+  - Each client = git branch `demos/<slug>`, built as a Preview deployment.
   - Vercel supports **Preview env vars scoped to one git branch** and **a domain assigned to one git
     branch** — that is what makes a branch the unit of a client, as you asked.
   - **Deployment Protection off** for this project, otherwise the prospect hits a Vercel login wall
@@ -240,37 +240,34 @@ Expected wall time: ~10 min research + ~5 min provisioning/build per client.
 | Step | State |
 |---|---|
 | 1 Code | Done on `feat/demo-personalization`: `DEMO_MODE`, `REDIS_KEY_PREFIX`, brand colour `00012`, `client-demo` seed profile, `demo:logo-color`. |
-| 3 Scripts | Done: provisioning runs through the Neon and Vercel MCPs from the skill, so the only scripts are `demo:assets` (Firebase copy/delete) and `demo:logo-color`. |
+| 3 Scripts | Done: `demo:assets` (Firebase copy/delete), `demo:logo-color`, and `demo:vercel attach/detach <slug>` (branch env vars + domain, through the Vercel CLI login). Neon goes through the Neon MCP. |
 | 4 Skill | Done: `.claude/skills/atelier-demo/SKILL.md` (`/atelier-demo <name>`, `list`, `teardown <slug>`). |
-| 2 Infra | **Blocked on you** — see below. |
-| 5 Dry run | After step 2. |
+| 2 Infra | Done — see below. |
+| 5 Dry run | Next: `/atelier-demo <a lead you know well>`. |
 
-### One-time setup still to do
+### Infrastructure as built
 
-1. **Get the code on `demo`:** merge `feat/demo-personalization` to `main`, then create `demo` from
-   `main` and push it. (Until this lands, the live projects run without the new code — and the new
-   env vars all default off, so merging changes nothing for them.)
-2. **Create the Vercel project `atelier-demos`** (the Vercel MCP returns 403 for project creation;
-   the local Vercel CLI is not logged in):
-   - Import `Mohamed-Magdy-fayed/atelier-management-system`, framework Next.js.
-   - *Settings → Git → Ignored Build Step*, custom command:
-     `case "$VERCEL_GIT_COMMIT_REF" in demo/*) exit 1;; *) exit 0;; esac`
-   - *Settings → Deployment Protection → Vercel Authentication*: **off** (prospects must not see a
-     Vercel login).
-   - *Settings → Functions → Region*: `fra1` (next to Neon `eu-central-1`).
-   - *Environment Variables*, **Preview** only, all branches:
-     `DEMO_MODE=1`, `BRANDING_EDITABLE=1`, `GOOGLE_CLIENT_ID=disabled-in-demo-mode`,
-     `GOOGLE_CLIENT_SECRET=disabled-in-demo-mode`, a fresh `JWT_SECRET_KEY` (≥ 32 chars),
-     and the same values the in-house project uses for `REDIS_URL`, `REDIS_TOKEN`,
-     `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`,
-     `FIREBASE_STORAGE_BUCKET`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `NEXT_PUBLIC_CLOUDINARY_API_KEY`.
-     Per-client `DATABASE_URL`, `BASE_URL`, `OAUTH_REDIRECT_URL_BASE` and `REDIS_KEY_PREFIX` are added
-     by the skill, scoped to each `demo/<slug>` branch.
-3. **Optional — `vercel login`** once on this machine, so teardown can remove the domain and branch
-   env vars itself (the MCP has no remove call for either).
-4. **Neon project count:** the org has 20 projects on what looks like the free plan. If creating a
-   demo project hits the plan's cap, archive unused ones (`example`, `tanstack-start-app`, …) or
-   upgrade — the skill stops rather than deleting anything.
+- **Vercel project `atelier-demos`** (`prj_90CAcL3omUHJEiz6VK2IrUMYHl3v`), linked to the repo,
+  Next.js, functions in `fra1`, Vercel Authentication **off**. Ignored Build Step:
+  `case "$VERCEL_GIT_COMMIT_REF" in demos/*) [ -n "$DATABASE_URL" ] && exit 1 || exit 0;; *) exit 0;; esac`
+  — only `demos/*` branches that already have a database build; `main` and everything else is
+  skipped.
+- **Shared Preview variables** (all branches): `DEMO_MODE=1`, `BRANDING_EDITABLE=1`, Google
+  placeholders, a fresh `JWT_SECRET_KEY`, and `REDIS_*` / `FIREBASE_*` copied from `.env.local`.
+  `.env.local` is the right source: its bucket (`megz-courses.appspot.com`) is the one
+  `demo:assets` uploads to, and `next.config.ts` only serves images from the deployment's own
+  bucket. (The in-house project's values are stored as *sensitive* and cannot be read back.)
+  `NEXT_PUBLIC_CLOUDINARY_*` is omitted: `src/env/client.ts` is never imported.
+- **Branches:** `demo` is the base (currently = `feat/demo-personalization`); clients are
+  `demos/<slug>` — plural, because git cannot hold `demo` and `demo/<slug>` at once.
+  Keep `demo` current with `main` once this is merged.
+- **Why the CLI and not the Vercel MCP for writes:** the connector is refused project create,
+  update and even env listing (403). `npx vercel@latest api` uses the CLI's own login.
+- **Vercel requires the branch to exist** before branch-scoped variables can be added, hence the
+  order in the skill: database → branch (skipped build) → `demo:vercel attach` → empty commit.
+- **Neon project count:** the org has 20 projects on what looks like the free plan. If creating a
+  demo project hits the plan's cap, archive unused ones (`example`, `tanstack-start-app`, …) or
+  upgrade — the skill stops rather than deleting anything.
 
 ## 9. Build order
 

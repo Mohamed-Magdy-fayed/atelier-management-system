@@ -15,9 +15,9 @@ The design and the reasons behind it are in `docs/client-demos/PLAN.md`; read it
 | Thing | Value |
 |---|---|
 | Vercel team | `mohamedmagdyfayeds-projects` |
-| Vercel project | `atelier-demos` (only builds `demo/*` branches; previews unprotected) |
+| Vercel project | `atelier-demos` (`prj_90CAcL3omUHJEiz6VK2IrUMYHl3v`) — only builds `demos/*` branches that have a `DATABASE_URL`; previews unprotected |
 | Base branch | `demo` on `origin` — every client branch starts at its tip and carries **no code** |
-| Client branch | `demo/<slug>` |
+| Client branch | `demos/<slug>` (plural: git cannot hold `demo` and `demo/<slug>` at once) |
 | URL | `https://<slug>-atelier.gateling.com` (gateling.com DNS is on Vercel — no DNS step) |
 | Neon | one project per client, `atelier-demo-<slug>`, region `aws-eu-central-1`, Postgres 18 |
 | Admin | `<slug>@admin.demo`, password generated here |
@@ -26,9 +26,15 @@ The design and the reasons behind it are in `docs/client-demos/PLAN.md`; read it
 | Lifetime | 7 days |
 
 Tools: `gateling-sales` (`list_leads`, `get_lead`, `add_note`), Claude in Chrome
-(`mcp__claude-in-chrome__*`, the operator's signed-in browser), the Vercel MCP and the
-Neon MCP. Load them with `ToolSearch` by keyword (`list_leads`, `create_project_env`,
-`get_connection_string`, `tabs_context_mcp`) — never guess their prefixes.
+(`mcp__claude-in-chrome__*`, the operator's signed-in browser), the Neon MCP, and the
+Vercel MCP **for reads only** (`get_project`, `list_deployments`, `get_deployment`,
+`get_deployment_events`). Load them with `ToolSearch` by keyword (`list_leads`,
+`get_connection_string`, `list_deployments`, `tabs_context_mcp`) — never guess their
+prefixes.
+
+**Every Vercel write goes through `npm run demo:vercel`**, which uses the Vercel CLI's own
+login via `npx vercel@latest api`. The Vercel MCP connector is refused project writes
+(403) and even env listing, so do not try it first.
 
 ## Ground rules
 
@@ -79,8 +85,8 @@ skill does.
   (e.g. "Ivory lace mermaid gown"), a colour word, and a one-line description if the
   caption gives detail. Fewer than 6 on Instagram → fill from Facebook photos.
 - **Slug.** From the English name: lowercase, `a-z0-9` and `-`, ≤ 40 chars, without
-  "atelier" (the URL adds it). Check it is free: no `demo/<slug>` branch on origin
-  (`git ls-remote origin refs/heads/demo/<slug>`).
+  "atelier" (the URL adds it). Check it is free: no `demos/<slug>` branch on origin
+  (`git ls-remote origin refs/heads/demos/<slug>`).
 
 ## 4. Review gate
 
@@ -114,8 +120,10 @@ Write `.demos/<slug>/manifest.json`:
 
 ## 6. Provision
 
-Order matters: env vars and the domain exist **before** the branch is pushed, so the
-first build already has its database.
+Order matters. Vercel only accepts branch-scoped variables for a branch that already
+exists on GitHub, and the project skips any `demos/*` push that has no `DATABASE_URL`.
+So: database → branch (build skipped) → variables and domain → an empty commit that
+builds.
 
 1. **Neon:** `create_project` `{ name: "atelier-demo-<slug>", region_id: "aws-eu-central-1", pg_version: 18 }`.
    A plan-limit error → stop and tell the operator how many projects exist; do not delete
@@ -124,23 +132,24 @@ first build already has its database.
    URL by inserting `-pooler` after the endpoint id in the host. Record the project id
    and endpoint id in the manifest as `neonProjectId` / `neonEndpointId` (extra keys are
    ignored by the seed).
-2. **Vercel env** — `create_project_env` on `atelier-demos`, `upsert: "true"`, each with
-   `target: ["preview"]`, `gitBranch: "demo/<slug>"`:
-   | key | value | type |
-   |---|---|---|
-   | `DATABASE_URL` | pooled connection string | `sensitive` |
-   | `BASE_URL` | `https://<slug>-atelier.gateling.com` | `plain` |
-   | `OAUTH_REDIRECT_URL_BASE` | same | `plain` |
-   | `REDIS_KEY_PREFIX` | `demo:<slug>:` | `plain` |
-3. **Domain** — `add_project_domain` on `atelier-demos`:
-   `{ name: "<slug>-atelier.gateling.com", gitBranch: "demo/<slug>" }`.
-4. **Branch** — create it at the tip of `demo` without touching the working tree:
+2. **Branch** — create it at the tip of `demo` without touching the working tree. This
+   push builds nothing (no `DATABASE_URL` yet):
    ```bash
-   git fetch origin demo && git push origin refs/remotes/origin/demo:refs/heads/demo/<slug>
+   git fetch origin demo && git push origin refs/remotes/origin/demo:refs/heads/demos/<slug>
    ```
-5. **Wait for the build** — `list_deployments` for `atelier-demos` filtered to the branch,
-   then `get_deployment` until `READY` (the build runs `drizzle-kit migrate` on the new
-   database). `ERROR` → read the build logs, report, stop.
+3. **Variables and domain** — one command adds `DATABASE_URL`, `BASE_URL`,
+   `OAUTH_REDIRECT_URL_BASE` and `REDIS_KEY_PREFIX` scoped to `demos/<slug>`, and assigns
+   `<slug>-atelier.gateling.com` to that branch:
+   ```bash
+   DEMO_DATABASE_URL='<pooled URL>' npm run -s demo:vercel -- attach <slug>
+   ```
+4. **Build** — push an empty commit on top of the branch, again without a checkout:
+   ```bash
+   C=$(git commit-tree "origin/demo^{tree}" -p origin/demo -m "chore: deploy demo <slug>") && git push origin "$C:refs/heads/demos/<slug>"
+   ```
+5. **Wait for the build** — `list_deployments` for `atelier-demos` (branch
+   `demos/<slug>`), then `get_deployment` until `READY`; the build runs `drizzle-kit migrate`
+   on the new database. `ERROR` → `get_deployment_events` for the logs, report, stop.
 6. **Seed** — generate the password, then seed with the **direct** (non-pooler) URL:
    ```bash
    node -e "console.log(require('crypto').randomBytes(18).toString('base64url'))"
@@ -170,9 +179,9 @@ project id. Tell the operator the note holds the password.
 
 ## /atelier-demo list
 
-`list_project_domains` on `atelier-demos`; for each `*-atelier.gateling.com` read
-`.demos/<slug>/manifest.json` if present. Show slug, URL, expiry, and mark anything past
-`expiresAt` as due for teardown.
+`git ls-remote origin "refs/heads/demos/*"` gives the live slugs; for each read
+`.demos/<slug>/manifest.json` if present (else the lead note). Show slug, URL, expiry,
+and mark anything past `expiresAt` as due for teardown.
 
 ## /atelier-demo teardown <slug>
 
@@ -180,10 +189,7 @@ Show exactly what will be deleted and wait for a yes:
 1. Neon `delete_project` `<neonProjectId>` (from the manifest or the lead note — confirm
    the project name is `atelier-demo-<slug>` before deleting).
 2. `npm run -s demo:assets -- delete <slug>`.
-3. `git push origin --delete demo/<slug>`.
-4. The domain and the four branch env vars on `atelier-demos`: the Vercel MCP has no
-   remove call. With the Vercel CLI logged in (`vercel login` once), run
-   `vercel domains rm <slug>-atelier.gateling.com --scope mohamedmagdyfayeds-projects`
-   and `vercel env rm <KEY> preview demo/<slug> --project atelier-demos` for each key;
-   otherwise give the operator the project's Domains and Environment Variables pages.
+3. `npm run -s demo:vercel -- detach <slug>` — removes the domain and the four branch
+   variables. Run it **before** deleting the branch, while Vercel still knows the branch.
+4. `git push origin --delete demos/<slug>`.
 5. `add_note` on the lead: demo torn down, date.

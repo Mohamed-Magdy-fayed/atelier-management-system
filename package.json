@@ -26,6 +26,7 @@
     "import:contract": "tsx scripts/print-import-contract.ts",
     "demo:logo-color": "tsx scripts/demo/logo-color.ts",
     "demo:assets": "tsx scripts/demo/assets.ts",
+    "demo:vercel": "tsx scripts/demo/vercel.ts",
     "seed:admin": "tsx src/drizzle/seed/cli.ts admin",
     "seed:all": "tsx src/drizzle/seed/cli.ts all",
     "seed:clear": "tsx src/drizzle/seed/cli.ts clear",
