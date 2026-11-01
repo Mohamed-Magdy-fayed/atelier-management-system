@@ -25,6 +25,9 @@ const MAX_EDGE = 1_600;
 const MAX_SOURCE_BYTES = 15 * 1024 * 1024;
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const NAME = /^[a-z0-9-]{1,40}$/;
+/** How far from the corner colour a pixel must be to count as logo, not margin. */
+const LOGO_TRIM_THRESHOLD = 60;
+const LOGO_PADDING = 24;
 
 function loadFirebaseEnv() {
   const explicit = process.env.DOTENV_CONFIG_PATH;
@@ -74,14 +77,43 @@ async function readSource(source: string): Promise<Buffer> {
   return buffer;
 }
 
+/**
+ * A logo is shown at ~48px in a square slot that stretches what it is given.
+ * Profile pictures put the mark in the middle of a wide margin, which at that
+ * size leaves the lettering unreadable — so trim the margin, then pad back to
+ * a square in the image's own corner colour.
+ */
+async function squareLogo(image: sharp.Sharp): Promise<sharp.Sharp> {
+  const { data: corner } = await image
+    .clone()
+    .extract({ left: 0, top: 0, width: 1, height: 1 })
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const { data, info } = await image
+    .trim({ threshold: LOGO_TRIM_THRESHOLD })
+    .toBuffer({ resolveWithObject: true });
+  const side = Math.max(info.width, info.height) + 2 * LOGO_PADDING;
+  const padX = side - info.width;
+  const padY = side - info.height;
+  return sharp(data).extend({
+    top: Math.floor(padY / 2),
+    bottom: Math.ceil(padY / 2),
+    left: Math.floor(padX / 2),
+    right: Math.ceil(padX / 2),
+    background: { r: corner[0], g: corner[1], b: corner[2] },
+  });
+}
+
 async function upload(slug: string, name: string, source: string) {
   if (!SLUG.test(slug)) throw new Error(`Invalid slug "${slug}"`);
   if (!NAME.test(name)) throw new Error(`Invalid asset name "${name}"`);
 
   // Decoding through sharp is also the content check: anything that is not
   // an image fails here instead of being stored.
-  const webp = await sharp(await readSource(source))
-    .rotate()
+  const decoded = sharp(await readSource(source)).rotate();
+  const prepared = name.startsWith("logo") ? await squareLogo(decoded) : decoded;
+  const webp = await prepared
     .resize(MAX_EDGE, MAX_EDGE, { fit: "inside", withoutEnlargement: true })
     .webp({ quality: 85 })
     .toBuffer();

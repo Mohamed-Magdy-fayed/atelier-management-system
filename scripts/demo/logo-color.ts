@@ -5,7 +5,7 @@
  * colour worth using — an all-black or all-white mark — in which case the demo
  * keeps the bundled palette.
  *
- * Method: shrink to 64×64, drop transparent, near-white, near-black and grey
+ * Method: shrink to 256×256 (thin lettering needs the resolution), drop transparent, near-white, near-black and grey
  * pixels, bucket the rest by hue, and take the most populated hue bucket,
  * weighted by saturation so a large dull area does not beat the actual brand
  * colour. The answer is the average of that bucket's pixels.
@@ -14,13 +14,15 @@ import { readFile } from "node:fs/promises";
 
 import sharp from "sharp";
 
-const SAMPLE_SIZE = 64;
+const SAMPLE_SIZE = 256;
 const HUE_BUCKETS = 24;
 /** Below this HSV saturation a pixel reads as grey. */
 const MIN_SATURATION = 0.25;
 /** HSV value band outside which a pixel reads as black or white. */
 const MIN_VALUE = 0.15;
 const MAX_VALUE = 0.97;
+/** Saturation of a solid stroke, as opposed to its anti-aliased edge. */
+const SOLID_SATURATION = 0.5;
 /** A hue bucket must cover this share of coloured pixels to count. */
 const MIN_BUCKET_SHARE = 0.05;
 
@@ -85,17 +87,24 @@ export async function sampleBrandColor(source: string): Promise<string | null> {
 
     const bucket = buckets[Math.floor(hue / (360 / HUE_BUCKETS)) % HUE_BUCKETS];
     bucket.weight += saturation;
+    colouredPixels += 1;
+    // Thin lettering is mostly anti-aliased edge, which drags a plain average
+    // towards the background (a gold logo came out as pale beige). Only the
+    // solid strokes go into the colour; every coloured pixel still counts
+    // towards choosing the hue.
+    if (saturation < SOLID_SATURATION) continue;
     bucket.r += r;
     bucket.g += g;
     bucket.b += b;
     bucket.n += 1;
-    colouredPixels += 1;
   }
 
   const best = buckets.reduce((top, bucket) =>
     bucket.weight > top.weight ? bucket : top,
   );
-  if (best.n === 0 || best.n / colouredPixels < MIN_BUCKET_SHARE) return null;
+  if (best.n === 0 || best.weight / colouredPixels < MIN_BUCKET_SHARE * MIN_SATURATION) {
+    return null;
+  }
 
   const hex = [best.r, best.g, best.b]
     .map((sum) => Math.round(sum / best.n).toString(16).padStart(2, "0"))

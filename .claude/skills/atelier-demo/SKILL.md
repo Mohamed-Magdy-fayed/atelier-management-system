@@ -70,18 +70,24 @@ skill does.
 
 - **Names.** English and Arabic as the business writes them (Instagram name, Facebook
   page, Maps). Missing one → propose a transliteration and flag it for the review.
-- **Branches.** From the Maps listing / page: area names only (e.g. "Tanta" / "طنطا"),
-  up to 3. None known → leave empty.
-- **Logo.** The profile picture at its largest size: open the profile, read the
-  avatar `img` `src` (`read_page` / `find`). Prefer Facebook's when Instagram's is
-  cropped to a circle with text cut off.
+- **Branches.** From the Maps listing, the page, or addresses printed on their posts, up to
+  3, with the public business address when shown (`addressEn` / `addressAr` in the
+  manifest). None known → leave empty.
+- **Logo.** Claude in Chrome hides signed CDN links, so do not read `img src`. Use the
+  Facebook page's public picture, `https://graph.facebook.com/<page handle>/picture?width=1000&height=1000`
+  (download it to the scratchpad and look at it). `demo:assets` trims its margin and pads it
+  to a square, because the header shows it at 48px.
 - **Brand colour.** `npm run -s demo:logo-color -- "<logo URL>"`. Exit 2 → no colour
   (monochrome logo) → `brandColor: null`, the bundled palette stays.
 - **Top 6 dresses.** On Instagram, open the last ~60 posts (pinned posts first). Keep a
   post only if its main subject is **one** dress; skip reels without a clear still,
   collages, offers, text posts and duplicates of the same dress. Rank by likes +
-  comments as the post shows them. For each of the top 6 record: the post URL, the image
-  `src` of the first slide, likes, comments, and from the caption a short English title
+  comments: the grid's hover overlay holds the counts — dispatch `mouseover`, `pointerover`
+  and `mouseenter` on each tile and read its text while scrolling the grid (the page only
+  keeps visible tiles). Skip posts owned by other accounts (collabs, brides' own photos).
+  Image: `https://www.instagram.com/p/<shortcode>/media/?size=l` (public, follows a redirect;
+  `src` links are hidden from you). Build a contact sheet of candidates and look at it to
+  confirm each is one dress. For each of the top 6 record: the post URL, likes, comments, and from the caption a short English title
   (e.g. "Ivory lace mermaid gown"), a colour word, and a one-line description if the
   caption gives detail. Fewer than 6 on Instagram → fill from Facebook photos.
 - **Slug.** From the English name: lowercase, `a-z0-9` and `-`, ≤ 40 chars, without
@@ -97,7 +103,7 @@ for a yes or edits. Apply edits and show again until they say yes.
 ## 5. Copy images and write the manifest
 
 ```bash
-npm run -s demo:assets -- upload <slug> logo "<logo src>"
+npm run -s demo:assets -- upload <slug> logo "<logo file or URL>"   # trims the margin, pads to a square
 npm run -s demo:assets -- upload <slug> dress-1 "<image src>"   # … dress-6
 ```
 

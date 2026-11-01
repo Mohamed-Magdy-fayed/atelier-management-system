@@ -59,6 +59,37 @@ async function applyBranding(
 }
 
 /**
+ * Generic branch names a leftover demo branch may take. Used only when its own
+ * name shares a district with one of the client's branches — a demo showing
+ * both "Heliopolis" and "Heliopolis Atelier" reads as a data bug.
+ */
+const SPARE_BRANCH_NAMES = [
+  { nameEn: "Zamalek Atelier", nameAr: "أتيليه الزمالك", addressEn: "Zamalek, Cairo", addressAr: "الزمالك، القاهرة" },
+  { nameEn: "New Cairo Atelier", nameAr: "أتيليه القاهرة الجديدة", addressEn: "Fifth Settlement, New Cairo", addressAr: "التجمع الخامس، القاهرة الجديدة" },
+  { nameEn: "Maadi Atelier", nameAr: "أتيليه المعادي", addressEn: "Maadi, Cairo", addressAr: "المعادي، القاهرة" },
+  { nameEn: "Sheikh Zayed Atelier", nameAr: "أتيليه الشيخ زايد", addressEn: "Sheikh Zayed, Giza", addressAr: "الشيخ زايد، الجيزة" },
+] as const;
+
+function sharesDistrict(name: string, manifest: ClientDemoManifest): boolean {
+  const district = name.replace(/\s*Atelier$/i, "").toLowerCase();
+  return manifest.branches.some((branch) => {
+    const taken = `${branch.nameEn} ${branch.addressEn ?? ""}`.toLowerCase();
+    return taken.includes(district);
+  });
+}
+
+function pickSpareBranchName<T extends { nameEn: string }>(
+  manifest: ClientDemoManifest,
+  generic: T,
+): T | (typeof SPARE_BRANCH_NAMES)[number] {
+  if (!sharesDistrict(generic.nameEn, manifest)) return generic;
+  return (
+    SPARE_BRANCH_NAMES.find((spare) => !sharesDistrict(spare.nameEn, manifest)) ??
+    generic
+  );
+}
+
+/**
  * Seeds a demo for one prospect: the full `demo` dataset, then the prospect's
  * identity laid over it.
  *
@@ -82,8 +113,25 @@ export async function seedClientDemoDataset(manifestPath: string) {
     for (const [index, branch] of manifest.branches.entries()) {
       await tx
         .update(BranchesTable)
-        .set({ nameEn: branch.nameEn, nameAr: branch.nameAr })
+        .set({
+          nameEn: branch.nameEn,
+          nameAr: branch.nameAr,
+          // The generic demo address names a different district, which
+          // contradicts the branch's new name.
+          addressEn: branch.addressEn ?? branch.nameEn,
+          addressAr: branch.addressAr ?? branch.nameAr,
+        })
         .where(eq(BranchesTable.id, DEMO_BRANCHES[index].id));
+    }
+
+    for (const [index, generic] of DEMO_BRANCHES.entries()) {
+      if (index < manifest.branches.length) continue;
+      const spare = pickSpareBranchName(manifest, generic);
+      if (spare === generic) continue;
+      await tx
+        .update(BranchesTable)
+        .set(spare)
+        .where(eq(BranchesTable.id, generic.id));
     }
 
     // Ranks 0–5 of the main branch are its most-booked dresses.

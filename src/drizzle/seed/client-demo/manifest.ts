@@ -54,14 +54,18 @@ export const clientDemoManifestSchema = z.object({
     .nullable()
     .optional(),
   /**
-   * Renames the demo branches in order. The portfolio keeps its full size
-   * either way; branches beyond this list keep their generic names.
+   * Renames the demo branches in order, with the business's public address
+   * when it is known (the area name otherwise). The portfolio keeps its full
+   * size either way; branches beyond this list keep a generic name that never
+   * repeats one of these.
    */
   branches: z
     .array(
       z.object({
         nameEn: z.string().trim().min(1).max(128),
         nameAr: z.string().trim().min(1).max(128),
+        addressEn: z.string().trim().min(1).max(255).optional(),
+        addressAr: z.string().trim().min(1).max(255).optional(),
       }),
     )
     .max(DEMO_BRANCHES.length)
