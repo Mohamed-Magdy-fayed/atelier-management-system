@@ -98,6 +98,15 @@ const commands = {
       await runSeedProfile("demo");
     },
   },
+  "client-demo": {
+    description:
+      "Seed the demo profile branded for one prospect (DEMO_MANIFEST, DEMO_NEON_ENDPOINT_ID).",
+    action: async () => {
+      assertAdminPasswordIsSafe(describeTarget());
+      const { runSeedProfile } = await import("@/drizzle/seed");
+      await runSeedProfile("client-demo");
+    },
+  },
   performance: {
     description:
       "Reset and seed a large dataset for table and query stress tests.",

@@ -763,6 +763,9 @@ export default {
     settingName00011: "Logo URL",
     settingDesc00011:
       "The logo shown in the public catalog and customer portal headers. Use the upload button — a link from anywhere else cannot be displayed. Leave empty to keep the logo this deployment ships with.",
+    settingName00012: "Brand colour",
+    settingDesc00012:
+      "The colour used for buttons, links and highlights, as a hex code such as #84253D. Leave empty to keep the colours this deployment ships with.",
     settingsLogoPlaceholder: "Upload a logo, or paste its link",
     settingsBrandingLocked: "Branding is fixed on this plan",
     settingsBrandingLockedHint:

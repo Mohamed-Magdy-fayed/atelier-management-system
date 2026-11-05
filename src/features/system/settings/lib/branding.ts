@@ -10,12 +10,15 @@ export type Branding = {
   nameEn: string | null;
   nameAr: string | null;
   logoUrl: string | null;
+  /** `#RRGGBB`; replaces the bundled primary colour when set. */
+  primaryColor: string | null;
 };
 
 export const EMPTY_BRANDING: Branding = {
   nameEn: null,
   nameAr: null,
   logoUrl: null,
+  primaryColor: null,
 };
 
 /** Logo bundled with the build, used when no logo URL is configured. */
@@ -63,4 +66,63 @@ export function isSupportedLogoUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+/**
+ * Only `#RRGGBB` is accepted. The value is spliced into a `<style>` element, so
+ * the strict pattern is what keeps a stored setting from injecting CSS.
+ */
+export function isHexColor(value: string): boolean {
+  return HEX_COLOR.test(value);
+}
+
+/** Text colours from `globals.css`, reused so a brand colour sits in the palette. */
+const LIGHT_TEXT = "oklch(0.9850 0.0060 60.0000)";
+const DARK_TEXT = "oklch(0.1700 0.0120 50.0000)";
+
+/** WCAG relative luminance of an `#RRGGBB` colour, 0 (black) to 1 (white). */
+function relativeLuminance(hex: string): number {
+  const channels = [1, 3, 5].map((start) => {
+    const value = Number.parseInt(hex.slice(start, start + 2), 16) / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+/**
+ * Light text on a brand colour unless the colour is light enough that dark text
+ * contrasts better. 0.179 is where the two contrast ratios are equal.
+ */
+function foregroundFor(hex: string): string {
+  return relativeLuminance(hex) > 0.179 ? DARK_TEXT : LIGHT_TEXT;
+}
+
+/**
+ * CSS that re-points the primary tokens at a brand colour, or `null` when the
+ * value is unset or invalid.
+ *
+ * Dark mode gets the colour lifted towards white, the same move the bundled
+ * palette makes (wine 0.42 → 0.70 lightness), so it stays readable on a dark
+ * surface; text on it is then always dark.
+ */
+export function buildBrandColorCss(primaryColor: string | null): string | null {
+  if (!primaryColor || !isHexColor(primaryColor)) return null;
+
+  const light = primaryColor.toLowerCase();
+  const dark = `color-mix(in oklch, ${light} 55%, white)`;
+  const lightText = foregroundFor(light);
+
+  const tokens = (color: string, text: string) =>
+    [
+      `--primary:${color}`,
+      `--primary-foreground:${text}`,
+      `--ring:${color}`,
+      `--sidebar-primary:${color}`,
+      `--sidebar-primary-foreground:${text}`,
+      `--sidebar-ring:${color}`,
+    ].join(";");
+
+  return `:root{${tokens(light, lightText)}}.dark{${tokens(dark, DARK_TEXT)}}`;
 }

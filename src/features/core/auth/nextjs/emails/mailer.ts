@@ -34,6 +34,13 @@ function getTransporter() {
 }
 
 export async function sendMail(options: SendMailOptions) {
+  // A demo's addresses are synthetic or a prospect's; neither should get mail.
+  // Skipped rather than thrown so the flow that triggered it still completes.
+  if (env.DEMO_MODE === "1") {
+    console.info("DEMO_MODE: skipped email %s", options.subject);
+    return;
+  }
+
   const transporter = getTransporter();
   const fromEmail = options.fromEmail ?? env.SMTP_FROM_EMAIL;
   const fromName = options.fromName ?? env.SMTP_FROM_NAME;

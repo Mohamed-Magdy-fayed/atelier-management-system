@@ -31,6 +31,7 @@ export const SYSTEM_SETTING_CODE = {
   BRAND_NAME_EN: "00009",
   BRAND_NAME_AR: "00010",
   BRAND_LOGO_URL: "00011",
+  BRAND_PRIMARY_COLOR: "00012",
 } as const;
 
 /**
@@ -45,6 +46,7 @@ export const BRANDING_SETTING_CODES = [
   SYSTEM_SETTING_CODE.BRAND_NAME_EN,
   SYSTEM_SETTING_CODE.BRAND_NAME_AR,
   SYSTEM_SETTING_CODE.BRAND_LOGO_URL,
+  SYSTEM_SETTING_CODE.BRAND_PRIMARY_COLOR,
 ] as const;
 
 export function isBrandingSettingCode(code: string): boolean {
@@ -66,6 +68,7 @@ export const SYSTEM_SETTING_CODES: SystemSettingCode[] = [
   SYSTEM_SETTING_CODE.BRAND_NAME_EN,
   SYSTEM_SETTING_CODE.BRAND_NAME_AR,
   SYSTEM_SETTING_CODE.BRAND_LOGO_URL,
+  SYSTEM_SETTING_CODE.BRAND_PRIMARY_COLOR,
 ];
 
 const LEGACY_SETTING_CODES = {
@@ -88,7 +91,8 @@ export type SystemSettingDefinition = {
     | "settingName00008"
     | "settingName00009"
     | "settingName00010"
-    | "settingName00011";
+    | "settingName00011"
+    | "settingName00012";
   /** i18n key under `systemPages` */
   descriptionKey:
     | "settingDesc00001"
@@ -101,7 +105,8 @@ export type SystemSettingDefinition = {
     | "settingDesc00008"
     | "settingDesc00009"
     | "settingDesc00010"
-    | "settingDesc00011";
+    | "settingDesc00011"
+    | "settingDesc00012";
   /** English fallback stored in DB on seed (not user-editable). */
   descriptionEn: string;
   /**
@@ -236,6 +241,16 @@ export const SYSTEM_SETTINGS: SystemSettingDefinition[] = [
     descriptionKey: "settingDesc00011",
     descriptionEn:
       "Logo shown in the public catalog and customer portal headers. Upload it with the upload button — a link from elsewhere cannot be displayed. Leave empty to use the logo bundled with this deployment.",
+    editable: { value: true },
+    seed: { isActive: null, value: null },
+  },
+  {
+    code: SYSTEM_SETTING_CODE.BRAND_PRIMARY_COLOR,
+    label: "branding",
+    nameKey: "settingName00012",
+    descriptionKey: "settingDesc00012",
+    descriptionEn:
+      "Brand colour used for buttons, links and highlights, as a hex code such as #84253D. Leave empty to use the colours bundled with this deployment.",
     editable: { value: true },
     seed: { isActive: null, value: null },
   },
