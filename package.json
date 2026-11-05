@@ -27,6 +27,13 @@
     "demo:logo-color": "tsx scripts/demo/logo-color.ts",
     "demo:assets": "tsx scripts/demo/assets.ts",
     "demo:vercel": "tsx scripts/demo/vercel.ts",
+    "marketing:up": "docker compose -f docker-compose.marketing.yml up -d",
+    "marketing:down": "docker compose -f docker-compose.marketing.yml down",
+    "marketing:migrate": "tsx scripts/marketing/with-env.ts npx drizzle-kit migrate",
+    "marketing:photos": "tsx scripts/marketing/photos.ts",
+    "marketing:seed": "tsx scripts/marketing/with-env.ts npx tsx src/drizzle/seed/marketing/run.ts",
+    "marketing:dev": "tsx scripts/marketing/with-env.ts npx next dev -p 3100",
+    "marketing:shots": "tsx scripts/marketing/with-env.ts npx tsx scripts/marketing/screenshots.ts",
     "seed:admin": "tsx src/drizzle/seed/cli.ts admin",
     "seed:all": "tsx src/drizzle/seed/cli.ts all",
     "seed:clear": "tsx src/drizzle/seed/cli.ts clear",
@@ -35,7 +42,8 @@
     "fix:tz-shift": "tsx scripts/migrations/fix-timestamp-shift.ts",
     "preview": "next build && next start",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "marketing:walkthrough": "tsx scripts/marketing/with-env.ts npx tsx scripts/marketing/walkthrough.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",
@@ -89,6 +97,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",
+    "playwright": "^1.56.1",
     "tailwindcss": "^4",
     "tsx": "^4.19.4",
     "typescript": "^5"

@@ -1,0 +1,38 @@
+# Isolated stack for marketing screenshots (`npm run marketing:*`).
+#
+# Kept out of docker-compose.yml on purpose: its own project name, ports and
+# volumes, so nothing here can share storage with a database that has ever held
+# real customer data. Credentials are throwaway and only reachable on localhost.
+name: atelier-marketing
+
+services:
+  postgres:
+    image: postgres:17.0
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      - POSTGRES_USER=marketing
+      - POSTGRES_PASSWORD=marketing
+      - POSTGRES_DB=atelier_marketing
+    volumes:
+      - pgdata-marketing:/var/lib/postgresql/data
+
+  # The app talks to Redis through the Upstash REST client, so a plain Redis is
+  # fronted by an Upstash-compatible HTTP proxy instead of borrowing a real
+  # Upstash database.
+  redis:
+    image: redis:7.4-alpine
+
+  redis-http:
+    image: hiett/serverless-redis-http:latest
+    ports:
+      - "127.0.0.1:8079:80"
+    environment:
+      - SRH_MODE=env
+      - SRH_TOKEN=marketing-local-token
+      - SRH_CONNECTION_STRING=redis://redis:6379
+    depends_on:
+      - redis
+
+volumes:
+  pgdata-marketing:
