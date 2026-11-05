@@ -1,0 +1,45 @@
+{
+  "firstFrameAt": 0,
+  "scenes": [
+    {
+      "scene": "dashboard",
+      "at": 3.6
+    },
+    {
+      "scene": "dresses",
+      "at": 9.5
+    },
+    {
+      "scene": "new-booking",
+      "at": 15.6
+    },
+    {
+      "scene": "calendar",
+      "at": 22.5
+    },
+    {
+      "scene": "customer",
+      "at": 27.9
+    },
+    {
+      "scene": "deposit",
+      "at": 33.1
+    },
+    {
+      "scene": "receipt",
+      "at": 41.8
+    },
+    {
+      "scene": "pickup",
+      "at": 47.1
+    },
+    {
+      "scene": "catalog",
+      "at": 55.4
+    },
+    {
+      "scene": "end",
+      "at": 62.1
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+<title>Gateling Filming Prompter</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  /* Layout: a laptop prompter — the line you are saying sits high on the screen, right under the camera you look into. Single dark look by choice. */
+  :root {
+    --bg: #141113;
+    --panel: #1d191b;
+    --line: #2c2629;
+    --ink: #f7efe6;
+    --dim: #7a706a;
+    --cue: #fe6e00;
+    --copper: #e28047;
+    --font-ar: "Cairo", "Segoe UI", Tahoma, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--font-ar);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 12px; box-sizing: border-box;
+  }
+  .wrap { max-width: 1200px; margin-inline: auto; height: 100%; display: flex; flex-direction: column; gap: 14px; }
+  .prompt {
+    flex: 0 0 auto; text-align: center; padding: 18px 12px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  .count { font-family: var(--font-mono); font-size: 14px; color: var(--dim); direction: ltr; }
+  .say { font-size: clamp(32px, 5.6vw, 72px); font-weight: 800; line-height: 1.4; margin: 6px 0 4px; text-wrap: balance; }
+  .how { font-size: 18px; color: var(--copper); font-weight: 600; }
+  .next { font-size: 20px; color: var(--dim); margin-top: 10px; }
+  .next b { color: #a99c94; font-weight: 600; }
+  .nav { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+  button {
+    font: 800 18px var(--font-ar); color: var(--ink); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 12px; padding: 12px 22px; cursor: pointer; min-width: 140px;
+  }
+  button.primary { background: var(--cue); border-color: var(--cue); color: #1a0d02; }
+  button:hover { border-color: var(--copper); }
+  button:focus-visible { outline: 3px solid var(--copper); outline-offset: 2px; }
+  .kbd { font-size: 14px; color: var(--dim); text-align: center; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; min-height: 0; flex: 1; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; overflow: auto; min-width: 0; }
+  h2 { font-size: 18px; margin: 0 0 10px; color: var(--ink); }
+  ol.script { margin: 0; padding-inline-start: 22px; display: flex; flex-direction: column; gap: 8px; }
+  ol.script li { color: var(--dim); font-size: 17px; line-height: 1.6; cursor: pointer; }
+  ol.script li.on { color: var(--ink); }
+  ol.script li small { display: block; color: var(--copper); font-size: 14px; }
+  ul.check { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  ul.check label { display: flex; gap: 10px; align-items: flex-start; font-size: 16px; line-height: 1.55; cursor: pointer; }
+  ul.check input { margin-top: 6px; accent-color: var(--cue); width: 18px; height: 18px; flex: none; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="wrap" dir="rtl" lang="ar">
+  <div class="prompt" aria-live="polite">
+    <div class="count" id="count">1 / 5</div>
+    <div class="say" id="say"></div>
+    <div class="how" id="how"></div>
+    <div class="next" id="next"></div>
+    <div class="nav">
+      <button id="prev" type="button">السطر اللي فات</button>
+      <button class="primary" id="fwd" type="button">السطر الجاي</button>
+    </div>
+    <div class="kbd">مسطرة المسافة أو ← للسطر الجاي · ⟵ Backspace للي فات</div>
+  </div>
+
+  <div class="grid">
+    <section aria-labelledby="s-script">
+      <h2 id="s-script">النص كله</h2>
+      <ol class="script" id="script"></ol>
+    </section>
+    <section aria-labelledby="s-check">
+      <h2 id="s-check">قبل ما تصوّر</h2>
+      <ul class="check">
+        <li><label><input type="checkbox" id="c1"> الموبايل بالطول، الكاميرا الخلفية لو حد هيصوّرك، الأمامية لو لوحدك.</label></li>
+        <li><label><input type="checkbox" id="c2"> الموبايل تحت شاشة اللابتوب على طول، عشان عينك تبقى في الكاميرا وانت بتقرا.</label></li>
+        <li><label><input type="checkbox" id="c3"> وشّك ناحية الشباك — نور طبيعي، مش لمبة فوق راسك.</label></li>
+        <li><label><input type="checkbox" id="c4"> ورا منك فساتين أو رفّ أتيليه — من غير دفاتر أو أوراق عليها أسامي عملاء.</label></li>
+        <li><label><input type="checkbox" id="c5"> قميص عادي — زي ما بتقابل صاحب أتيليه، مش بدلة.</label></li>
+        <li><label><input type="checkbox" id="c6"> أوضة هادية، والموبايل على Do Not Disturb.</label></li>
+        <li><label><input type="checkbox" id="c7"> صوّر كل سطر لوحده، ٢–٣ مرات. سيب ثانية سكوت قبل وبعد كل مرة.</label></li>
+        <li><label><input type="checkbox" id="c8"> ما تحفظش — اتكلم كأنك بتحكي. غلطة صغيرة بتخليه طبيعي أكتر.</label></li>
+        <li><label><input type="checkbox" id="c9"> لما تخلص: حط الفيديوهات في فولدر <b>marketing/raw</b> في المشروع، وقولّي.</label></li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+  // Each line is filmed as its own take; the edit puts the matching cutaway over it.
+  const LINES = [
+    { say: "لو عندك أتيليه… الرسالة دي أكيد وصلتك قبل كده.", how: "قريب من الكاميرا · ابتسامة صغيرة كأنك فاهمه", cut: "رسالة العروسة" },
+    { say: "عروسة جاية تاخد فستانها… تلاقيه مع عروسة تانية. والسبب؟ الدفتر.", how: "وقفة بعد «والسبب؟» · هزّ راسك على «الدفتر»", cut: "الدفتر" },
+    { say: "أنا محمد، وعملت سيستم للأتيليهات… أول ما يوم يتحجز، مستحيل يتحجز تاني.", how: "واثق وهادي · ممكن تشاور بإيدك على «مستحيل»", cut: "التقويم" },
+    { say: "ابعتلي لينك صفحتك، وأنا بنفسي أنزّل فساتينك على السيستم… وخلال ٢٤ ساعة تلاقي أتيليهك جاهز.", how: "زي ما بتعرض خدمة على صاحبك · ركّز على «٢٤ ساعة»", cut: "صفحتك ← السيستم" },
+    { say: "ده مجاناً لأول ٢٠ أتيليه في مدينة نصر. الزرار تحت… ابعتلي على واتساب.", how: "شاور لتحت على «الزرار تحت» · خلّص بابتسامة وسكتة", cut: "زرار واتساب" },
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  const list = $("script");
+  const items = LINES.map((line, i) => {
+    const li = document.createElement("li");
+    li.textContent = line.say;
+    const small = document.createElement("small");
+    small.textContent = `${line.how} — يتركّب عليه: ${line.cut}`;
+    li.appendChild(small);
+    li.addEventListener("click", () => go(i));
+    list.appendChild(li);
+    return li;
+  });
+
+  let at = 0;
+  try { at = Math.min(LINES.length - 1, Math.max(0, Number(localStorage.getItem("filming-line")) || 0)); } catch { /* storage optional */ }
+
+  function go(i) {
+    at = Math.min(LINES.length - 1, Math.max(0, i));
+    const line = LINES[at];
+    $("count").textContent = `${at + 1} / ${LINES.length}`;
+    $("say").textContent = line.say;
+    $("how").textContent = line.how;
+    const nxt = LINES[at + 1];
+    $("next").innerHTML = "";
+    if (nxt) {
+      const b = document.createElement("b");
+      b.textContent = nxt.say;
+      $("next").append("بعده: ", b);
+    } else {
+      $("next").textContent = "ده آخر سطر — برافو.";
+    }
+    items.forEach((el, k) => el.classList.toggle("on", k === at));
+    try { localStorage.setItem("filming-line", String(at)); } catch { /* storage optional */ }
+  }
+
+  $("fwd").addEventListener("click", () => go(at + 1));
+  $("prev").addEventListener("click", () => go(at - 1));
+  document.addEventListener("keydown", (e) => {
+    if (e.target.closest("input, button")) return;
+    if (e.code === "Space" || e.key === "ArrowLeft") { e.preventDefault(); go(at + 1); }
+    if (e.key === "Backspace" || e.key === "ArrowRight") { e.preventDefault(); go(at - 1); }
+  });
+
+  document.querySelectorAll('.check input').forEach((box) => {
+    try { box.checked = localStorage.getItem("filming-" + box.id) === "1"; } catch { /* storage optional */ }
+    box.addEventListener("change", () => { try { localStorage.setItem("filming-" + box.id, box.checked ? "1" : "0"); } catch { /* storage optional */ } });
+  });
+
+  go(at);
+</script>
