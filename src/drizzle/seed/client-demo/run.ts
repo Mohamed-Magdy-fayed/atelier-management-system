@@ -1,7 +1,16 @@
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, notInArray } from "drizzle-orm";
 
 import { db } from "@/drizzle";
-import { BranchesTable, DressesTable, SettingsTable } from "@/drizzle/schema";
+import {
+  BranchesTable,
+  BranchMembershipsTable,
+  DressesTable,
+  ExpensesTable,
+  ImportJobsTable,
+  PaymentsTable,
+  ReservationsTable,
+  SettingsTable,
+} from "@/drizzle/schema";
 import { SYSTEM_SETTING_CODE } from "@/features/system/settings/lib/system-settings-registry";
 
 import { getDatabaseHostname } from "../clear-db";
@@ -38,10 +47,9 @@ function assertClientDemoTarget(): void {
   }
 }
 
-async function applyBranding(
-  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
-  manifest: ClientDemoManifest,
-) {
+type SeedTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+async function applyBranding(tx: SeedTransaction, manifest: ClientDemoManifest) {
   const values: Array<[string, string | null]> = [
     [SYSTEM_SETTING_CODE.BRAND_NAME_EN, manifest.nameEn],
     [SYSTEM_SETTING_CODE.BRAND_NAME_AR, manifest.nameAr],
@@ -59,34 +67,85 @@ async function applyBranding(
 }
 
 /**
- * Generic branch names a leftover demo branch may take. Used only when its own
- * name shares a district with one of the client's branches — a demo showing
- * both "Heliopolis" and "Heliopolis Atelier" reads as a data bug.
+ * Folds every demo branch the client does not have into the client's last
+ * branch, then deletes it, so the branch switcher lists only the manifest's
+ * branches. Moving the rows rather than dropping them keeps the dashboard's
+ * totals, and the money invariant, as the `demo` profile built them.
+ *
+ * Re-seeding stays idempotent: the target is itself a demo branch, so
+ * `clearPreviousDemoData` still cascades everything moved here.
  */
-const SPARE_BRANCH_NAMES = [
-  { nameEn: "Zamalek Atelier", nameAr: "أتيليه الزمالك", addressEn: "Zamalek, Cairo", addressAr: "الزمالك، القاهرة" },
-  { nameEn: "New Cairo Atelier", nameAr: "أتيليه القاهرة الجديدة", addressEn: "Fifth Settlement, New Cairo", addressAr: "التجمع الخامس، القاهرة الجديدة" },
-  { nameEn: "Maadi Atelier", nameAr: "أتيليه المعادي", addressEn: "Maadi, Cairo", addressAr: "المعادي، القاهرة" },
-  { nameEn: "Sheikh Zayed Atelier", nameAr: "أتيليه الشيخ زايد", addressEn: "Sheikh Zayed, Giza", addressAr: "الشيخ زايد، الجيزة" },
-] as const;
-
-function sharesDistrict(name: string, manifest: ClientDemoManifest): boolean {
-  const district = name.replace(/\s*Atelier$/i, "").toLowerCase();
-  return manifest.branches.some((branch) => {
-    const taken = `${branch.nameEn} ${branch.addressEn ?? ""}`.toLowerCase();
-    return taken.includes(district);
-  });
-}
-
-function pickSpareBranchName<T extends { nameEn: string }>(
+async function mergeExtraBranches(
+  tx: SeedTransaction,
   manifest: ClientDemoManifest,
-  generic: T,
-): T | (typeof SPARE_BRANCH_NAMES)[number] {
-  if (!sharesDistrict(generic.nameEn, manifest)) return generic;
-  return (
-    SPARE_BRANCH_NAMES.find((spare) => !sharesDistrict(spare.nameEn, manifest)) ??
-    generic
-  );
+) {
+  const target = DEMO_BRANCHES[manifest.branches.length - 1].id;
+
+  for (const extra of DEMO_BRANCHES.slice(manifest.branches.length)) {
+    await tx
+      .update(DressesTable)
+      .set({ branchId: target })
+      .where(eq(DressesTable.branchId, extra.id));
+    await tx
+      .update(ReservationsTable)
+      .set({ branchId: target })
+      .where(eq(ReservationsTable.branchId, extra.id));
+    await tx
+      .update(PaymentsTable)
+      .set({ branchId: target })
+      .where(eq(PaymentsTable.branchId, extra.id));
+    await tx
+      .update(ExpensesTable)
+      .set({ branchId: target })
+      .where(eq(ExpensesTable.branchId, extra.id));
+    await tx
+      .update(ImportJobsTable)
+      .set({ branchId: target })
+      .where(eq(ImportJobsTable.branchId, extra.id));
+
+    // A user already in the target keeps that row, and their extra-branch row
+    // goes with the branch. If that row was their current branch, the target
+    // becomes current so they are not left without one.
+    await tx
+      .update(BranchMembershipsTable)
+      .set({ isCurrent: true })
+      .where(
+        and(
+          eq(BranchMembershipsTable.branchId, target),
+          inArray(
+            BranchMembershipsTable.userId,
+            tx
+              .select({ userId: BranchMembershipsTable.userId })
+              .from(BranchMembershipsTable)
+              .where(
+                and(
+                  eq(BranchMembershipsTable.branchId, extra.id),
+                  eq(BranchMembershipsTable.isCurrent, true),
+                ),
+              ),
+          ),
+        ),
+      );
+
+    await tx
+      .update(BranchMembershipsTable)
+      .set({ branchId: target })
+      .where(
+        and(
+          eq(BranchMembershipsTable.branchId, extra.id),
+          notInArray(
+            BranchMembershipsTable.userId,
+            tx
+              .select({ userId: BranchMembershipsTable.userId })
+              .from(BranchMembershipsTable)
+              .where(eq(BranchMembershipsTable.branchId, target)),
+          ),
+        ),
+      );
+
+    // Cascades the memberships skipped above.
+    await tx.delete(BranchesTable).where(eq(BranchesTable.id, extra.id));
+  }
 }
 
 /**
@@ -130,15 +189,7 @@ export async function seedClientDemoDataset(manifestPath: string) {
         .where(eq(BranchesTable.id, DEMO_BRANCHES[index].id));
     }
 
-    for (const [index, generic] of DEMO_BRANCHES.entries()) {
-      if (index < manifest.branches.length) continue;
-      const spare = pickSpareBranchName(manifest, generic);
-      if (spare === generic) continue;
-      await tx
-        .update(BranchesTable)
-        .set(spare)
-        .where(eq(BranchesTable.id, generic.id));
-    }
+    await mergeExtraBranches(tx, manifest);
 
     // Ranks 0–5 of the main branch are its most-booked dresses.
     for (const [rank, dress] of manifest.dresses.entries()) {

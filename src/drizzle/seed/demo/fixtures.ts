@@ -347,7 +347,9 @@ function buildBranchDresses(branchIndex: number): DemoDress[] {
       images: [
         "https://storage.googleapis.com/megz-courses.appspot.com/uploads%2F1786482586810-8a6b4c62-0d7a-4424-b9f7-1b85fa51746a.avif",
       ],
-      depositAmount: roundToStep(pricePerDay * 1.3, 50),
+      // The deposit (العربون) is part of the rental price, never above it:
+      // the reservation form prefills depositPaid from this.
+      depositAmount: Math.max(50, roundToStep(pricePerDay * 0.4, 50)),
       insurance: roundToStep(pricePerDay * 0.3, 50),
       currentStatus: statusByRank.get(rank) ?? "available",
       branchIndex,
