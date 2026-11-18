@@ -1,3 +1,5 @@
+import { DEFAULT_CALLING_CODE } from "@/lib/locale-config";
+
 /**
  * Bare E.164 digits for WhatsApp, or null when the number is unusable.
  *
@@ -12,9 +14,9 @@ export function toWhatsAppDigits(
   let digits = phone.replace(/\D/g, "");
   if (!digits) return null;
   if (digits.startsWith("0")) {
-    digits = `20${digits.slice(1)}`;
+    digits = `${DEFAULT_CALLING_CODE}${digits.slice(1)}`;
   } else if (digits.length === 10) {
-    digits = `20${digits}`;
+    digits = `${DEFAULT_CALLING_CODE}${digits}`;
   }
   return digits;
 }

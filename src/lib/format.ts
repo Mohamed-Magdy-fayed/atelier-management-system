@@ -1,14 +1,16 @@
-export function formatCurrency(amount: number, locale = "en-EG") {
+import { CURRENCY, intlLocale } from "@/lib/locale-config";
+
+export function formatCurrency(amount: number, locale = intlLocale("en")) {
   return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "EGP",
+    currency: CURRENCY,
   }).format(amount);
 }
 
 export function formatDate(
   date: Date | string | number | undefined,
   opts: Intl.DateTimeFormatOptions = {},
-  locale = "en-EG",
+  locale = intlLocale("en"),
 ) {
   if (!date) return "";
 

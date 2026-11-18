@@ -176,6 +176,8 @@ export default {
     lead: "Browse our curated dresses, see pricing by branch, and check availability—then visit us to reserve in person.",
     primaryGuest: "View collection",
     secondaryGuest: "Sign in",
+    termsLink: "Terms of rental",
+    privacyLink: "Privacy policy",
     footerTagline:
       "Visit our boutiques for fittings and reservations—online reservation coming soon.",
     locationsTitle: "Our locations",
@@ -652,7 +654,8 @@ export default {
     reservationsFormStepCustomer: "Customer",
     reservationsFormStepPayment: "Payment & status",
     reservationsFormStepProgress: "Step {current} of {total}",
-    reservationMinDeposit: "Deposit must be at least 100 EGP.",
+    reservationMinDeposit:
+      "Deposit is below the minimum deposit for this shop.",
     reservationValidationReceivingRequired:
       "Please set the pickup date and time.",
     reservationValidationReturnRequired: "Please set the return date and time.",
@@ -684,6 +687,9 @@ export default {
     paymentMethodMobileWallet: "Mobile wallet",
     paymentMethodVisa: "Visa",
     paymentMethodCash: "Cash",
+    paymentMethodCard: "Card",
+    paymentMethodBankTransfer: "Bank transfer",
+    paymentMethodPaypal: "PayPal",
     expensesTitle: "Expenses",
     expensesLead:
       "Track operational costs — dry cleaning, tailoring, dress acquisition, salaries, and more.",

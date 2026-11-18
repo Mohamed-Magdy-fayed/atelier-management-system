@@ -7,14 +7,13 @@ import type { FormEvent } from "react";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-
 import { useAppForm } from "@/components/forms/hooks";
-import { translateZodIssueMessages } from "@/components/forms/validation-messages";
 import {
   OverlayFormBody,
   OverlayFormFooterActions,
   OverlayFormSubmitButton,
 } from "@/components/forms/overlay-form";
+import { translateZodIssueMessages } from "@/components/forms/validation-messages";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,21 +27,21 @@ import { FieldGroup, FieldSet } from "@/components/ui/field";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { paymentMethods } from "@/drizzle/schemas/system/payments-table";
 import { reservationStatuses } from "@/drizzle/schemas/system/reservations-table";
-import { translationKey } from "@/features/core/i18n/global";
 import { useTranslation } from "@/features/core/i18n/client";
+import { translationKey } from "@/features/core/i18n/global";
 import { useInvalidateDashboard } from "@/features/system/dashboard/lib/use-invalidate-dashboard";
 import { DressPickerField } from "@/features/system/dresses/admin/components/dress-picker-field";
 import { useBranchFieldOptions } from "@/features/system/shared/use-branch-field-options";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ReservationGridRow } from "@/integrations/trpc/routers/reservations";
 import { formatCurrency } from "@/lib/format";
-
+import { intlLocale, MIN_DEPOSIT } from "@/lib/locale-config";
+import { isOccasionDayBlocked } from "../../lib/occasion-day-availability";
 import { mapToReceiptProps } from "../../lib/receipt/map-receipt-props";
 import {
   buildDefaultReservationDatetimes,
   syncReceivingReturnFromOccasion,
 } from "../../lib/reservation-datetime-defaults";
-import { isOccasionDayBlocked } from "../../lib/occasion-day-availability";
 import { ReservationReceiptPreview } from "./reservation-receipt-preview";
 
 const reservationStatusSchema = z.enum(reservationStatuses);
@@ -72,7 +71,7 @@ const createFormSchema = z.object({
   depositPaid: z
     .number()
     .int()
-    .min(100, translationKey("systemPages.reservationMinDeposit"))
+    .min(MIN_DEPOSIT, translationKey("systemPages.reservationMinDeposit"))
     .max(10_000_000, translationKey("forms.validation.numberIntMaxLarge")),
   discount: z
     .number()
@@ -260,7 +259,7 @@ export function ReservationFormDialog({
       receivingDateTime,
       returnDateTime,
       occasionDate,
-      depositPaid: 100,
+      depositPaid: MIN_DEPOSIT,
       discount: 0,
       paymentMethod: "cash",
       status: "reserved",
@@ -406,7 +405,8 @@ export function ReservationFormDialog({
 
   // The branch picked in the form decides which dresses and customers are
   // offered — the sidebar's active branch no longer gates this dialog.
-  const resolvedBranchId = (isEdit ? editBranchId : createBranchId) || undefined;
+  const resolvedBranchId =
+    (isEdit ? editBranchId : createBranchId) || undefined;
 
   const { data: formData, isFetching: formDataLoading } = useQuery({
     ...trpc.reservations.formData.queryOptions(
@@ -427,7 +427,7 @@ export function ReservationFormDialog({
     [branchOptions, resolvedBranchId],
   );
 
-  const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
+  const currencyLocale = intlLocale(locale);
 
   const customerOptions = useMemo(
     () =>
@@ -985,9 +985,7 @@ export function ReservationFormDialog({
                     variant="outline"
                     size="default"
                     disabled={pending}
-                    onClick={() =>
-                      setCreateStep((s) => Math.max(1, s - 1))
-                    }
+                    onClick={() => setCreateStep((s) => Math.max(1, s - 1))}
                   >
                     {String(t("common.back"))}
                   </Button>
@@ -1008,9 +1006,7 @@ export function ReservationFormDialog({
                     disabled={pending || !resolvedBranchId}
                   >
                     <SubmitIcon
-                      className={
-                        pending ? "size-3.5 animate-spin" : "size-3.5"
-                      }
+                      className={pending ? "size-3.5 animate-spin" : "size-3.5"}
                     />
                     {pending
                       ? String(t("common.saving"))

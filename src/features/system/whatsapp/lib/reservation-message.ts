@@ -1,4 +1,5 @@
 import type { WhatsAppSendingMode } from "@/features/system/settings/lib/system-settings-registry";
+import { CURRENCY, intlLocale } from "@/lib/locale-config";
 
 export type ReservationMessageData = {
   customerName: string;
@@ -46,7 +47,7 @@ type Translate = (
  * in the business timezone so "pick up at 18:00" means the shop's 18:00.
  */
 function formatDateTime(value: Date, locale: string, timeZone: string): string {
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-GB", {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone,
@@ -54,16 +55,16 @@ function formatDateTime(value: Date, locale: string, timeZone: string): string {
 }
 
 function formatDate(value: Date, locale: string, timeZone: string): string {
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-GB", {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
     dateStyle: "medium",
     timeZone,
   }).format(value);
 }
 
 function formatMoney(amount: number, locale: string): string {
-  return new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-GB", {
+  return new Intl.NumberFormat(intlLocale(locale), {
     style: "currency",
-    currency: "EGP",
+    currency: CURRENCY,
     maximumFractionDigits: 0,
   }).format(amount);
 }
@@ -150,10 +151,7 @@ export function buildReservationMessage({
   }
 
   if (mode === "platform") {
-    lines.push(
-      "",
-      t("systemPages.whatsappBrandingSuffix", {}),
-    );
+    lines.push("", t("systemPages.whatsappBrandingSuffix", {}));
   }
 
   return lines.join("\n");

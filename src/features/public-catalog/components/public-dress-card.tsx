@@ -1,10 +1,10 @@
 import Link from "next/link";
-
 import { Badge } from "@/components/ui/badge";
 import { Muted } from "@/components/ui/typography";
 import { PublicDressCoverImage } from "@/features/public-catalog/components/public-dress-cover-image";
 import type { PublicDressRow } from "@/features/public-catalog/server/queries";
 import { formatCurrency } from "@/lib/format";
+import { intlLocale } from "@/lib/locale-config";
 import { cn } from "@/lib/utils";
 
 export function PublicDressCard({
@@ -22,7 +22,7 @@ export function PublicDressCard({
   };
   hidePrices?: boolean;
 }) {
-  const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
+  const currencyLocale = intlLocale(locale);
   const branchLabel = locale === "ar" ? dress.branchNameAr : dress.branchNameEn;
   const cover = dress.images?.[0];
 

@@ -1,6 +1,5 @@
 import { TRPCError } from "@trpc/server";
 import { and, between, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
-
 import {
   BranchesTable,
   DressesTable,
@@ -17,8 +16,9 @@ import {
   assertUserCanAccessBranch,
 } from "@/features/system/shared/staff-access";
 import { resolveWhatsAppSender } from "@/features/system/whatsapp/server/credentials";
-import { reservationCreated } from "@/integrations/inngest/functions/reservation-whatsapp";
 import { inngest } from "@/integrations/inngest/client";
+import { reservationCreated } from "@/integrations/inngest/functions/reservation-whatsapp";
+import { MIN_DEPOSIT } from "@/lib/locale-config";
 import { rentalCustomerPhoneKey } from "@/lib/phone";
 import { rentalWindowsOverlap } from "@/lib/rental-availability";
 import { generateReservationCode } from "../utils";
@@ -223,7 +223,7 @@ export async function createReservation(
   await assertScreenPermission(ctx, session, "reservations", "create");
   await assertUserCanAccessBranch(ctx, session, input.branchId);
 
-  if (input.depositPaid < 100) {
+  if (input.depositPaid < MIN_DEPOSIT) {
     throw new TRPCError({
       code: "BAD_REQUEST",
       message: ctx.t("systemPages.reservationMinDeposit"),

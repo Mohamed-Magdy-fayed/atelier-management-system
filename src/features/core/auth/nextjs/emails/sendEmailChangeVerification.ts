@@ -5,12 +5,14 @@ import * as React from "react";
 
 import type { SendEmailChangeVerificationEmail } from "@/features/core/auth/types";
 import { getT } from "@/features/core/i18n/server";
+import { getEmailBrandName } from "./brand";
 import { sendMail } from "./mailer";
 import { BaseEmail } from "./templates/BaseEmail";
 
 export const sendEmailChangeVerification: SendEmailChangeVerificationEmail =
   async (options) => {
     const { t } = await getT();
+    const brand = await getEmailBrandName();
     const defaultRecipientName = t(
       "authTranslations.emails.common.defaultRecipientName",
     );
@@ -42,10 +44,9 @@ export const sendEmailChangeVerification: SendEmailChangeVerificationEmail =
     const notice = t(
       "authTranslations.emails.emailChangeVerification.html.ignore",
     );
-    const signature = t("authTranslations.emails.common.signatureHtml").replace(
-      /<br\s*\/?\s*>/gi,
-      "\n",
-    );
+    const signature = t("authTranslations.emails.common.signatureHtml", {
+      brand,
+    }).replace(/<br\s*\/?\s*>/gi, "\n");
 
     const html = await render(
       React.createElement(BaseEmail, {
@@ -66,6 +67,6 @@ export const sendEmailChangeVerification: SendEmailChangeVerificationEmail =
       subject,
       text,
       html,
-      fromName: t("authTranslations.emails.common.fromName"),
+      fromName: t("authTranslations.emails.common.fromName", { brand }),
     });
   };

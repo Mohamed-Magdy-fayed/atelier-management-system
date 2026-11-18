@@ -22,6 +22,7 @@ import { getCustomerPortalData } from "@/features/customer-portal/server/queries
 import { resolveBrandName } from "@/features/system/settings/lib/branding";
 import { getBranding } from "@/features/system/settings/server/branding";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { intlLocale } from "@/lib/locale-config";
 import { cn } from "@/lib/utils";
 
 const statusLabelKey = {
@@ -58,7 +59,7 @@ export default async function MyAccountPage() {
     locale,
     String(t("appName")),
   );
-  const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
+  const currencyLocale = intlLocale(locale);
   const { stats, reservations } = await getCustomerPortalData(
     auth.session.user.id,
   );

@@ -40,6 +40,12 @@ function paymentMethodTranslationId(method: string) {
       return "systemPages.paymentMethodVisa" as const;
     case "cash":
       return "systemPages.paymentMethodCash" as const;
+    case "card":
+      return "systemPages.paymentMethodCard" as const;
+    case "bankTransfer":
+      return "systemPages.paymentMethodBankTransfer" as const;
+    case "paypal":
+      return "systemPages.paymentMethodPaypal" as const;
     default:
       return "systemPages.paymentsMethod";
   }

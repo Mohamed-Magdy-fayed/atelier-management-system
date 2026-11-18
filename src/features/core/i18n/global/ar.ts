@@ -174,6 +174,8 @@ export default {
     lead: "تصفّح مجموعتنا، واطّلع على الأسعار حسب الفرع، وتحقق من التوفر—ثم زرنا لإتمام الحجز في أحد البوتيكات.",
     primaryGuest: "عرض المجموعة",
     secondaryGuest: "تسجيل الدخول",
+    termsLink: "شروط الإيجار",
+    privacyLink: "سياسة الخصوصية",
     footerTagline:
       "زرّ فروعنا للقياس والحجز—الحجز الإلكتروني الكامل غير متاح بعد.",
     locationsTitle: "فروعنا",
@@ -635,7 +637,7 @@ export default {
     reservationsFormStepCustomer: "العميل",
     reservationsFormStepPayment: "الدفع والحالة",
     reservationsFormStepProgress: "الخطوة {current} من {total}",
-    reservationMinDeposit: "يجب أن يكون المقدم 100 جنيه على الأقل.",
+    reservationMinDeposit: "المقدم أقل من الحد الأدنى للمقدم في هذا المتجر.",
     reservationValidationReceivingRequired: "يرجى تحديد تاريخ ووقت الاستلام.",
     reservationValidationReturnRequired: "يرجى تحديد تاريخ ووقت الإرجاع.",
     reservationInvalidDress: "اختر فستانًا نشطًا صالحًا لهذا الفرع.",
@@ -666,6 +668,9 @@ export default {
     paymentMethodMobileWallet: "محفظة إلكترونية",
     paymentMethodVisa: "فيزا",
     paymentMethodCash: "نقدًا",
+    paymentMethodCard: "بطاقة",
+    paymentMethodBankTransfer: "تحويل بنكي",
+    paymentMethodPaypal: "باي بال",
     expensesTitle: "المصروفات",
     expensesLead:
       "تتبع التكاليف التشغيلية — التنظيف الجاف والخياطة وشراء الفساتين والرواتب وغيرها.",

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-
 import { LinkButton } from "@/components/general/link-button";
 import { buttonVariants } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,6 +17,7 @@ import {
 } from "@/features/public-catalog/server/queries";
 import { formatBranchHours } from "@/lib/branch-hours";
 import { formatCurrency } from "@/lib/format";
+import { intlLocale } from "@/lib/locale-config";
 import { toWhatsAppUrl } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
@@ -50,7 +50,7 @@ export default async function PublicDressDetailPage({ params }: Props) {
 
   const { t } = await getT();
   const locale = await getLocaleCookie();
-  const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
+  const currencyLocale = intlLocale(locale);
 
   const branchLabel = locale === "ar" ? dress.branchNameAr : dress.branchNameEn;
   const address =

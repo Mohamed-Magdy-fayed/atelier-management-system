@@ -3,7 +3,6 @@
 import { CalendarIcon } from "lucide-react";
 import { useMemo, useState, useTransition } from "react";
 import { ar, enUS } from "react-day-picker/locale";
-
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -15,6 +14,7 @@ import {
 import { useTranslation } from "@/features/core/i18n/client";
 import { checkDressAvailabilityAction } from "@/features/public-catalog/server/actions";
 import { NEXT_AVAILABLE_SCAN_DAYS } from "@/features/public-catalog/server/constants";
+import { intlLocale } from "@/lib/locale-config";
 import { cn } from "@/lib/utils";
 
 function toYMD(d: Date): string {
@@ -104,9 +104,7 @@ export function DressAvailabilityChecker({
                 >
                   <CalendarIcon className="mr-2 size-4" />
                   {selected
-                    ? selected.toLocaleDateString(
-                        locale === "ar" ? "ar-EG" : "en-EG",
-                      )
+                    ? selected.toLocaleDateString(intlLocale(locale))
                     : String(t("common.selectDate"))}
                 </Button>
               }

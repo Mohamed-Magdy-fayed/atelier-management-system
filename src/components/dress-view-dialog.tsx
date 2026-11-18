@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { EyeIcon, Loader2Icon } from "lucide-react";
 import type { ReactElement } from "react";
 import { useState } from "react";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +19,7 @@ import { useTranslation } from "@/features/core/i18n/client";
 import { DressPublicShare } from "@/features/system/dresses/admin/components/dress-public-share";
 import { useTRPC } from "@/integrations/trpc/client";
 import { formatCurrency } from "@/lib/format";
+import { intlLocale } from "@/lib/locale-config";
 
 type DressStaticData = {
   title: string;
@@ -74,7 +74,7 @@ function DressViewBody({
 }) {
   const { t, locale } = useTranslation();
   const trpc = useTRPC();
-  const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
+  const currencyLocale = intlLocale(locale);
 
   const { data: fetched, isLoading } = useQuery({
     ...trpc.dresses.getById.queryOptions({ id: dressId }),

@@ -25,9 +25,14 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { useTranslation } from "@/features/core/i18n/client";
+import { DEFAULT_PHONE_COUNTRY } from "@/lib/locale-config";
 import { cn } from "@/lib/utils";
 
 const countryOptions = [
+  { code: "US", flagUrl: "/flags/us.png" },
+  { code: "GB", flagUrl: "/flags/gb.png" },
+  { code: "CA", flagUrl: "/flags/ca.png" },
+  { code: "AU", flagUrl: "/flags/au.png" },
   { code: "EG", flagUrl: "/flags/eg.png" },
   { code: "MA", flagUrl: "/flags/ma.png" },
   { code: "TN", flagUrl: "/flags/tn.png" },
@@ -157,7 +162,7 @@ export const MobileNumberInput = memo(function MobileNumberInput({
       containerComponent={PhoneContainer}
       countries={countryCodes}
       countrySelectComponent={CountrySelect}
-      defaultCountry="EG"
+      defaultCountry={DEFAULT_PHONE_COUNTRY}
       inputComponent={PhoneInputComponent}
       limitMaxLength={true}
       numberInputProps={inputProps}

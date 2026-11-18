@@ -5,6 +5,7 @@ import * as React from "react";
 
 import { getT } from "@/features/core/i18n/server";
 
+import { getEmailBrandName } from "./brand";
 import { sendMail } from "./mailer";
 import { BaseEmail } from "./templates/BaseEmail";
 
@@ -15,6 +16,7 @@ export async function sendPasswordResetCodeEmail(options: {
   expiresInMinutes: number;
 }) {
   const { t } = await getT();
+  const brand = await getEmailBrandName();
   const subject = t("authTranslations.emails.passwordReset.subject");
   const defaultRecipientName = t(
     "authTranslations.emails.common.defaultRecipientName",
@@ -42,10 +44,9 @@ export async function sendPasswordResetCodeEmail(options: {
     minutesLabel,
   });
   const notice = t("authTranslations.emails.passwordReset.html.ignore");
-  const signature = t("authTranslations.emails.common.signatureHtml").replace(
-    /<br\s*\/?\s*>/gi,
-    "\n",
-  );
+  const signature = t("authTranslations.emails.common.signatureHtml", {
+    brand,
+  }).replace(/<br\s*\/?\s*>/gi, "\n");
 
   const html = await render(
     React.createElement(BaseEmail, {
@@ -65,6 +66,6 @@ export async function sendPasswordResetCodeEmail(options: {
     subject,
     text,
     html,
-    fromName: t("authTranslations.emails.common.fromName"),
+    fromName: t("authTranslations.emails.common.fromName", { brand }),
   });
 }

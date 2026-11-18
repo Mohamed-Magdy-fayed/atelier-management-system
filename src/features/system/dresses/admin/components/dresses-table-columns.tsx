@@ -1,7 +1,6 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-
 import { Badge } from "@/components/ui/badge";
 import {
   createEntityActionsColumn,
@@ -11,6 +10,7 @@ import {
 import type { useTranslation } from "@/features/core/i18n/client";
 import type { DressGridRow } from "@/integrations/trpc/routers/dresses";
 import { formatCurrency } from "@/lib/format";
+import { intlLocale } from "@/lib/locale-config";
 import { cn } from "@/lib/utils";
 import { DressRowActions, type SetDressRowAction } from "./dress-row-actions";
 import { DressViewDialog } from "./dress-view-dialog";
@@ -141,7 +141,7 @@ export function buildDressColumns(opts: {
             )}
             title={String(t("systemPages.dressesNetValueHint"))}
           >
-            {formatCurrency(net, opts.locale === "ar" ? "ar-EG" : "en-EG")}
+            {formatCurrency(net, intlLocale(opts.locale))}
           </span>
         );
       },

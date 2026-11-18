@@ -224,8 +224,8 @@ export default {
         minuteSingular: "دقيقة",
         minutePlural: "دقائق",
         greetingHtml: "مرحباً {name},",
-        signatureHtml: "شكراً،<br/>فريق Gateling",
-        fromName: "Gateling Auth",
+        signatureHtml: "شكراً،<br/>فريق {brand}",
+        fromName: "{brand}",
       },
       passwordReset: {
         subject: "رمز استعادة كلمة المرور",

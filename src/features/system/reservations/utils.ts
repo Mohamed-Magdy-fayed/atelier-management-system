@@ -44,6 +44,12 @@ export function formatPaymentMethod(method: PaymentMethod) {
       return "Mobile wallet";
     case "visa":
       return "Visa";
+    case "card":
+      return "Card";
+    case "bankTransfer":
+      return "Bank transfer";
+    case "paypal":
+      return "PayPal";
     default:
       return method;
   }
