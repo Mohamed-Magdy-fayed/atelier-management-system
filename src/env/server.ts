@@ -79,6 +79,19 @@ export const env = createEnv({
     DEMO_MODE: z.enum(["0", "1"]).default("0"),
 
     /**
+     * Marketing site only. WhatsApp number (digits, country code, no "+") that
+     * the landing page's lead form opens. Unset hides the WhatsApp buttons
+     * rather than linking to a wrong number.
+     */
+    SALES_WHATSAPP_NUMBER: z
+      .string()
+      .regex(/^\d{8,15}$/)
+      .optional(),
+
+    /** Google Search Console HTML-tag token (the `content` of the meta tag). */
+    GOOGLE_SITE_VERIFICATION: z.string().min(1).optional(),
+
+    /**
      * Prepended to every Redis key. Demos share one Upstash database and are
      * seeded with the same deterministic user ids, so without a per-deployment
      * prefix one demo's cached permissions would be served to another. Empty

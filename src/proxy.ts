@@ -19,7 +19,16 @@ const authRoutes = [
   "/reset-password",
 ];
 
-const publicRoutes = ["/verify-email", "/oauth/", "/collection", "/view-dress"];
+const publicRoutes = [
+  "/verify-email",
+  "/oauth/",
+  "/collection",
+  "/view-dress",
+  // Marketing surface and crawler files: must never bounce to sign-in.
+  "/start",
+  "/robots.txt",
+  "/sitemap",
+];
 
 export async function proxy(request: NextRequest) {
   const response = (await middlewareAuth(request)) ?? NextResponse.next();
