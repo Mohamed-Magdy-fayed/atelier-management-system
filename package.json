@@ -13,7 +13,7 @@
     "db:start": "docker-compose up -d",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
+    "db:push": "node scripts/guard-db-push.mjs && drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:reset": "docker compose down -v && docker compose up -d",
     "db:drop": "drizzle-kit drop",
