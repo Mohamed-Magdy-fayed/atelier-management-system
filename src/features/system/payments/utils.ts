@@ -35,6 +35,12 @@ export function getPaymentMethodVariant(
       return "outline";
     case "visa":
       return "destructive";
+    case "card":
+      return "destructive";
+    case "bankTransfer":
+      return "outline";
+    case "paypal":
+      return "outline";
     default:
       return "secondary";
   }

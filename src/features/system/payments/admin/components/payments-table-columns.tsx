@@ -1,7 +1,6 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-
 import { Badge } from "@/components/ui/badge";
 import type {
   PaymentMethod,
@@ -20,6 +19,7 @@ import {
 } from "@/features/system/payments/utils";
 import type { PaymentGridRow } from "@/integrations/trpc/routers/payments";
 import { formatCurrency } from "@/lib/format";
+import { intlLocale } from "@/lib/locale-config";
 
 import {
   PaymentRowActions,
@@ -68,7 +68,7 @@ export function buildPaymentColumns(opts: {
     dateStyle: "medium",
     timeStyle: "short",
   });
-  const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
+  const currencyLocale = intlLocale(locale);
   const fmt = (n: number) => formatCurrency(n, currencyLocale);
 
   return [

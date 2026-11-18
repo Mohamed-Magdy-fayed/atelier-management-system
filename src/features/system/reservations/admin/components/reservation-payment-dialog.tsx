@@ -6,7 +6,6 @@ import type { FormEvent } from "react";
 import { useCallback, useId, useMemo } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-
 import { useAppForm } from "@/components/forms/hooks";
 import {
   OverlayFormBody,
@@ -32,6 +31,7 @@ import { reservationOutstanding } from "@/features/system/reservations/utils";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ReservationGridRow } from "@/integrations/trpc/routers/reservations";
 import { formatCurrency } from "@/lib/format";
+import { ENABLED_PAYMENT_METHODS, intlLocale } from "@/lib/locale-config";
 
 const paymentFormSchema = z.object({
   amount: z.number().int().min(1),
@@ -57,7 +57,7 @@ export function ReservationPaymentDialog({
   const queryClient = useQueryClient();
   const invalidateDashboard = useInvalidateDashboard();
   const formId = useId();
-  const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
+  const currencyLocale = intlLocale(locale);
 
   const outstanding = useMemo(
     () => (reservation ? reservationOutstanding(reservation) : 0),
@@ -70,7 +70,7 @@ export function ReservationPaymentDialog({
 
   const methodOptions = useMemo(
     () =>
-      paymentMethods.map((value) => ({
+      ENABLED_PAYMENT_METHODS.map((value) => ({
         value,
         label: String(
           t(
@@ -80,7 +80,13 @@ export function ReservationPaymentDialog({
                 ? "systemPages.paymentMethodInstapay"
                 : value === "mobileWallet"
                   ? "systemPages.paymentMethodMobileWallet"
-                  : "systemPages.paymentMethodVisa",
+                  : value === "card"
+                    ? "systemPages.paymentMethodCard"
+                    : value === "bankTransfer"
+                      ? "systemPages.paymentMethodBankTransfer"
+                      : value === "paypal"
+                        ? "systemPages.paymentMethodPaypal"
+                        : "systemPages.paymentMethodVisa",
           ),
         ),
       })),

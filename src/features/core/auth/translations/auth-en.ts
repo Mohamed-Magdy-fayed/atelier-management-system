@@ -231,8 +231,8 @@ export default {
         minuteSingular: "minute",
         minutePlural: "minutes",
         greetingHtml: "Hi {name},",
-        signatureHtml: "Thanks,<br/>The Gateling Team",
-        fromName: "Gateling Auth",
+        signatureHtml: "Thanks,<br/>The {brand} Team",
+        fromName: "{brand}",
       },
       passwordReset: {
         subject: "Your password reset code",

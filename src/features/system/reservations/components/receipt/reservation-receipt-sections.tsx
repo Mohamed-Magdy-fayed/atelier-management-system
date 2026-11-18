@@ -1,30 +1,34 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-
 import { Badge } from "@/components/ui/badge";
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
 import { useTranslation } from "@/features/core/i18n/client";
-import { useBrandName } from "@/features/system/settings/client/branding-provider";
 import { getStatusVariant } from "@/features/system/reservations/utils";
+import { useBrandName } from "@/features/system/settings/client/branding-provider";
 import { useTRPC } from "@/integrations/trpc/client";
 import { formatCurrency } from "@/lib/format";
+import { intlLocale } from "@/lib/locale-config";
 import { cn } from "@/lib/utils";
-
+import type {
+  ReceiptVariant,
+  ReservationsReceiptProps,
+} from "../../lib/receipt/types";
 import { DressReceiptQr } from "./dress-receipt-qr";
-import type { ReceiptVariant, ReservationsReceiptProps } from "../../lib/receipt/types";
 
 export const receiptFontClass =
   "font-[family:'Times_New_Roman',_Arial,_sans-serif]";
-const headingClass =
-  "text-lg font-semibold uppercase tracking-wide text-black";
+const headingClass = "text-lg font-semibold uppercase tracking-wide text-black";
 const labelClass = "text-base font-medium uppercase text-black";
 const bodyTextClass = "text-base leading-6 text-black";
 
 type SectionProps = {
   data: ReservationsReceiptProps;
   variant?: ReceiptVariant;
-  formatDateLabel?: (value?: Date | string | null, withTime?: boolean) => string;
+  formatDateLabel?: (
+    value?: Date | string | null,
+    withTime?: boolean,
+  ) => string;
   policyText?: string | null;
   branchName?: string;
 };
@@ -59,7 +63,10 @@ export function ReceiptBrand({ data, branchName }: SectionProps) {
   );
 }
 
-export function ReceiptCustomer({ data, t }: SectionProps & { t: ReturnType<typeof useTranslation>["t"] }) {
+export function ReceiptCustomer({
+  data,
+  t,
+}: SectionProps & { t: ReturnType<typeof useTranslation>["t"] }) {
   return (
     <section className={cn("receipt-section space-y-2", receiptFontClass)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -95,7 +102,9 @@ export function ReceiptCustomer({ data, t }: SectionProps & { t: ReturnType<type
   );
 }
 
-function statusLabelKey(status: NonNullable<ReservationsReceiptProps["status"]>) {
+function statusLabelKey(
+  status: NonNullable<ReservationsReceiptProps["status"]>,
+) {
   switch (status) {
     case "reserved":
       return "systemPages.reservationStatusReserved" as const;
@@ -108,7 +117,10 @@ function statusLabelKey(status: NonNullable<ReservationsReceiptProps["status"]>)
   }
 }
 
-export function ReceiptDressAndNotes({ data, t }: SectionProps & { t: ReturnType<typeof useTranslation>["t"] }) {
+export function ReceiptDressAndNotes({
+  data,
+  t,
+}: SectionProps & { t: ReturnType<typeof useTranslation>["t"] }) {
   return (
     <div className={cn("grid gap-4", receiptFontClass)}>
       {data.dress ? (
@@ -162,7 +174,7 @@ export function ReceiptTotals({
   t: ReturnType<typeof useTranslation>["t"];
   locale: string;
 }) {
-  const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
+  const currencyLocale = intlLocale(locale);
   const fmt = (n: number) => formatCurrency(n, currencyLocale);
 
   return (
@@ -257,8 +269,9 @@ export function ReceiptPolicy({
   });
 
   const loadedPolicy =
-    settingsPage?.rows.find((row) => row.code === "00003" && row.isActive !== false)
-      ?.value ?? "";
+    settingsPage?.rows.find(
+      (row) => row.code === "00003" && row.isActive !== false,
+    )?.value ?? "";
 
   const text =
     data.usagePolicyHint?.trim() ||
@@ -293,7 +306,7 @@ export function ReceiptFooter({
   locale: string;
   variant?: ReceiptVariant;
 }) {
-  const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
+  const currencyLocale = intlLocale(locale);
   const fmt = (n: number) => formatCurrency(n, currencyLocale);
 
   const methodLabel = data.paymentMethod
@@ -362,7 +375,9 @@ export function ReceiptFooter({
   );
 }
 
-function paymentMethodKey(method: NonNullable<ReservationsReceiptProps["paymentMethod"]>) {
+function paymentMethodKey(
+  method: NonNullable<ReservationsReceiptProps["paymentMethod"]>,
+) {
   switch (method) {
     case "cash":
       return "systemPages.paymentMethodCash" as const;
@@ -372,6 +387,12 @@ function paymentMethodKey(method: NonNullable<ReservationsReceiptProps["paymentM
       return "systemPages.paymentMethodMobileWallet" as const;
     case "visa":
       return "systemPages.paymentMethodVisa" as const;
+    case "card":
+      return "systemPages.paymentMethodCard" as const;
+    case "bankTransfer":
+      return "systemPages.paymentMethodBankTransfer" as const;
+    case "paypal":
+      return "systemPages.paymentMethodPaypal" as const;
   }
 }
 
@@ -392,19 +413,14 @@ export function ReceiptBody({
         : branchState.activeBranch.nameEn
       : "");
 
-  const formatDateLabel = (
-    value?: Date | string | null,
-    withTime = true,
-  ) => {
+  const formatDateLabel = (value?: Date | string | null, withTime = true) => {
     if (!value) return String(t("common.inactive"));
     const date = new Date(value);
     return new Intl.DateTimeFormat(locale === "ar" ? "ar" : "en", {
       month: "short",
       day: "numeric",
       year: "numeric",
-      ...(withTime
-        ? { hour: "numeric", minute: "2-digit" as const }
-        : {}),
+      ...(withTime ? { hour: "numeric", minute: "2-digit" as const } : {}),
     }).format(date);
   };
 

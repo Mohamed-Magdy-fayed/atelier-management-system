@@ -8,6 +8,7 @@ import {
 } from "@/features/core/data-table";
 import type { useTranslation } from "@/features/core/i18n/client";
 import type { ExpenseGridRow } from "@/integrations/trpc/routers/expenses";
+import { intlLocale } from "@/lib/locale-config";
 
 import {
   ExpenseRowActions,
@@ -37,10 +38,10 @@ export function buildExpenseColumns(opts: {
   t: Translate;
 }): ColumnDef<ExpenseGridRow>[] {
   const { locale, setRowAction, t } = opts;
-  const dateFmt = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-EG", {
+  const dateFmt = new Intl.DateTimeFormat(intlLocale(locale), {
     dateStyle: "medium",
   });
-  const moneyFmt = new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-EG", {
+  const moneyFmt = new Intl.NumberFormat(intlLocale(locale), {
     maximumFractionDigits: 0,
   });
 

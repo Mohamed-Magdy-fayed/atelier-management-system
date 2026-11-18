@@ -60,6 +60,14 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
             {t("landing.footerTagline")}
           </Muted>
           <Muted className="text-xs">{`\u00A9 ${year} ${brandName}`}</Muted>
+          <nav className="flex gap-4 text-xs text-muted-foreground">
+            <Link className="hover:underline" href="/terms">
+              {t("landing.termsLink")}
+            </Link>
+            <Link className="hover:underline" href="/privacy">
+              {t("landing.privacyLink")}
+            </Link>
+          </nav>
         </div>
       </footer>
     </div>

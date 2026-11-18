@@ -1,7 +1,6 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-
 import { Badge } from "@/components/ui/badge";
 import type { ReservationStatus } from "@/drizzle/schemas/system/reservations-table";
 import {
@@ -14,6 +13,7 @@ import { DressViewDialog } from "@/features/system/dresses/admin/components/dres
 import { getStatusVariant } from "@/features/system/reservations/utils";
 import type { ReservationGridRow } from "@/integrations/trpc/routers/reservations";
 import { formatCurrency } from "@/lib/format";
+import { intlLocale } from "@/lib/locale-config";
 
 import { ReservationRowActions } from "./reservation-row-actions";
 
@@ -37,7 +37,7 @@ export function buildReservationColumns(opts: {
   t: Translate;
 }): ColumnDef<ReservationGridRow>[] {
   const { locale, t } = opts;
-  const currencyLocale = locale === "ar" ? "ar-EG" : "en-EG";
+  const currencyLocale = intlLocale(locale);
   const fmt = (n: number) => formatCurrency(n, currencyLocale);
 
   const dateTimeFmt = new Intl.DateTimeFormat(locale === "ar" ? "ar" : "en", {

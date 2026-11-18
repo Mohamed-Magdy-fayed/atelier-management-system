@@ -8,7 +8,6 @@ import type {
 } from "@tanstack/react-table";
 import { PlusIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -16,6 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useBranch } from "@/features/core/auth/nextjs/components/branch-provider";
+import { useScreenPermission } from "@/features/core/auth/nextjs/hooks/use-screen-permission";
 import {
   DataTable,
   DataTableExportButton,
@@ -28,10 +28,10 @@ import {
   useDataTable,
   useTableUrlState,
 } from "@/features/core/data-table";
-import { useScreenPermission } from "@/features/core/auth/nextjs/hooks/use-screen-permission";
 import { useTranslation } from "@/features/core/i18n/client";
 import { useTRPC } from "@/integrations/trpc/client";
 import type { ExpenseGridRow } from "@/integrations/trpc/routers/expenses";
+import { intlLocale } from "@/lib/locale-config";
 
 import {
   buildExpenseColumns,
@@ -108,7 +108,7 @@ export function ExpensesTablePage() {
 
   const moneyFmt = useMemo(
     () =>
-      new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-EG", {
+      new Intl.NumberFormat(intlLocale(locale), {
         maximumFractionDigits: 0,
       }),
     [locale],

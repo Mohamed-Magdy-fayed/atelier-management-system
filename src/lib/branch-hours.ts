@@ -1,3 +1,5 @@
+import { intlLocale } from "@/lib/locale-config";
+
 /** `HH:mm` or `HH:mm:ss` from Postgres `time` → value for `<input type="time">`. */
 export function toTimeInputValue(value: string | null | undefined): string {
   if (!value) return "";
@@ -31,7 +33,7 @@ export function formatBranchHours(
   const close = toTimeInputValue(closesAt);
   if (!open || !close) return null;
 
-  const fmt = new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en", {
+  const fmt = new Intl.DateTimeFormat(intlLocale(locale), {
     hour: "numeric",
     minute: "2-digit",
   });

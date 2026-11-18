@@ -3,9 +3,9 @@
 import { useCallback, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import { toast } from "sonner";
-
 import { useTranslation } from "@/features/core/i18n/client";
 import { formatDate } from "@/lib/format";
+import { intlLocale } from "@/lib/locale-config";
 
 import type { ReservationsReceiptProps } from "../../lib/receipt/types";
 
@@ -41,7 +41,7 @@ export function useReservationReceipt(props: ReservationsReceiptProps) {
               day: "numeric",
               year: "numeric",
             },
-        locale === "ar" ? "ar-EG" : "en-EG",
+        intlLocale(locale),
       );
     },
     [locale, t],
@@ -55,7 +55,8 @@ export function useReservationReceipt(props: ReservationsReceiptProps) {
         printContainerRef.current.dir = locale === "ar" ? "rtl" : "ltr";
       }
     },
-    onAfterPrint: () => toast.success(String(t("systemPages.reservationsPrintSuccess"))),
+    onAfterPrint: () =>
+      toast.success(String(t("systemPages.reservationsPrintSuccess"))),
     pageStyle: `
       @page { size: 80mm auto; margin: 5mm; }
       body { font-family: "Times New Roman", Arial, sans-serif; font-size: 16px; line-height: 1.5; font-weight: 500; color: #000; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
