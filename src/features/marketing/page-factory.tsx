@@ -8,7 +8,7 @@ import { COPY, type MarketingLocale } from "./content";
 /** See `MARKETING_SITE` in env/server.ts. */
 export const marketingEnabled = () => env.MARKETING_SITE === "1";
 
-const path = (l: MarketingLocale) => (l === "ar" ? "/start" : "/start/en");
+const path = (l: MarketingLocale) => (l === "ar" ? "/" : "/en");
 
 export function marketingMetadata(locale: MarketingLocale): Metadata {
   if (!marketingEnabled()) return {};
@@ -20,9 +20,9 @@ export function marketingMetadata(locale: MarketingLocale): Metadata {
     alternates: {
       canonical: `${base}${path(locale)}`,
       languages: {
-        ar: `${base}/start`,
-        en: `${base}/start/en`,
-        "x-default": `${base}/start`,
+        ar: `${base}/`,
+        en: `${base}/en`,
+        "x-default": `${base}/`,
       },
     },
     openGraph: {
@@ -31,6 +31,7 @@ export function marketingMetadata(locale: MarketingLocale): Metadata {
       locale: locale === "ar" ? "ar_EG" : "en",
       type: "website",
     },
+    icons: { icon: "/brand/gateling-mark.png" },
     robots: { index: true, follow: true },
     verification: env.GOOGLE_SITE_VERIFICATION
       ? { google: env.GOOGLE_SITE_VERIFICATION }

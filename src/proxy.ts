@@ -47,7 +47,10 @@ async function middlewareAuth(request: NextRequest) {
   const isPublicRoute =
     PUBLIC_SITE_PATHS.includes(
       pathname as (typeof PUBLIC_SITE_PATHS)[number],
-    ) || publicRoutes.some((route) => pathname.startsWith(route));
+    ) ||
+    // Exact match: a `/en` prefix would also open anything starting with it.
+    pathname === "/en" ||
+    publicRoutes.some((route) => pathname.startsWith(route));
 
   if (!session?.user) {
     if (isAuthRoute || isPublicRoute) {
