@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { env } from "@/env/server";
 import { LeadForm } from "../components/lead-form";
 import { COPY } from "../content";
+import { BookingDemo } from "./gg-extra";
 import "./gg.css";
 
 const head = Noto_Naskh_Arabic({
@@ -94,15 +95,16 @@ export function GlossStylePage() {
         <div>
           <section className="gg-hero">
             <div className="gg-ph" />
-            {hasVideo ? (
+            {hasVideo && (
               <video autoPlay loop muted playsInline src="/preview/hero.mp4" />
-            ) : (
-              <div className="gg-label">
-                فيديو مؤقت. هنحط هنا لقطات حقيقية من أتيليه شغّال (أتيليه آلاء
-                بإذنها أو تصوير جديد).
-              </div>
             )}
             <div className="gg-w gg-hero-in">
+              {!hasVideo && (
+                <div className="gg-label">
+                  فيديو مؤقت. هنحط هنا لقطات حقيقية من أتيليه شغّال (أتيليه آلاء
+                  بإذنها أو تصوير جديد).
+                </div>
+              )}
               <div className="gg-trust">
                 <span>★ أول عميل شغّال فعلاً</span>
                 <span>★ فرعين في قويسنا وشبين الكوم</span>
@@ -151,6 +153,62 @@ export function GlossStylePage() {
           </div>
         </section>
 
+        {/* Idea source: Cal.com (inline chips inside a big statement) */}
+        <section className="gg-sec gg-statement">
+          <div className="gg-w">
+            <p className="gg-serif gg-big">
+              العروسة اختارت <span className="gg-chip c1">فستان</span> وحددت{" "}
+              <span className="gg-chip c2">يوم</span> والباقي{" "}
+              <span className="gg-chip c3">✓ علينا</span>
+            </p>
+          </div>
+        </section>
+
+        {/* Idea source: Linear and Raycast (bento grid of unequal tiles) */}
+        <section className="gg-sec" style={{ paddingTop: 0 }}>
+          <div className="gg-w">
+            <p className="gg-eyebrow">في الداخل</p>
+            <h2 className="gg-h2 gg-serif">حاجات صغيرة بتفرق كل يوم.</h2>
+            <div className="gg-bento">
+              <div className="bt big">
+                <h3 className="gg-serif">مفيش حجز مزدوج</h3>
+                <p>
+                  لو الفستان محجوز في اليوم ده، البرنامج بيقولك قبل ما تأكدي.
+                </p>
+                <div className="bt-vis">
+                  <span className="dot ok">١٢</span>
+                  <span className="dot bk">١٣</span>
+                  <span className="dot ok">١٤</span>
+                  <span className="dot bk">١٥</span>
+                  <span className="dot bk">١٦</span>
+                  <span className="dot ok">١٧</span>
+                </div>
+              </div>
+              <div className="bt tint">
+                <h3 className="gg-serif">العربون والمتبقي</h3>
+                <p>الإجمالي ٢٬١٠٠ ج.م، مدفوع ٧٥٠، متبقي ١٬٣٥٠. لوحدهم.</p>
+              </div>
+              <div className="bt dark">
+                <h3 className="gg-serif">كل فروعك</h3>
+                <p>قويسنا وشبين الكوم على نفس الشاشة، وكل فرع بيشوف شغله.</p>
+              </div>
+              <div className="bt">
+                <h3 className="gg-serif">مرتجعات</h3>
+                <p>مين لازم يرجّع النهارده، ومين اتأخر.</p>
+              </div>
+              <div className="bt">
+                <h3 className="gg-serif">رسالة واتساب جاهزة</h3>
+                <p>
+                  بنفس صيغة رسالة التأكيد اللي البرنامج بيبعتها فعلاً للعروسة.
+                </p>
+              </div>
+            </div>
+            <span className="gg-tag" style={{ marginTop: 14 }}>
+              أرقام توضيحية
+            </span>
+          </div>
+        </section>
+
         <section className="gg-sec" id="features" style={{ paddingTop: 0 }}>
           <div className="gg-w">
             <h2 className="gg-h2 gg-serif">كل اللي بتحتاجه، ومفيش غيره.</h2>
@@ -194,6 +252,40 @@ export function GlossStylePage() {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Idea source: Cal.com (a working widget instead of a screenshot) */}
+        <section className="gg-sec" style={{ paddingTop: 0 }}>
+          <div className="gg-w">
+            <p className="gg-eyebrow">جرّبي بنفسك</p>
+            <h2 className="gg-h2 gg-serif">
+              اضغطي على يوم، شوفي إيه اللي بيحصل.
+            </h2>
+            <BookingDemo />
+          </div>
+        </section>
+
+        {/* Idea source: Aesop, SSENSE and Jacquemus (editorial image band, big type on quiet imagery) */}
+        <section className="gg-edit">
+          <div className="gg-edit-row">
+            <div className="ph">
+              <span>صورة مؤقتة: فستان زفاف</span>
+            </div>
+            <div className="ph">
+              <span>صورة مؤقتة: تفاصيل تطريز</span>
+            </div>
+            <div className="ph">
+              <span>صورة مؤقتة: عروسة في البروفة</span>
+            </div>
+          </div>
+          <div className="gg-w">
+            <p className="gg-serif gg-edit-t">
+              الفستان هو النجم. الباقي مسؤوليتنا.
+            </p>
+            <span className="gg-tag">
+              صور مؤقتة لحين تصوير حقيقي بإذن الأتيليه
+            </span>
           </div>
         </section>
 

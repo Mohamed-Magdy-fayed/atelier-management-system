@@ -187,7 +187,11 @@
   margin-inline-end: 8px;
 }
 .gg-sec {
-  background-image: radial-gradient(circle, rgb(43 42 34 / 0.05) 1px, transparent 1px);
+  background-image: radial-gradient(
+    circle,
+    rgb(43 42 34 / 0.05) 1px,
+    transparent 1px
+  );
   background-size: 24px 24px;
 }
 .gg-hero h1 {
@@ -553,4 +557,261 @@
 }
 .gg-bannerlabel b {
   color: var(--o);
+}
+/* hero alignment: container must span the full hero, text starts at the container edge */
+.gg-hero .gg-hero-in {
+  width: 100%;
+  max-width: 1140px;
+  margin-inline: auto;
+}
+.gg-hero .gg-label {
+  z-index: 3;
+  position: static;
+  display: inline-block;
+  margin-bottom: 14px;
+}
+/* statement with inline chips (Cal.com) */
+.gg-statement .gg-big {
+  font-size: clamp(1.9rem, 4.6vw, 3.6rem);
+  line-height: 1.7;
+  margin: 0;
+  max-width: 22ch;
+}
+.gg-chip {
+  display: inline-block;
+  padding: 0 0.45em;
+  border-radius: 0.4em;
+  line-height: 1.25;
+  vertical-align: middle;
+  font-size: 0.8em;
+}
+.gg-chip.c1 {
+  background: #ffd9bf;
+}
+.gg-chip.c2 {
+  background: #e8e4d6;
+}
+.gg-chip.c3 {
+  background: var(--o);
+  color: #fff;
+}
+/* bento (Linear, Raycast) */
+.gg-bento {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-top: 28px;
+}
+.bt {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px;
+  min-height: 190px;
+}
+.bt h3 {
+  margin: 0 0 6px;
+  font-size: 1.3rem;
+}
+.bt p {
+  margin: 0;
+  color: var(--mut);
+  font-size: 0.95rem;
+}
+.bt.big {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.bt.wide {
+  grid-column: span 2;
+}
+.bt.tint {
+  background: #ffd9bf;
+  border-color: #ffd9bf;
+}
+.bt.tint p {
+  color: #5a3a24;
+}
+.bt.dark {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.bt.dark p {
+  color: #d9d4c4;
+}
+.bt-vis {
+  display: flex;
+  gap: 8px;
+  margin-top: 26px;
+  flex-wrap: wrap;
+}
+.bt-vis .dot {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+}
+.dot.ok {
+  background: #e6f1e3;
+  color: #25652a;
+}
+.dot.bk {
+  background: #f3dcd8;
+  color: #9a2c1f;
+  text-decoration: line-through;
+}
+@media (max-width: 860px) {
+  .gg-bento {
+    grid-template-columns: 1fr 1fr;
+  }
+  .bt.big {
+    grid-column: span 2;
+    grid-row: auto;
+  }
+}
+@media (max-width: 520px) {
+  .gg-bento {
+    grid-template-columns: 1fr;
+  }
+  .bt.big,
+  .bt.wide {
+    grid-column: auto;
+  }
+}
+/* interactive demo (Cal.com) */
+.gg-demo {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 0;
+  margin-top: 28px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.gg-demo-cal {
+  padding: 24px;
+  border-inline-end: 1px solid var(--line);
+}
+.gg-demo-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.gg-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  text-align: center;
+}
+.gg-demo-grid i {
+  font-style: normal;
+  color: var(--mut);
+  font-size: 0.8rem;
+}
+.gg-demo-grid button {
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 10px;
+  background: var(--paper);
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+.gg-demo-grid button.bk {
+  background: #f3dcd8;
+  color: #9a2c1f;
+}
+.gg-demo-grid button.on {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+.gg-demo-side {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+.gg-demo-side p {
+  margin: 0;
+  color: var(--mut);
+}
+.gg-demo-t {
+  color: var(--ink) !important;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.gg-demo-badge {
+  align-self: flex-start;
+  padding: 2px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+.gg-demo-badge.ok {
+  background: #e6f1e3;
+  color: #25652a;
+}
+.gg-demo-badge.no {
+  background: #f3dcd8;
+  color: #9a2c1f;
+}
+@media (max-width: 760px) {
+  .gg-demo {
+    grid-template-columns: 1fr;
+  }
+  .gg-demo-cal {
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--line);
+  }
+}
+/* editorial band (Aesop, SSENSE, Jacquemus) */
+.gg-edit {
+  padding: 40px 0 72px;
+}
+.gg-edit-row {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  gap: 0;
+}
+.gg-edit-row .ph {
+  min-height: 420px;
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+  background: repeating-linear-gradient(
+    135deg,
+    #e9e4d6 0 16px,
+    #efeadd 16px 32px
+  );
+  font-size: 0.8rem;
+  color: #7a7566;
+}
+.gg-edit-row .ph:nth-child(2) {
+  background: repeating-linear-gradient(
+    135deg,
+    #ddd6c4 0 16px,
+    #e4ddcc 16px 32px
+  );
+}
+.gg-edit-t {
+  font-size: clamp(2rem, 5vw, 4rem);
+  margin: 36px 0 10px;
+  max-width: 18ch;
+}
+@media (max-width: 640px) {
+  .gg-edit-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .gg-edit-row .ph:nth-child(2) {
+    display: none;
+  }
+  .gg-edit-row .ph {
+    min-height: 260px;
+  }
 }
