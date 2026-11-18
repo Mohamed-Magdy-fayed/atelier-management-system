@@ -26,6 +26,7 @@ const publicRoutes = [
   "/view-dress",
   // Marketing surface and crawler files: must never bounce to sign-in.
   "/start",
+  "/ar/",
   "/robots.txt",
   "/sitemap",
 ];
