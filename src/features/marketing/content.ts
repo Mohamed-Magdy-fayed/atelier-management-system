@@ -1,5 +1,5 @@
 /**
- * Copy for the Gateling Atelier marketing page (`/start`, `/start/en`).
+ * Copy for the Gateling Atelier marketing page (`/`, `/en`).
  *
  * Rules for editing this file:
  * - Arabic is written first, in Egyptian-leaning plain language an atelier owner
@@ -229,7 +229,7 @@ export const COPY: Record<MarketingLocale, MarketingCopy> = {
     footer: {
       line: "Gateling Atelier من Gateling Solutions",
       other: "English",
-      otherHref: "/start/en",
+      otherHref: "/en",
     },
   },
   en: {
@@ -383,7 +383,7 @@ export const COPY: Record<MarketingLocale, MarketingCopy> = {
     footer: {
       line: "Gateling Atelier by Gateling Solutions",
       other: "العربية",
-      otherHref: "/start",
+      otherHref: "/",
     },
   },
 };

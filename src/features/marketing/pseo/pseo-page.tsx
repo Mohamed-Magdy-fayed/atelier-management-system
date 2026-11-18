@@ -7,7 +7,7 @@ import { FAMILY_META, type PseoFamily, type PseoRow, rowPath } from "./types";
 const siteUrl = () => env.BASE_URL.replace(/\/$/, "");
 
 function ctaHref(slug: string) {
-  return `/start?src=pseo&page=${encodeURIComponent(slug)}#start`;
+  return `/?src=pseo&page=${encodeURIComponent(slug)}#start`;
 }
 
 function waHref(slug: string) {
@@ -35,14 +35,11 @@ function Shell({
       <header className="mx-auto flex max-w-3xl items-center justify-between px-5 py-5">
         <Link
           className="mk-display text-xl font-bold text-[var(--mk-ink)]"
-          href="/start"
+          href="/"
         >
           Gateling Atelier
         </Link>
-        <Link
-          className="text-sm underline-offset-4 hover:underline"
-          href="/start"
-        >
+        <Link className="text-sm underline-offset-4 hover:underline" href="/">
           عن البرنامج
         </Link>
       </header>
@@ -143,7 +140,7 @@ export function PseoPage({ row }: { row: PseoRow }) {
     <Shell jsonLd={jsonLd}>
       <main className="mx-auto max-w-3xl px-5 pt-6">
         <nav aria-label="breadcrumb" className="mk-muted mb-6 text-sm">
-          <Link href="/start">الرئيسية</Link> ‹{" "}
+          <Link href="/">الرئيسية</Link> ‹{" "}
           <Link href={`/ar/${meta.path}`}>{meta.crumb}</Link>
         </nav>
         {!row.published ? (

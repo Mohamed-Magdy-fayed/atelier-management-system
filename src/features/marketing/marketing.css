@@ -1,12 +1,15 @@
 /* Scoped to .mk so the marketing page never inherits a tenant's brand colour. */
 .mk {
-  --mk-bg: #f6efe4;
-  --mk-paper: #fbf7f0;
-  --mk-ink: #5a1a24; /* bordeaux */
-  --mk-text: #221a17;
-  --mk-gold: #b88a44;
-  --mk-line: #e1d4c0;
-  --mk-muted: #6f6258;
+  /* Gateling orange, sampled from the logo mark (#FD5F02). Text on it is
+     always ink: white on this orange is only ~3:1. */
+  --mk-bg: #fbf5ee;
+  --mk-paper: #fffdfa;
+  --mk-ink: #1f1612; /* warm near-black */
+  --mk-text: #2a201b;
+  --mk-gold: #fd5f02; /* name kept so existing components inherit the brand */
+  --mk-orange: #fd5f02;
+  --mk-line: #eaddcf;
+  --mk-muted: #6b5d53;
   background: var(--mk-bg);
   color: var(--mk-text);
   font-family: var(--font-mk-body), system-ui, sans-serif;
@@ -24,7 +27,7 @@
   border: 1px solid var(--mk-line);
   box-shadow:
     0 1px 0 #fff inset,
-    0 24px 48px -28px rgb(90 26 36 / 0.35);
+    0 24px 48px -28px rgb(31 22 18 / 0.28);
 }
 .mk-btn {
   display: inline-flex;
@@ -34,14 +37,14 @@
   border-radius: 999px;
   padding: 0.85rem 1.6rem;
   font-weight: 700;
-  background: var(--mk-ink);
-  color: var(--mk-bg);
+  background: var(--mk-orange);
+  color: var(--mk-ink);
   transition:
     transform 0.15s ease,
     background 0.15s ease;
 }
 .mk-btn:hover {
-  background: #431219;
+  background: #e25400;
   transform: translateY(-1px);
 }
 .mk-btn:disabled {

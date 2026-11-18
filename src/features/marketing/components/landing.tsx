@@ -28,7 +28,7 @@ export function Landing({
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
       description: c.meta.description,
-      url: `${siteUrl}${locale === "ar" ? "/start" : "/start/en"}`,
+      url: `${siteUrl}${locale === "ar" ? "/" : "/en"}`,
       inLanguage: locale,
       offers: [
         {
@@ -77,9 +77,17 @@ export function Landing({
 
       <header className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5">
         <Link
-          className="mk-display text-xl font-bold text-[var(--mk-ink)]"
-          href={locale === "ar" ? "/start" : "/start/en"}
+          className="mk-display flex items-center gap-2.5 text-xl font-bold text-[var(--mk-ink)]"
+          href={locale === "ar" ? "/" : "/en"}
         >
+          {/* biome-ignore lint/performance/noImgElement: tiny static brand mark */}
+          <img
+            alt=""
+            className="size-8"
+            height={32}
+            src="/brand/gateling-mark.png"
+            width={32}
+          />
           Gateling Atelier
         </Link>
         <nav className="hidden items-center gap-7 text-sm md:flex">

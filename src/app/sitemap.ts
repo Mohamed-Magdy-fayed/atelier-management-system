@@ -13,15 +13,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
   if (env.DEMO_MODE === "1" || env.MARKETING_SITE !== "1") return [];
   return [
     {
-      url: `${base}/start`,
+      url: `${base}/`,
       alternates: {
-        languages: { ar: `${base}/start`, en: `${base}/start/en` },
+        languages: { ar: `${base}/`, en: `${base}/en` },
       },
     },
     {
-      url: `${base}/start/en`,
+      url: `${base}/en`,
       alternates: {
-        languages: { ar: `${base}/start`, en: `${base}/start/en` },
+        languages: { ar: `${base}/`, en: `${base}/en` },
       },
     },
     // Only rows a human has published. Drafts never appear here.
