@@ -1,5 +1,4 @@
 import { Noto_Naskh_Arabic, Tajawal } from "next/font/google";
-import { notFound } from "next/navigation";
 
 import { env } from "@/env/server";
 import { LeadForm } from "../components/lead-form";
@@ -61,17 +60,22 @@ const STEPS = [
   },
 ];
 
-export function GlossStylePage() {
-  if (process.env.NODE_ENV === "production") notFound();
+/**
+ * The Arabic marketing landing. `preview` is only true on the internal
+ * `/preview` route, where it adds the "not published" banner.
+ */
+export function GlossStylePage({ preview = false }: { preview?: boolean }) {
   return (
     <div className={`gg ${head.variable} ${body.variable}`} dir="rtl" lang="ar">
-      <div className="gg-bannerlabel">
-        <b>معاينة داخلية، مش منشورة.</b> التصميم على نمط GlossGenius، أضيق،
-        بالعربي.
-      </div>
+      {preview ? (
+        <div className="gg-bannerlabel">
+          <b>معاينة داخلية، مش منشورة.</b> التصميم على نمط GlossGenius، أضيق،
+          بالعربي.
+        </div>
+      ) : null}
       <header className="gg-bar">
         <div className="gg-w">
-          <a className="gg-logo" href="/preview">
+          <a className="gg-logo" href={preview ? "/preview" : "/"}>
             {/* biome-ignore lint/performance/noImgElement: tiny static brand mark */}
             <img alt="" height={30} src="/brand/gateling-mark.png" width={30} />
             Gateling Atelier
