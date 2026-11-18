@@ -91,7 +91,7 @@ export function GlossStylePage() {
       </header>
 
       <main>
-        <div className="gg-w">
+        <div>
           <section className="gg-hero">
             <div className="gg-ph" />
             {hasVideo ? (
@@ -102,7 +102,12 @@ export function GlossStylePage() {
                 بإذنها أو تصوير جديد).
               </div>
             )}
-            <div className="gg-hero-in">
+            <div className="gg-w gg-hero-in">
+              <div className="gg-trust">
+                <span>★ أول عميل شغّال فعلاً</span>
+                <span>★ فرعين في قويسنا وشبين الكوم</span>
+                <span>★ شراكة مباشرة مع المؤسس</span>
+              </div>
               <h1 className="gg-serif">
                 مفيش فستان يتحجز مرتين. والباقي يمشي لوحده.
               </h1>
@@ -118,6 +123,11 @@ export function GlossStylePage() {
                   {c.hero.whatsapp}
                 </a>
               </div>
+              <ul className="gg-checks">
+                <li>حجز واحد لكل فستان في اليوم، البرنامج بيمنع التكرار</li>
+                <li>العربون والمتبقي بيتحسبوا لوحدهم</li>
+                <li>رسايل واتساب جاهزة للعروسة</li>
+              </ul>
               <div className="gg-note">ابدأ مجاناً بفرع واحد. من غير كارت.</div>
             </div>
           </section>

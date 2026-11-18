@@ -1,14 +1,14 @@
 /* Internal landing preview in the GlossGenius layout language. 404 in production. */
 .gg {
-  --ink: #17120e;
-  --paper: #f6f2ec;
+  --ink: #2b2a22;
+  --paper: #faf9f5;
   --card: #ece6dc;
   --o: #fd5f02;
-  --mut: #5f554d;
-  --line: #ddd5c9;
-  --mk-line: #cfc6b8;
+  --mut: #6b685c;
+  --line: #e3e0d3;
+  --mk-line: #d5d1c2;
   --mk-ink: #17120e;
-  background: #fff;
+  background: var(--paper);
   color: var(--ink);
   font-family: var(--font-gg-body), system-ui, sans-serif;
   line-height: 1.7;
@@ -36,7 +36,7 @@
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgb(255 255 255 / 0.92);
+  background: rgb(250 249 245 / 0.92);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
@@ -75,7 +75,7 @@
   justify-content: center;
   height: 44px;
   padding: 0 22px;
-  border-radius: 999px;
+  border-radius: 10px;
   font-weight: 700;
   font-size: 0.95rem;
   border: 1.5px solid var(--ink);
@@ -118,10 +118,11 @@
 /* hero */
 .gg-hero {
   position: relative;
-  margin-top: 20px;
-  border-radius: 28px;
+  margin-top: 0;
+  border-radius: 0;
+  width: 100%;
   overflow: hidden;
-  min-height: min(640px, 86vh);
+  min-height: min(680px, 88vh);
   display: flex;
   align-items: flex-end;
   color: #fff;
@@ -156,8 +157,38 @@
 .gg-hero-in {
   position: relative;
   z-index: 2;
-  padding: 44px;
-  width: 100%;
+  padding-top: 48px;
+  padding-bottom: 56px;
+}
+.gg-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  font-size: 0.85rem;
+  color: #e9e4d6;
+  margin-bottom: 18px;
+}
+.gg-trust span::first-letter {
+  color: var(--o);
+}
+.gg-checks {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: 0.95rem;
+  color: #efeadd;
+}
+.gg-checks li::before {
+  content: "✓";
+  color: var(--o);
+  font-weight: 800;
+  margin-inline-end: 8px;
+}
+.gg-sec {
+  background-image: radial-gradient(circle, rgb(43 42 34 / 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 .gg-hero h1 {
   font-size: clamp(2.1rem, 4.6vw, 3.6rem);
@@ -198,7 +229,8 @@
 }
 @media (max-width: 640px) {
   .gg-hero-in {
-    padding: 24px;
+    padding-top: 28px;
+    padding-bottom: 32px;
   }
 }
 /* sections */
@@ -264,12 +296,13 @@
 .gg-card {
   flex: 0 0 min(420px, 86%);
   scroll-snap-align: start;
-  border-radius: 24px;
+  border-radius: 16px;
   padding: 28px;
   min-height: 560px;
   display: flex;
   flex-direction: column;
-  background: var(--paper);
+  background: #fff;
+  border: 1px solid var(--line);
 }
 .gg-card.o {
   background: #ffd9bf;
@@ -313,14 +346,14 @@
 }
 .gg-phone {
   background: #0f0b09;
-  border-radius: 26px;
+  border-radius: 16px;
   padding: 8px;
   max-width: 300px;
   margin-inline: auto;
 }
 .gg-phone-in {
   background: #efe7dd;
-  border-radius: 20px;
+  border-radius: 14px;
   overflow: hidden;
   color: var(--ink);
 }
@@ -379,7 +412,7 @@
   display: grid;
   grid-template-columns: 1fr 1.1fr;
   gap: 0;
-  border-radius: 28px;
+  border-radius: 16px;
   overflow: hidden;
   background: var(--ink);
   color: #fff;
@@ -415,7 +448,7 @@
   margin-top: 40px;
 }
 .gg-price > div {
-  border-radius: 24px;
+  border-radius: 16px;
   padding: 32px;
   background: var(--paper);
 }
@@ -454,7 +487,7 @@
   margin: 48px auto 0;
   text-align: start;
   background: var(--paper);
-  border-radius: 24px;
+  border-radius: 16px;
   padding: 32px;
 }
 .gg-form-box input,
