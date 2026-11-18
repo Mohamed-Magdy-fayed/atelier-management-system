@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { env } from "@/env/server";
+import { marketingEnabled } from "@/features/marketing/page-factory";
 import { getRow, visibleRows } from "@/features/marketing/pseo";
 import { PseoPage } from "@/features/marketing/pseo/pseo-page";
 import {
@@ -27,7 +28,7 @@ export async function generateMetadata({
   const row = FAMILIES.includes(family as PseoFamily)
     ? getRow(family as PseoFamily, slug)
     : undefined;
-  if (!row) return {};
+  if (!row || !marketingEnabled()) return {};
   const base = env.BASE_URL.replace(/\/$/, "");
   return {
     title: { absolute: row.title },
@@ -54,6 +55,6 @@ export default async function Page({
   const row = FAMILIES.includes(family as PseoFamily)
     ? getRow(family as PseoFamily, slug)
     : undefined;
-  if (!row) notFound();
+  if (!row || !marketingEnabled()) notFound();
   return <PseoPage row={row} />;
 }

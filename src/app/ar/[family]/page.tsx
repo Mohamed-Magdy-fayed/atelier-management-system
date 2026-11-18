@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { marketingEnabled } from "@/features/marketing/page-factory";
 import { visibleRows } from "@/features/marketing/pseo";
 import { PseoHub } from "@/features/marketing/pseo/pseo-page";
 import { FAMILY_META, type PseoFamily } from "@/features/marketing/pseo/types";
@@ -18,7 +19,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { family } = await params;
   const meta = FAMILY_META[family as PseoFamily];
-  if (!meta) return {};
+  if (!meta || !marketingEnabled()) return {};
   const hasPublished = visibleRows(family as PseoFamily).some(
     (r) => r.published,
   );
@@ -37,7 +38,8 @@ export default async function Page({
   params: Promise<{ family: string }>;
 }) {
   const { family } = await params;
-  if (!FAMILIES.includes(family as PseoFamily)) notFound();
+  if (!marketingEnabled() || !FAMILIES.includes(family as PseoFamily))
+    notFound();
   // A hub with nothing visible must not exist in production.
   if (visibleRows(family as PseoFamily).length === 0) notFound();
   return <PseoHub family={family as PseoFamily} />;
