@@ -117,6 +117,7 @@
 }
 /* hero */
 .gg-hero {
+  view-timeline: --gg-hero block;
   position: relative;
   margin-top: 0;
   border-radius: 0;
@@ -128,31 +129,50 @@
   color: #fff;
   background: #2a211b;
 }
-.gg-ph {
+.gg-hero-media {
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(
-    135deg,
-    #2c231d 0 16px,
-    #352a23 16px 32px
-  );
+  overflow: clip;
 }
-.gg-hero video {
+.gg-hero-media img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 55% 40%;
+}
+/* Scroll-driven parallax: the photo drifts and eases in as the hero scrolls
+   away. Chromium 115+ and Safari 26+ run it; elsewhere (and with reduced
+   motion) the image simply stays still. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .gg-hero-media img {
+      inset-block: -8%;
+      height: 116%;
+      animation: gg-hero-drift linear both;
+      animation-timeline: --gg-hero;
+      animation-range: exit 0% exit 100%;
+    }
+  }
+}
+@keyframes gg-hero-drift {
+  from {
+    transform: translateY(0) scale(1);
+  }
+  to {
+    transform: translateY(9%) scale(1.07);
+  }
 }
 .gg-hero::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to top,
-    rgb(23 18 14 / 0.82),
-    rgb(23 18 14 / 0) 62%
-  );
+  /* page is RTL: the copy sits on the right, so the second layer darkens
+     that side and leaves the people (mirrored to the left) clear. */
+  background:
+    linear-gradient(to left, rgb(23 18 14 / 0.6), rgb(23 18 14 / 0) 60%),
+    linear-gradient(to top, rgb(23 18 14 / 0.82), rgb(23 18 14 / 0) 62%);
 }
 .gg-hero-in {
   position: relative;
@@ -813,5 +833,95 @@
   }
   .gg-edit-row .ph {
     min-height: 260px;
+  }
+}
+
+/* hero phone: real app screens crossfading in a full-height frame on the left
+   (opposite the RTL copy). On wide screens the photo is nudged right and fades
+   into the dark at its left edge, so the couple stays clear of the phone. */
+.gg-hero-phone {
+  position: absolute;
+  z-index: 3;
+  inset-inline-end: clamp(16px, 3vw, 64px);
+  top: 24px;
+  bottom: 14px;
+  width: clamp(220px, 21vw, 290px);
+  display: none;
+  flex-direction: column;
+}
+@media (min-width: 1180px) {
+  .gg-hero-phone {
+    display: flex;
+  }
+  .gg-hero-media {
+    left: 12%;
+    right: -12%;
+    mask-image: linear-gradient(to right, transparent, #000 18%);
+  }
+}
+.gg-hphone {
+  flex: 1;
+  min-height: 0;
+  padding: 7px;
+  border-radius: 30px;
+  background: #17120e;
+  box-shadow: 0 18px 44px rgb(0 0 0 / 0.5);
+}
+.gg-hphone-screen {
+  position: relative;
+  height: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+  background: #f4efe6;
+}
+.gg-hphone-screen img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+.gg-hphone-screen .s0 {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gg-hphone-screen img {
+    animation: gg-phone-cycle 12s ease-in-out infinite;
+  }
+  .gg-hphone-screen .s1 {
+    animation-delay: 4s;
+  }
+  .gg-hphone-screen .s2 {
+    animation-delay: 8s;
+  }
+}
+@keyframes gg-phone-cycle {
+  0%,
+  4% {
+    opacity: 0;
+  }
+  10%,
+  30% {
+    opacity: 1;
+  }
+  36%,
+  100% {
+    opacity: 0;
+  }
+}
+.gg-hero-phone .gg-tag {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.65rem;
+  line-height: 1.4;
+  text-align: center;
+}
+/* narrow screens: the copy covers the whole photo, so darken it evenly */
+@media (max-width: 1179px) {
+  .gg-hero::after {
+    background:
+      linear-gradient(rgb(23 18 14 / 0.42), rgb(23 18 14 / 0.42)),
+      linear-gradient(to top, rgb(23 18 14 / 0.82), rgb(23 18 14 / 0) 62%);
   }
 }

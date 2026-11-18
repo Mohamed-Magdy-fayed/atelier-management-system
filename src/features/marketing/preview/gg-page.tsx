@@ -1,5 +1,3 @@
-import { existsSync } from "node:fs";
-import path from "node:path";
 import { Noto_Naskh_Arabic, Tajawal } from "next/font/google";
 import { notFound } from "next/navigation";
 
@@ -37,6 +35,13 @@ const MESSAGE = [
   "المتبقي: ١٬٣٥٠ ج.م.",
 ].join("\n");
 
+/** Real app screens captured at phone width from the local app (demo data). */
+const HERO_SCREENS = [
+  "/preview/phone-reservations.jpg",
+  "/preview/phone-dresses.jpg",
+  "/preview/phone-dashboard.jpg",
+];
+
 const STEPS = [
   {
     n: "١",
@@ -58,11 +63,6 @@ const STEPS = [
 
 export function GlossStylePage() {
   if (process.env.NODE_ENV === "production") notFound();
-  // Drop real atelier footage at public/preview/hero.mp4 and it replaces the placeholder.
-  const hasVideo = existsSync(
-    path.join(process.cwd(), "public/preview/hero.mp4"),
-  );
-
   return (
     <div className={`gg ${head.variable} ${body.variable}`} dir="rtl" lang="ar">
       <div className="gg-bannerlabel">
@@ -94,22 +94,35 @@ export function GlossStylePage() {
       <main>
         <div>
           <section className="gg-hero">
-            <div className="gg-ph" />
-            {hasVideo && (
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                poster="/preview/hero-poster.jpg"
-                src="/preview/hero.mp4"
+            <picture className="gg-hero-media">
+              <source srcSet="/preview/hero-atelier.webp" type="image/webp" />
+              <img
+                alt=""
+                decoding="async"
+                fetchPriority="high"
+                height={1080}
+                src="/preview/hero-atelier.jpg"
+                width={1920}
               />
-            )}
+            </picture>
+            <div className="gg-hero-phone" aria-hidden="true">
+              <div className="gg-hphone">
+                <div className="gg-hphone-screen">
+                  {HERO_SCREENS.map((src, i) => (
+                    // biome-ignore lint/performance/noImgElement: static review asset
+                    <img alt="" className={`s${i}`} key={src} src={src} />
+                  ))}
+                </div>
+              </div>
+              <span className="gg-tag">
+                شاشات حقيقية من البرنامج على الموبايل، بيانات تجريبية
+              </span>
+            </div>
             <div className="gg-w gg-hero-in">
+              <div className="gg-hero-text">
               <div className="gg-label">
-                {hasVideo
-                  ? "خلفية متحركة مولّدة مؤقتاً. هنستبدلها بلقطات حقيقية من أتيليه شغّال."
-                  : "فيديو مؤقت. هنحط هنا لقطات حقيقية من أتيليه شغّال (أتيليه آلاء بإذنها أو تصوير جديد)."}
+                صورة مؤقتة مولّدة بالذكاء الاصطناعي. هنستبدلها بصورة حقيقية من
+                أتيليه شغّال.
               </div>
               <div className="gg-trust">
                 <span>★ أول عميل شغّال فعلاً</span>
@@ -137,6 +150,7 @@ export function GlossStylePage() {
                 <li>رسايل واتساب جاهزة للعروسة</li>
               </ul>
               <div className="gg-note">ابدأ مجاناً بفرع واحد. من غير كارت.</div>
+              </div>
             </div>
           </section>
         </div>
