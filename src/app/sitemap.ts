@@ -10,7 +10,7 @@ import { rowPath } from "@/features/marketing/pseo/types";
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = env.BASE_URL.replace(/\/$/, "");
-  if (env.DEMO_MODE === "1") return [];
+  if (env.DEMO_MODE === "1" || env.MARKETING_SITE !== "1") return [];
   return [
     {
       url: `${base}/start`,
