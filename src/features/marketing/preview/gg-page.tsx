@@ -96,15 +96,21 @@ export function GlossStylePage() {
           <section className="gg-hero">
             <div className="gg-ph" />
             {hasVideo && (
-              <video autoPlay loop muted playsInline src="/preview/hero.mp4" />
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                poster="/preview/hero-poster.jpg"
+                src="/preview/hero.mp4"
+              />
             )}
             <div className="gg-w gg-hero-in">
-              {!hasVideo && (
-                <div className="gg-label">
-                  فيديو مؤقت. هنحط هنا لقطات حقيقية من أتيليه شغّال (أتيليه آلاء
-                  بإذنها أو تصوير جديد).
-                </div>
-              )}
+              <div className="gg-label">
+                {hasVideo
+                  ? "خلفية متحركة مولّدة مؤقتاً. هنستبدلها بلقطات حقيقية من أتيليه شغّال."
+                  : "فيديو مؤقت. هنحط هنا لقطات حقيقية من أتيليه شغّال (أتيليه آلاء بإذنها أو تصوير جديد)."}
+              </div>
               <div className="gg-trust">
                 <span>★ أول عميل شغّال فعلاً</span>
                 <span>★ فرعين في قويسنا وشبين الكوم</span>
