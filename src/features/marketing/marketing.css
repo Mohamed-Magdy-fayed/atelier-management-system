@@ -1,0 +1,72 @@
+/* Scoped to .mk so the marketing page never inherits a tenant's brand colour. */
+.mk {
+  --mk-bg: #f6efe4;
+  --mk-paper: #fbf7f0;
+  --mk-ink: #5a1a24; /* bordeaux */
+  --mk-text: #221a17;
+  --mk-gold: #b88a44;
+  --mk-line: #e1d4c0;
+  --mk-muted: #6f6258;
+  background: var(--mk-bg);
+  color: var(--mk-text);
+  font-family: var(--font-mk-body), system-ui, sans-serif;
+  line-height: 1.7;
+}
+.mk-display {
+  font-family: var(--font-mk-display), serif;
+  letter-spacing: -0.01em;
+}
+.mk-muted {
+  color: var(--mk-muted);
+}
+.mk-card {
+  background: var(--mk-paper);
+  border: 1px solid var(--mk-line);
+  box-shadow:
+    0 1px 0 #fff inset,
+    0 24px 48px -28px rgb(90 26 36 / 0.35);
+}
+.mk-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.85rem 1.6rem;
+  font-weight: 700;
+  background: var(--mk-ink);
+  color: var(--mk-bg);
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+.mk-btn:hover {
+  background: #431219;
+  transform: translateY(-1px);
+}
+.mk-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+.mk-btn-ghost {
+  background: transparent;
+  color: var(--mk-ink);
+  border: 1.5px solid var(--mk-ink);
+}
+.mk-btn-ghost:hover {
+  background: var(--mk-ink);
+  color: var(--mk-bg);
+}
+.mk-clash {
+  background: repeating-linear-gradient(135deg, #b3261e 0 4px, #f6efe4 4px 8px);
+  border: 1px solid #b3261e;
+}
+.mk-rule {
+  border-top: 1px solid var(--mk-line);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-btn {
+    transition: none;
+  }
+}
