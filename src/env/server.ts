@@ -80,13 +80,13 @@ export const env = createEnv({
 
     /**
      * Marketing site only. WhatsApp number (digits, country code, no "+") that
-     * the landing page's lead form opens. Unset hides the WhatsApp buttons
-     * rather than linking to a wrong number.
+     * the landing page's lead form opens. Defaults to Gateling's dedicated
+     * sales line; override per deployment if needed.
      */
     SALES_WHATSAPP_NUMBER: z
       .string()
       .regex(/^\d{8,15}$/)
-      .optional(),
+      .default("201271741743"),
 
     /** Google Search Console HTML-tag token (the `content` of the meta tag). */
     GOOGLE_SITE_VERIFICATION: z.string().min(1).optional(),
