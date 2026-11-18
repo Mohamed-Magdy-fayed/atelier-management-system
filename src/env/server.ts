@@ -88,6 +88,14 @@ export const env = createEnv({
       .regex(/^\d{8,15}$/)
       .default("201271741743"),
 
+    /**
+     * Turns the Gateling marketing site on (`/start`, `/ar/*`, sitemap entries).
+     * Off by default because this one codebase also serves clients' own
+     * storefronts (e.g. Aalaa's), which must never show Gateling's sales pages.
+     * Set to "1" only on the deployment behind atelier.gateling.com.
+     */
+    MARKETING_SITE: z.enum(["0", "1"]).default("0"),
+
     /** Google Search Console HTML-tag token (the `content` of the meta tag). */
     GOOGLE_SITE_VERIFICATION: z.string().min(1).optional(),
 

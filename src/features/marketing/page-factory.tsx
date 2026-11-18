@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { env } from "@/env/server";
 import { Landing } from "./components/landing";
 import { COPY, type MarketingLocale } from "./content";
 
+/** See `MARKETING_SITE` in env/server.ts. */
+export const marketingEnabled = () => env.MARKETING_SITE === "1";
+
 const path = (l: MarketingLocale) => (l === "ar" ? "/start" : "/start/en");
 
 export function marketingMetadata(locale: MarketingLocale): Metadata {
+  if (!marketingEnabled()) return {};
   const c = COPY[locale];
   const base = env.BASE_URL.replace(/\/$/, "");
   return {
@@ -34,6 +39,7 @@ export function marketingMetadata(locale: MarketingLocale): Metadata {
 }
 
 export function MarketingPage({ locale }: { locale: MarketingLocale }) {
+  if (!marketingEnabled()) notFound();
   return (
     <Landing
       locale={locale}
