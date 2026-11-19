@@ -249,17 +249,17 @@ export function TryExperience() {
 
         <div className="try-grid">
           <div className="try-steps" dir={dir}>
-            <p className="text-primary font-medium">
+            <p className="try-eyebrow text-primary font-medium">
               {String(t("sandbox.try.eyebrow"))}
             </p>
-            <h1 className="mt-1 text-2xl font-semibold text-balance sm:text-3xl">
+            <h1 className="try-title mt-1 text-2xl font-semibold text-balance sm:text-3xl">
               {String(t("sandbox.try.title"))}
             </h1>
-            <p className="text-muted-foreground mt-2 max-w-prose text-pretty">
+            <p className="try-intro text-muted-foreground mt-2 max-w-prose text-pretty">
               {String(t("sandbox.try.intro"))}
             </p>
 
-            <h2 className="mt-6 mb-2 font-semibold">
+            <h2 className="try-steps-heading mt-6 mb-2 font-semibold">
               {String(t("sandbox.try.stepsHeading"))}
             </h2>
             <ol className="try-step-list">
@@ -301,7 +301,7 @@ export function TryExperience() {
               })}
             </ol>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2">
+            <div className="try-nav mt-4 flex flex-wrap items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -330,7 +330,7 @@ export function TryExperience() {
               </Button>
             </div>
 
-            <div className="bg-card mt-6 space-y-3 rounded-xl border p-4">
+            <div className="try-signup bg-card mt-6 space-y-3 rounded-xl border p-4">
               <p className="font-semibold">
                 {String(
                   allDone
@@ -343,10 +343,10 @@ export function TryExperience() {
                   {String(t("sandbox.try.allDoneBody"))}
                 </p>
               ) : null}
-              <p className="text-muted-foreground">
+              <p className="try-signup-note text-muted-foreground">
                 {String(t("sandbox.try.pricingNote"))}
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="try-signup-btns flex flex-wrap gap-2">
                 <Button
                   type="button"
                   variant={allDone ? "default" : "outline"}
@@ -371,7 +371,7 @@ export function TryExperience() {
               </div>
             </div>
 
-            <p className="text-muted-foreground mt-4">
+            <p className="try-saved text-muted-foreground mt-4">
               {String(t("sandbox.try.savedLocally"))}
             </p>
           </div>
