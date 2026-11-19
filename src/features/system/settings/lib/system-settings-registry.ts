@@ -18,6 +18,10 @@ export const WHATSAPP_SENDING_MODES = ["off", "platform", "own"] as const;
 export type WhatsAppSendingMode = (typeof WHATSAPP_SENDING_MODES)[number];
 export const DEFAULT_WHATSAPP_SENDING_MODE: WhatsAppSendingMode = "platform";
 
+/** Where self-serve sign-ups are sent unless the setting says otherwise. */
+export const DEFAULT_GATELING_LEAD_URL =
+  "https://gateling.com/api/leads/self-serve";
+
 /** Fixed system setting codes (policy / integration / branding parameters). */
 export const SYSTEM_SETTING_CODE = {
   SHOW_CATALOG_PRICES: "00001",
@@ -32,6 +36,8 @@ export const SYSTEM_SETTING_CODE = {
   BRAND_NAME_AR: "00010",
   BRAND_LOGO_URL: "00011",
   BRAND_PRIMARY_COLOR: "00012",
+  GATELING_LEAD_URL: "00013",
+  GATELING_LEAD_KEY: "00014",
 } as const;
 
 /**
@@ -69,6 +75,8 @@ export const SYSTEM_SETTING_CODES: SystemSettingCode[] = [
   SYSTEM_SETTING_CODE.BRAND_NAME_AR,
   SYSTEM_SETTING_CODE.BRAND_LOGO_URL,
   SYSTEM_SETTING_CODE.BRAND_PRIMARY_COLOR,
+  SYSTEM_SETTING_CODE.GATELING_LEAD_URL,
+  SYSTEM_SETTING_CODE.GATELING_LEAD_KEY,
 ];
 
 const LEGACY_SETTING_CODES = {
@@ -92,7 +100,9 @@ export type SystemSettingDefinition = {
     | "settingName00009"
     | "settingName00010"
     | "settingName00011"
-    | "settingName00012";
+    | "settingName00012"
+    | "settingName00013"
+    | "settingName00014";
   /** i18n key under `systemPages` */
   descriptionKey:
     | "settingDesc00001"
@@ -106,7 +116,9 @@ export type SystemSettingDefinition = {
     | "settingDesc00009"
     | "settingDesc00010"
     | "settingDesc00011"
-    | "settingDesc00012";
+    | "settingDesc00012"
+    | "settingDesc00013"
+    | "settingDesc00014";
   /** English fallback stored in DB on seed (not user-editable). */
   descriptionEn: string;
   /**
@@ -251,6 +263,29 @@ export const SYSTEM_SETTINGS: SystemSettingDefinition[] = [
     descriptionKey: "settingDesc00012",
     descriptionEn:
       "Brand colour used for buttons, links and highlights, as a hex code such as #84253D. Leave empty to use the colours bundled with this deployment.",
+    editable: { value: true },
+    seed: { isActive: null, value: null },
+  },
+  // Gateling lead hand-off (docs/self-serve/PLAN.md). Both are pasted here from
+  // gateling.com's Settings page: no environment variables, no redeploy.
+  {
+    code: SYSTEM_SETTING_CODE.GATELING_LEAD_URL,
+    label: "integration",
+    nameKey: "settingName00013",
+    descriptionKey: "settingDesc00013",
+    descriptionEn:
+      "Where the /try sign-up form sends its answers. Normally https://gateling.com/api/leads/self-serve.",
+    editable: { value: true },
+    seed: { isActive: null, value: DEFAULT_GATELING_LEAD_URL },
+  },
+  {
+    code: SYSTEM_SETTING_CODE.GATELING_LEAD_KEY,
+    label: "integration",
+    nameKey: "settingName00014",
+    descriptionKey: "settingDesc00014",
+    descriptionEn:
+      "API key created on gateling.com Settings with the Self-serve leads scope. Stored encrypted and never shown again after saving.",
+    isSecret: true,
     editable: { value: true },
     seed: { isActive: null, value: null },
   },

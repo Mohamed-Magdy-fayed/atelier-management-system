@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 
 import { NextResponse } from "next/server";
 
-import { env } from "@/env/server";
+import { db } from "@/drizzle";
+import { resolveLeadTarget } from "@/features/sandbox/server/lead-target";
 import { leadSubmissionSchema } from "@/features/sandbox/lib/lead";
 
 /**
@@ -64,7 +65,8 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!env.GATELING_LEAD_URL || !env.GATELING_LEAD_KEY) {
+  const target = await resolveLeadTarget(db);
+  if (!target) {
     // Honest failure: the form then offers the WhatsApp fallback.
     return NextResponse.json(
       { ok: false, error: "not_configured" },
@@ -75,11 +77,11 @@ export async function POST(request: Request) {
   const lead = parsed.data;
 
   try {
-    const response = await fetch(env.GATELING_LEAD_URL, {
+    const response = await fetch(target.url, {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        authorization: `Bearer ${env.GATELING_LEAD_KEY}`,
+        authorization: `Bearer ${target.key}`,
       },
       body: JSON.stringify({
         // Field names are the gateling.com self-serve endpoint contract.
