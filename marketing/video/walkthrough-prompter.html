@@ -1,0 +1,274 @@
+<title>Walkthrough Voiceover Prompter</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+  /* Layout: recording-booth prompter — the script owns the screen, the video is a small monitor beside it. Single dark look by choice. */
+  :root {
+    --bg: #141113;
+    --panel: #1d191b;
+    --line: #2c2629;
+    --ink: #f7efe6;
+    --dim: #6f6560;
+    --cue: #fe6e00;
+    --copper: #e28047;
+    --font-ar: "Cairo", "Segoe UI", Tahoma, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-ar);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 16px;
+    box-sizing: border-box;
+  }
+  .stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 28px;
+    height: 100%;
+    max-width: 1400px;
+    margin-inline: auto;
+  }
+  .script-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  h1 { font-size: 20px; font-weight: 700; margin: 0; color: var(--dim); }
+  h1 b { color: var(--ink); font-weight: 800; }
+  .clock { font-family: var(--font-mono); font-size: 22px; font-variant-numeric: tabular-nums; color: var(--copper); direction: ltr; }
+
+  .lines {
+    list-style: none; margin: 16px 0 0; padding: 0;
+    flex: 1; min-height: 0; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 10px;
+    scroll-behavior: smooth;
+  }
+  .line {
+    position: relative;
+    padding: 18px 22px 22px;
+    border-radius: 14px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--dim);
+    transition: color .2s, background-color .2s, border-color .2s;
+  }
+  .line .meta {
+    display: flex; gap: 12px; align-items: center;
+    font-family: var(--font-mono); font-size: 13px; letter-spacing: .04em;
+    direction: ltr; justify-content: flex-end;
+  }
+  .line .scene { font-family: var(--font-ar); font-size: 14px; letter-spacing: 0; }
+  .line .text {
+    display: block; margin-top: 4px;
+    font-size: clamp(26px, 4.2vw, 54px); font-weight: 800; line-height: 1.35;
+    text-wrap: balance;
+  }
+  .line .tone { display: block; margin-top: 2px; font-size: 16px; font-weight: 600; color: var(--copper); opacity: .55; }
+  .line.live .tone, .line.next .tone { opacity: 1; }
+  .line .bar {
+    position: absolute; inset-inline: 22px; bottom: 10px; height: 4px; border-radius: 4px;
+    background: var(--line); overflow: hidden; opacity: 0;
+  }
+  .line .bar i { display: block; height: 100%; width: 0; background: var(--cue); margin-inline-start: 0; }
+  .line.next { color: #b9ada4; }
+  .line.next .cue { opacity: 1; }
+  .cue {
+    font-family: var(--font-ar); font-size: 14px; font-weight: 700; color: var(--copper);
+    opacity: 0; transition: opacity .2s;
+  }
+  .line.live { color: var(--ink); background: var(--panel); border-color: var(--cue); }
+  .line.live .bar { opacity: 1; }
+  .line.live .cue { opacity: 1; color: var(--cue); }
+  .line.done { color: #4a4240; }
+
+  .monitor { display: flex; flex-direction: column; gap: 12px; align-items: stretch; width: min(300px, 28vw); }
+  .screen { position: relative; aspect-ratio: 9 / 16; max-width: 100%; border-radius: 16px; overflow: hidden; background: #000; border: 1px solid var(--line); }
+  video { width: 100%; height: 100%; display: block; object-fit: cover; }
+  .countdown {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    background: rgba(20, 17, 19, .82); font-size: 120px; font-weight: 800; color: var(--cue);
+    font-family: var(--font-mono);
+  }
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  button {
+    font: 700 16px var(--font-ar); color: var(--ink); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px 10px; cursor: pointer;
+  }
+  button.primary { grid-column: 1 / -1; background: var(--cue); border-color: var(--cue); color: #1a0d02; font-size: 18px; }
+  button:hover { border-color: var(--copper); }
+  button:focus-visible { outline: 3px solid var(--copper); outline-offset: 2px; }
+  label.toggle { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #b9ada4; }
+  details { font-size: 14px; color: #b9ada4; line-height: 1.7; }
+  details summary { cursor: pointer; font-weight: 700; color: var(--ink); }
+  details ul { margin: 8px 0 0; padding-inline-start: 18px; }
+
+  @media (max-width: 760px) {
+    .stage { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); height: auto; }
+    .monitor {
+      order: -1; width: 100%; display: grid; grid-template-columns: 120px minmax(0, 1fr); align-items: start; gap: 12px;
+      position: sticky; top: env(safe-area-inset-top, 0px); z-index: 2; background: var(--bg); padding-block: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+    body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+    .monitor details { display: none; }
+    .screen { width: 120px; }
+    .monitor .side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .lines { overflow: visible; }
+    .countdown { font-size: 56px; }
+  }
+  @media (min-width: 761px) { .monitor .side { display: contents; } }
+  @media (prefers-reduced-motion: reduce) { .lines { scroll-behavior: auto; } .line { transition: none; } }
+</style>
+
+<div class="stage" dir="rtl" lang="ar">
+  <section class="script-col" aria-label="النص">
+    <header>
+      <h1><b>شرح السيستم</b> · جيتلنج أتيليه · ٦٠ ثانية</h1>
+      <span class="clock" id="clock">00.0 / 60.0</span>
+    </header>
+    <ol class="lines" id="lines"></ol>
+  </section>
+
+  <aside class="monitor" aria-label="الفيديو">
+    <div class="screen">
+      <video id="video" src="walkthrough-silent.mp4" muted playsinline preload="auto"></video>
+      <div class="countdown" id="countdown" hidden>3</div>
+    </div>
+    <div class="side">
+      <div class="controls">
+        <button class="primary" id="start" type="button">ابدأ التسجيل ▸ ٣ ٢ ١</button>
+        <button id="pause" type="button">إيقاف مؤقت</button>
+        <button id="restart" type="button">من الأول</button>
+      </div>
+      <label class="toggle"><input type="checkbox" id="countin" checked> عدّ تنازلي ٣ ثواني قبل البداية</label>
+      <details>
+        <summary>إزاي تسجّل</summary>
+        <ul>
+          <li>ابدأ تسجيل الصوت على الموبايل الأول، وبعدين اضغط «ابدأ».</li>
+          <li>اقرأ السطر المنوّر بس، والشريط البرتقالي بيوريك الوقت الفاضل.</li>
+          <li>السطر اللي عليه «استعد» هو اللي جاي — خد نفسك.</li>
+          <li>ده تسجيل حقيقي للسيستم — كل اللي بتقوله بيحصل على الشاشة في نفس اللحظة.</li>
+          <li>صوت دافي، بالمصري، كأنك بتكلّم صاحب أتيليه قدامك — مش مذيع.</li>
+          <li>تحت كل سطر ملاحظة صغيرة بتقولك تقوله إزاي.</li>
+          <li>لو غلطت كمّل عادي — أنا بقصّ وأظبط على الفيديو.</li>
+          <li>ابعتلي الملف (m4a أو wav) وأنا أركّبه على الفيديو بالمللي.</li>
+        </ul>
+      </details>
+    </div>
+  </aside>
+</div>
+
+<script>
+  // Windows follow walkthrough-scenes.json, shifted by the 3.5 s trimmed off the start
+  // and scaled by 60/62 (the cut plays 3% fast to land on exactly 60 s):
+  // dashboard 0.1, dresses 6.0, booking 12.1, calendar 19.0, customer 24.4,
+  // deposit 29.6, receipt 38.3, pickup 43.6, catalog 51.9, held last frame 56.6–62.
+  // Wording is the founder's own from the first take (Voice 025), cleaned of slips.
+  const SCRIPT = [
+    { start: 0.4, end: 5.5, scene: "١ · لوحة التحكم", text: "دي لوحة التحكم: إيراداتك ومصاريفك وصافي ربحك… كله قدامك أول ما تفتح.", tone: "هادي، كأنك بتفرّج صاحبك" },
+    { start: 6, end: 11.4, scene: "٢ · الفساتين", text: "ودي فساتينك: كل فستان بكوده واسمه… كلهم في مكان واحد بدل الدفتر.", tone: "ركّز على «بدل الدفتر»" },
+    { start: 11.9, end: 18.1, scene: "٣ · حجز جديد", text: "لو عروسة جاية تحجز، هتدوس على «إضافة» وتكتب كود الفستان… بيطلعلك على طول.", tone: "قول «إضافة» مع الضغطة" },
+    { start: 18.6, end: 23.3, scene: "٤ · التقويم", text: "هتختار يوم الفرح، وهتلاقي إن الأيام المحجوزة مقفولة… فمستحيل الفستان يتحجز مرتين.", tone: "وقفة قبل «فمستحيل» — دي أهم جملة" },
+    { start: 23.8, end: 28.3, scene: "٥ · بيانات العروسة", text: "هتكتب اسم العروسة ورقم تليفونها، عشان تسجّل بياناتها.", tone: "عادي وبسيط" },
+    { start: 28.8, end: 36.7, scene: "٦ · العربون", text: "وكمان تسجّل العربون، والسيستم بيحسبلك الباقي لوحده. هتدوس «إنشاء»… وكده الحجز اتسجّل.", tone: "قول «إنشاء» مع الضغطة على الشاشة" },
+    { start: 37.2, end: 41.9, scene: "٧ · الإيصال", text: "وده إيصال الحجز كمان، بالمواعيد والشروط اللي انت محددها في السيستم.", tone: "هادي" },
+    { start: 42.4, end: 49.8, scene: "٨ · يوم الاستلام", text: "يوم الاستلام هتغيّر بس الحالة لـ«تم الاستلام»، وتحصّل باقي المبلغ بضغطة واحدة… والسيستم عارف كمان هو كام.", tone: "ابتسامة على «عارف كمان هو كام»" },
+    { start: 50.4, end: 54.5, scene: "٩ · صفحة العرايس", text: "وفساتينك بالصور في صفحة، العرايس يقدروا يتفرجوا عليها.", tone: "حماس صغير — وخلّص هنا، من غير «لو حابب»" },
+    { start: 55, end: 59.8, scene: "١٠ · الختام", text: "لو حابب تشوف السيستم بتاعك هيبقى شكله إزاي عندنا… هتبعتلنا بس لينك صفحتك.", tone: "دافي ومباشر — وخلّص بسكتة ثانية" },
+  ];
+  const CUE_LEAD = 1.0;
+
+  const video = document.getElementById("video");
+  const list = document.getElementById("lines");
+  const clock = document.getElementById("clock");
+  const countdown = document.getElementById("countdown");
+  const countin = document.getElementById("countin");
+
+  const fmt = (s) => s.toFixed(1).padStart(4, "0");
+  const items = SCRIPT.map((line, i) => {
+    const li = document.createElement("li");
+    li.className = "line";
+    li.innerHTML =
+      `<div class="meta"><span class="cue">استعد</span><span class="scene"></span><span>${fmt(line.start)} → ${fmt(line.end)}</span></div>` +
+      `<span class="text"></span><span class="tone"></span><span class="bar"><i></i></span>`;
+    li.querySelector(".scene").textContent = line.scene;
+    li.querySelector(".text").textContent = line.text;
+    li.querySelector(".tone").textContent = line.tone;
+    list.appendChild(li);
+    return li;
+  });
+
+  let lastLive = -1;
+  function render() {
+    const t = video.currentTime || 0;
+    clock.textContent = `${fmt(t)} / ${fmt(video.duration || 60)}`;
+    let live = -1;
+    SCRIPT.forEach((line, i) => {
+      const el = items[i];
+      const isLive = t >= line.start && t < line.end;
+      const isNext = !isLive && t < line.start && t >= line.start - CUE_LEAD;
+      el.classList.toggle("live", isLive);
+      el.classList.toggle("next", isNext);
+      el.classList.toggle("done", t >= line.end);
+      el.querySelector(".cue").textContent = isLive ? "اتكلم دلوقتي" : "استعد";
+      el.querySelector(".bar i").style.width = isLive
+        ? `${((t - line.start) / (line.end - line.start)) * 100}%`
+        : t >= line.end ? "100%" : "0%";
+      if (isLive || isNext) live = i;
+    });
+    if (live !== -1 && live !== lastLive) {
+      items[live].scrollIntoView({ block: "center" });
+      lastLive = live;
+    }
+    if (!video.paused) requestAnimationFrame(render);
+  }
+
+  let wakeLock = null;
+  async function keepAwake() {
+    try { wakeLock = await navigator.wakeLock?.request("screen"); } catch { /* optional */ }
+  }
+
+  let counting = false;
+  async function start() {
+    if (counting) return;
+    video.pause();
+    video.currentTime = 0;
+    lastLive = -1;
+    render();
+    keepAwake();
+    if (countin.checked) {
+      counting = true;
+      countdown.hidden = false;
+      for (const n of ["٣", "٢", "١"]) {
+        countdown.textContent = n;
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+      countdown.hidden = true;
+      counting = false;
+    }
+    await video.play().catch(() => {});
+    requestAnimationFrame(render);
+  }
+
+  document.getElementById("start").addEventListener("click", start);
+  document.getElementById("restart").addEventListener("click", () => {
+    video.pause(); video.currentTime = 0; lastLive = -1; render(); list.scrollTop = 0;
+  });
+  const pauseBtn = document.getElementById("pause");
+  pauseBtn.addEventListener("click", () => {
+    if (video.paused) { video.play().catch(() => {}); requestAnimationFrame(render); }
+    else video.pause();
+  });
+  video.addEventListener("play", () => { pauseBtn.textContent = "إيقاف مؤقت"; });
+  video.addEventListener("pause", () => { pauseBtn.textContent = "كمّل"; render(); });
+  video.addEventListener("ended", () => { render(); wakeLock?.release?.().catch(() => {}); });
+  video.addEventListener("loadedmetadata", render);
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space" && e.target === document.body) { e.preventDefault(); pauseBtn.click(); }
+  });
+  render();
+</script>
