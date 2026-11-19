@@ -8,6 +8,7 @@
   --line: #e3e0d3;
   --mk-line: #d5d1c2;
   --mk-ink: #17120e;
+  --gg-bar-h: 65px;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-gg-body), system-ui, sans-serif;
@@ -123,7 +124,9 @@
   border-radius: 0;
   width: 100%;
   overflow: hidden;
-  min-height: min(680px, 88vh);
+  /* header (64px + 1px border) + hero = exactly one screen; svh so mobile browser bars never cause overflow */
+  min-height: calc(100vh - var(--gg-bar-h));
+  min-height: calc(100svh - var(--gg-bar-h));
   display: flex;
   align-items: flex-end;
   color: #fff;
@@ -990,4 +993,17 @@
   .gg-diff-grid>div:first-child{border-block-start:0}
   .gg-built-grid{grid-template-columns:1fr 1fr}
   .gg-tiles{grid-template-columns:1fr}
+}
+
+/* keep the header a single 64px row on phones so header + hero stay exactly one screen */
+.gg-logo{white-space:nowrap}
+.gg-bar .gg-pill{white-space:nowrap}
+@media (max-width:760px){
+  .gg-bar .gg-w{block-size:64px}
+  .gg-bar .gg-pill{padding-inline:14px;font-size:.85rem}
+  .gg-logo{font-size:1rem}
+}
+@media (max-height:700px) and (max-width:1179px){
+  .gg-hero-in{padding-block:24px 28px}
+  .gg-checks,.gg-trust{display:none}
 }
