@@ -21,6 +21,18 @@ const UNIMPLEMENTED = [
   "/settings",
 ] as const;
 
+/**
+ * The sandbox only ever stands in for someone who is not signed in. A signed-in
+ * user (an admin opening /settings, say) always gets the real screens, even if
+ * a /try cookie is still on the browser from the last 30 minutes.
+ */
+export function shouldServeSandbox(
+  cookieValue: string | undefined,
+  hasSession: boolean,
+): boolean {
+  return cookieValue === "1" && !hasSession;
+}
+
 function matchesPrefix(pathname: string, base: string): boolean {
   return pathname === base || pathname.startsWith(`${base}/`);
 }

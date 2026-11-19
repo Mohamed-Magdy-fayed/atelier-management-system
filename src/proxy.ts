@@ -9,6 +9,7 @@ import { PUBLIC_SITE_PATHS } from "@/features/public-catalog/lib/public-tabs";
 import {
   resolveSandboxRewrite,
   SANDBOX_COOKIE,
+  shouldServeSandbox,
 } from "@/features/sandbox/lib/routing";
 import { getProtectedScreenDefinitionByPathname } from "@/features/system/registry";
 import { env } from "./env/server";
@@ -52,7 +53,13 @@ async function middlewareAuth(request: NextRequest) {
 
   // Demo visitors (cookie set by /try) see the sandbox screens at the normal
   // paths. The sandbox pages carry no server data, so this exposes nothing.
-  if (request.cookies.get(SANDBOX_COOKIE)?.value === "1") {
+  // Never for a signed-in user: they must always reach the real screens.
+  if (
+    shouldServeSandbox(
+      request.cookies.get(SANDBOX_COOKIE)?.value,
+      Boolean(session?.user),
+    )
+  ) {
     const target = resolveSandboxRewrite(pathname);
     if (target) return NextResponse.rewrite(new URL(target, request.url));
   }
