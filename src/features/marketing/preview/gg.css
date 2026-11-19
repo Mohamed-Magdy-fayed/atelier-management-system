@@ -1007,3 +1007,22 @@
   .gg-hero-in{padding-block:24px 28px}
   .gg-checks,.gg-trust{display:none}
 }
+
+/* Desktop hero is a fixed one-screen box (header included); content compacts by available height so nothing can spill past the fold, whatever the browser chrome or zoom leaves us. */
+@media (min-width:1180px){
+  .gg-hero{height:calc(100vh - var(--gg-bar-h));height:calc(100svh - var(--gg-bar-h));min-height:0}
+  .gg-hero-in{padding-block:clamp(16px,4svh,48px) clamp(16px,5svh,56px)}
+}
+@media (min-width:1180px) and (max-height:900px){
+  .gg-hero h1{font-size:clamp(1.8rem,6.2svh,3.2rem)}
+  .gg-hero p{font-size:1rem;margin-top:10px}
+  .gg-row{margin-top:16px}
+  .gg-trust{display:none}
+  .gg-hero .gg-label{margin-bottom:8px;padding:5px 10px;font-size:.75rem}
+}
+@media (min-width:1180px) and (max-height:780px){
+  .gg-checks{display:none}
+}
+@media (min-width:1180px) and (max-height:640px){
+  .gg-hero .gg-label,.gg-hero p{display:none}
+}

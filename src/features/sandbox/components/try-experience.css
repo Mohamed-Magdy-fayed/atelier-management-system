@@ -191,3 +191,66 @@
     transition: none;
   }
 }
+
+/*
+ * Desktop: the page is exactly one screen (svh, so browser bars never cause
+ * overflow). Header + grid share it; the phone scales to the row height and
+ * the steps column scrolls on its own if a short window cannot fit it all.
+ */
+@container try (min-width: 64rem) {
+  .try-root {
+    block-size: 100vh;
+    block-size: 100svh;
+    min-block-size: 0;
+    padding-block: 0.75rem;
+    overflow: clip;
+  }
+
+  .try-inner {
+    block-size: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .try-header {
+    flex: none;
+    margin-block-end: 0.75rem;
+  }
+
+  .try-grid {
+    flex: 1 1 0;
+    min-block-size: 0;
+    align-items: stretch;
+    gap: 2.5rem;
+  }
+
+  .try-phone-col {
+    position: static;
+    min-block-size: 0;
+    block-size: 100%;
+  }
+
+  .try-phone {
+    block-size: 100%;
+    max-block-size: 52rem;
+  }
+
+  .try-steps {
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-inline-end: 0.5rem;
+  }
+}
+
+/* The container itself cannot be styled by its own container query, so the
+   root's one-screen sizing uses a viewport query (root spans the viewport). */
+@media (min-width: 64rem) {
+  .try-root {
+    block-size: 100vh;
+    block-size: 100svh;
+    min-block-size: 0;
+    padding-block: 0.75rem;
+    overflow: clip;
+  }
+}
