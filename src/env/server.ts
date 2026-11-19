@@ -107,6 +107,12 @@ export const env = createEnv({
      */
     REDIS_KEY_PREFIX: z.string().default(""),
 
+    /**
+     * Where the sandbox sign-up form posts its answers (POST https://gateling.com/api/leads/self-serve). Optional: unset, the form falls back to a WhatsApp message.
+     */
+    GATELING_LEAD_URL: z.url().optional(),
+    GATELING_LEAD_KEY: z.string().min(1).optional(),
+
     FIREBASE_PROJECT_ID: z.string().min(1),
     FIREBASE_CLIENT_EMAIL: z.string().min(1),
     FIREBASE_PRIVATE_KEY: z.string().min(1),

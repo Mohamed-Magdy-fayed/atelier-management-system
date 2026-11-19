@@ -6,6 +6,10 @@ import {
 } from "@/features/core/auth/core";
 import { readScreenPermissionsCache } from "@/features/core/auth/core/screen-permission-cache";
 import { PUBLIC_SITE_PATHS } from "@/features/public-catalog/lib/public-tabs";
+import {
+  resolveSandboxRewrite,
+  SANDBOX_COOKIE,
+} from "@/features/sandbox/lib/routing";
 import { getProtectedScreenDefinitionByPathname } from "@/features/system/registry";
 import { env } from "./env/server";
 
@@ -29,6 +33,8 @@ const publicRoutes = [
   "/ar/",
   "/robots.txt",
   "/sitemap",
+  "/try",
+  "/sandbox/",
 ];
 
 export async function proxy(request: NextRequest) {
@@ -42,6 +48,13 @@ export async function proxy(request: NextRequest) {
 async function middlewareAuth(request: NextRequest) {
   const session = await getUserSession(request.cookies);
   const pathname = request.nextUrl.pathname;
+
+  // Demo visitors (cookie set by /try) see the sandbox screens at the normal
+  // paths. The sandbox pages carry no server data, so this exposes nothing.
+  if (request.cookies.get(SANDBOX_COOKIE)?.value === "1") {
+    const target = resolveSandboxRewrite(pathname);
+    if (target) return NextResponse.rewrite(new URL(target, request.url));
+  }
 
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
   const isPublicRoute =

@@ -1,4 +1,5 @@
 import authAr from "@/features/core/auth/translations/auth-ar";
+import sandboxAr from "@/features/sandbox/translations/sandbox-ar";
 import { dt, type LanguageMessages } from "../lib";
 
 export default {
@@ -1176,4 +1177,5 @@ export default {
     },
   }),
   ...authAr,
+  ...sandboxAr,
 } as const satisfies LanguageMessages;
