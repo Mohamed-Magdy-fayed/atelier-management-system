@@ -7,11 +7,14 @@ import { getRow, visibleRows } from "@/features/marketing/pseo";
 import { PseoPage } from "@/features/marketing/pseo/pseo-page";
 import {
   FAMILY_META,
+  isEnglishFamily,
   type PseoFamily,
   rowPath,
 } from "@/features/marketing/pseo/types";
 
-const FAMILIES = Object.keys(FAMILY_META) as PseoFamily[];
+const FAMILIES: PseoFamily[] = (Object.keys(FAMILY_META) as PseoFamily[]).filter(
+  (f) => !isEnglishFamily(f),
+);
 
 export function generateStaticParams() {
   const params = visibleRows().map((r) => ({ family: r.family, slug: r.slug }));

@@ -3,6 +3,8 @@ import { Noto_Naskh_Arabic, Tajawal } from "next/font/google";
 import { env } from "@/env/server";
 import { LeadForm } from "../components/lead-form";
 import { COPY } from "../content";
+import { visibleRows } from "../pseo";
+import { rowPath } from "../pseo/types";
 import { BookingDemo } from "./gg-extra";
 import "./gg.css";
 
@@ -581,7 +583,19 @@ export function GlossStylePage({ preview = false }: { preview?: boolean }) {
         </section>
       </main>
       <footer className="gg-foot">
-        <div className="gg-w">{c.footer.line}</div>
+        <div className="gg-w">
+          <p>{c.footer.line}</p>
+          <nav aria-label="اقرأ عن البرنامج" className="gg-seo-links">
+            {visibleRows("barnamag").map((r) => (
+              <a href={rowPath(r)} key={r.slug}>
+                {r.h1.split(":")[0]}
+              </a>
+            ))}
+            <a href="/ar/hulul">حلول لمشاكل الأتيليه</a>
+            <a href="/ar/namazig">نماذج جاهزة</a>
+            <a href="/en/software/dress-rental-software">English</a>
+          </nav>
+        </div>
       </footer>
     </div>
   );

@@ -1,9 +1,15 @@
 import { AREAS } from "./areas";
+import { KEYWORD_PAGES } from "./keyword-pages";
 import { PROBLEMS } from "./problems";
 import { TEMPLATES } from "./templates";
 import type { PseoFamily, PseoRow } from "./types";
 
-export const ALL_ROWS: PseoRow[] = [...AREAS, ...PROBLEMS, ...TEMPLATES];
+export const ALL_ROWS: PseoRow[] = [
+  ...KEYWORD_PAGES,
+  ...AREAS,
+  ...PROBLEMS,
+  ...TEMPLATES,
+];
 
 /**
  * Drafts render only when `PSEO_PREVIEW=1` (a preview deployment), and then

@@ -2,12 +2,19 @@ import Link from "next/link";
 
 import { env } from "@/env/server";
 import { ALL_ROWS, visibleRows } from "./index";
-import { FAMILY_META, type PseoFamily, type PseoRow, rowPath } from "./types";
+import {
+  FAMILY_META,
+  hubPath,
+  isEnglishFamily,
+  type PseoFamily,
+  type PseoRow,
+  rowPath,
+} from "./types";
 
 const siteUrl = () => env.BASE_URL.replace(/\/$/, "");
 
-function ctaHref(slug: string) {
-  return `/?src=pseo&page=${encodeURIComponent(slug)}#start`;
+function ctaHref(slug: string, en: boolean) {
+  return `${en ? "/en" : "/"}?src=pseo&page=${encodeURIComponent(slug)}#start`;
 }
 
 function waHref(slug: string) {
@@ -19,12 +26,18 @@ function waHref(slug: string) {
 function Shell({
   children,
   jsonLd,
+  en = false,
 }: {
   children: React.ReactNode;
   jsonLd: object[];
+  en?: boolean;
 }) {
   return (
-    <div className="mk min-h-dvh" dir="rtl" lang="ar">
+    <div
+      className="mk min-h-dvh"
+      dir={en ? "ltr" : "rtl"}
+      lang={en ? "en" : "ar"}
+    >
       <script
         type="application/ld+json"
         // biome-ignore lint/security/noDangerouslySetInnerHtml: static, server-built JSON-LD
@@ -35,26 +48,47 @@ function Shell({
       <header className="mx-auto flex max-w-3xl items-center justify-between px-5 py-5">
         <Link
           className="mk-display text-xl font-bold text-[var(--mk-ink)]"
-          href="/"
+          href={en ? "/en" : "/"}
         >
           Gateling Atelier
         </Link>
-        <Link className="text-sm underline-offset-4 hover:underline" href="/">
-          عن البرنامج
+        <Link
+          className="text-sm underline-offset-4 hover:underline"
+          href={en ? "/en" : "/"}
+        >
+          {en ? "About the software" : "عن البرنامج"}
         </Link>
       </header>
       {children}
       <footer className="mk-rule mt-16">
         <div className="mx-auto max-w-3xl px-5 py-8 text-sm">
-          Gateling Atelier من Gateling Solutions
+          {en
+            ? "Gateling Atelier by Gateling Solutions"
+            : "Gateling Atelier من Gateling Solutions"}
         </div>
       </footer>
     </div>
   );
 }
 
-function Cta({ slug }: { slug: string }) {
+function Cta({ slug, en = false }: { slug: string; en?: boolean }) {
   const wa = waHref(slug);
+  if (en) {
+    return (
+      <aside className="mk-card my-12 rounded-3xl p-7">
+        <p className="mk-display text-2xl font-bold">Try it on your own dresses</p>
+        <p className="mk-muted mt-2">
+          500 EGP per branch per month (about $10), with a free plan for one
+          branch. We set up the atelier and train your staff.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link className="mk-btn" href={ctaHref(slug, true)}>
+            Request a free trial
+          </Link>
+        </div>
+      </aside>
+    );
+  }
   return (
     <aside className="mk-card my-12 rounded-3xl p-7">
       <p className="mk-display text-2xl font-bold">جرّب البرنامج على فساتينك</p>
@@ -63,7 +97,7 @@ function Cta({ slug }: { slug: string }) {
         الأتيليه ونعلّم الموظفين.
       </p>
       <div className="mt-5 flex flex-wrap gap-3">
-        <Link className="mk-btn" href={ctaHref(slug)}>
+        <Link className="mk-btn" href={ctaHref(slug, false)}>
           اطلب تجربة مجانية
         </Link>
         {wa ? (
@@ -83,6 +117,7 @@ function Cta({ slug }: { slug: string }) {
 
 export function PseoPage({ row }: { row: PseoRow }) {
   const meta = FAMILY_META[row.family];
+  const en = isEnglishFamily(row.family);
   const base = siteUrl();
   const url = `${base}${rowPath(row)}`;
   const related = row.related
@@ -106,7 +141,7 @@ export function PseoPage({ row }: { row: PseoRow }) {
           "@type": "ListItem",
           position: 2,
           name: meta.crumb,
-          item: `${base}/ar/${meta.path}`,
+          item: `${base}${hubPath(row.family)}`,
         },
         { "@type": "ListItem", position: 3, name: row.h1, item: url },
       ],
@@ -137,15 +172,18 @@ export function PseoPage({ row }: { row: PseoRow }) {
   }
 
   return (
-    <Shell jsonLd={jsonLd}>
+    <Shell en={en} jsonLd={jsonLd}>
       <main className="mx-auto max-w-3xl px-5 pt-6">
         <nav aria-label="breadcrumb" className="mk-muted mb-6 text-sm">
-          <Link href="/">الرئيسية</Link> ‹{" "}
-          <Link href={`/ar/${meta.path}`}>{meta.crumb}</Link>
+          <Link href={en ? "/en" : "/"}>{en ? "Home" : "الرئيسية"}</Link>{" "}
+          {en ? "›" : "‹"}{" "}
+          <Link href={hubPath(row.family)}>{meta.crumb}</Link>
         </nav>
         {!row.published ? (
           <p className="mb-6 rounded-xl border border-[#b3261e] px-4 py-2 text-sm text-[#b3261e]">
-            مسودة للمراجعة. غير منشورة وغير مفهرسة.
+            {en
+              ? "Draft for review. Unpublished and not indexed."
+              : "مسودة للمراجعة. غير منشورة وغير مفهرسة."}
           </p>
         ) : null}
         <h1 className="mk-display text-balance text-4xl font-bold leading-[1.25] text-[var(--mk-ink)] md:text-5xl">
@@ -181,7 +219,7 @@ export function PseoPage({ row }: { row: PseoRow }) {
                   <li className="mk-rule pt-4" key={st.title}>
                     <h3 className="font-bold">
                       <span className="mk-display ms-2 text-[var(--mk-gold)]">
-                        {(i + 1).toLocaleString("ar-EG")}.
+                        {(i + 1).toLocaleString(en ? "en" : "ar-EG")}.
                       </span>
                       {st.title}
                     </h3>
@@ -208,19 +246,21 @@ export function PseoPage({ row }: { row: PseoRow }) {
         {row.comparison?.length ? (
           <section className="mt-10">
             <h2 className="mk-display text-2xl font-bold">
-              بالإيد ولا بالبرنامج
+              {row.comparisonCols?.heading ?? "بالإيد ولا بالبرنامج"}
             </h2>
             <ul className="mt-4 grid gap-3">
               {row.comparison.map((c) => (
                 <li className="mk-card rounded-2xl p-5" key={c.aspect}>
                   <p className="font-bold">{c.aspect}</p>
                   <p className="mk-muted mt-2">
-                    <span className="font-bold">بالإيد: </span>
+                    <span className="font-bold">
+                      {row.comparisonCols?.left ?? "بالإيد"}:{" "}
+                    </span>
                     {c.manual}
                   </p>
                   <p className="mt-1">
                     <span className="font-bold text-[var(--mk-ink)]">
-                      بالبرنامج:{" "}
+                      {row.comparisonCols?.right ?? "بالبرنامج"}:{" "}
                     </span>
                     {c.system}
                   </p>
@@ -230,11 +270,11 @@ export function PseoPage({ row }: { row: PseoRow }) {
           </section>
         ) : null}
 
-        <Cta slug={row.slug} />
+        <Cta en={en} slug={row.slug} />
 
         {row.faq.length ? (
           <section>
-            <h2 className="mk-display mb-4 text-2xl font-bold">أسئلة بتتسأل</h2>
+            <h2 className="mk-display mb-4 text-2xl font-bold">{en ? "FAQ" : "أسئلة بتتسأل"}</h2>
             {row.faq.map((f) => (
               <details className="mk-rule py-4" key={f.q}>
                 <summary className="cursor-pointer list-none font-bold marker:hidden">
@@ -248,7 +288,7 @@ export function PseoPage({ row }: { row: PseoRow }) {
 
         {related.length ? (
           <section className="mt-12">
-            <h2 className="mk-display mb-4 text-xl font-bold">اقرأ كمان</h2>
+            <h2 className="mk-display mb-4 text-xl font-bold">{en ? "Read more" : "اقرأ كمان"}</h2>
             <ul className="grid gap-2">
               {related.map((r) => (
                 <li key={`${r.family}/${r.slug}`}>
@@ -263,7 +303,7 @@ export function PseoPage({ row }: { row: PseoRow }) {
               <li>
                 <Link
                   className="underline underline-offset-4"
-                  href={`/ar/${meta.path}`}
+                  href={hubPath(row.family)}
                 >
                   كل {meta.crumb}
                 </Link>

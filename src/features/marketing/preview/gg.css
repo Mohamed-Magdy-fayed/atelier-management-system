@@ -1026,3 +1026,17 @@
 @media (min-width:1180px) and (max-height:640px){
   .gg-hero .gg-label,.gg-hero p{display:none}
 }
+
+.gg-seo-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-top: 12px;
+}
+.gg-seo-links a {
+  color: inherit;
+  text-underline-offset: 4px;
+}
+.gg-seo-links a:hover {
+  text-decoration: underline;
+}

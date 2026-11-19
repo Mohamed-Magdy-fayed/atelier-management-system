@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import { COPY, type MarketingLocale, PRICE_EGP } from "../content";
+import { visibleRows } from "../pseo";
+import { rowPath } from "../pseo/types";
 import { DressCalendar } from "./dress-calendar";
 import { LeadForm } from "./lead-form";
 
@@ -16,6 +18,8 @@ export function Landing({
   whatsappNumber?: string;
 }) {
   const c = COPY[locale];
+  // Only pages that exist in this deployment (published, or preview on).
+  const seoLinks = visibleRows(locale === "ar" ? "barnamag" : "software");
   const waHref = whatsappNumber
     ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(c.hero.whatsapp)}`
     : undefined;
@@ -91,6 +95,9 @@ export function Landing({
           Gateling Atelier
         </Link>
         <nav className="hidden items-center gap-7 text-sm md:flex">
+          {seoLinks[0] ? (
+            <Link href={rowPath(seoLinks[0])}>{seoLinks[0].h1.split(":")[0]}</Link>
+          ) : null}
           <a href="#features">{c.nav.features}</a>
           <a href="#pricing">{c.nav.pricing}</a>
           <a href="#faq">{c.nav.faq}</a>
@@ -282,6 +289,30 @@ export function Landing({
       <footer className="mk-rule">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-8 text-sm">
           <span>{c.footer.line}</span>
+          {seoLinks.length > 0 ? (
+            <nav
+              aria-label={locale === "ar" ? "اقرأ عن البرنامج" : "Learn more"}
+              className="flex flex-wrap gap-x-5 gap-y-2"
+            >
+              {seoLinks.map((r) => (
+                <Link
+                  className="underline-offset-4 hover:underline"
+                  href={rowPath(r)}
+                  key={r.slug}
+                >
+                  {r.h1.split(":")[0]}
+                </Link>
+              ))}
+              {locale === "ar" ? (
+                <Link
+                  className="underline-offset-4 hover:underline"
+                  href="/ar/hulul"
+                >
+                  حلول لمشاكل الأتيليه
+                </Link>
+              ) : null}
+            </nav>
+          ) : null}
         </div>
       </footer>
     </div>
