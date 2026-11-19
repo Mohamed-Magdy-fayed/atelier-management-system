@@ -4,9 +4,15 @@ import { notFound } from "next/navigation";
 import { marketingEnabled } from "@/features/marketing/page-factory";
 import { visibleRows } from "@/features/marketing/pseo";
 import { PseoHub } from "@/features/marketing/pseo/pseo-page";
-import { FAMILY_META, type PseoFamily } from "@/features/marketing/pseo/types";
+import {
+  FAMILY_META,
+  isEnglishFamily,
+  type PseoFamily,
+} from "@/features/marketing/pseo/types";
 
-const FAMILIES = Object.keys(FAMILY_META) as PseoFamily[];
+const FAMILIES: PseoFamily[] = (Object.keys(FAMILY_META) as PseoFamily[]).filter(
+  (f) => !isEnglishFamily(f),
+);
 
 export function generateStaticParams() {
   return FAMILIES.map((family) => ({ family }));

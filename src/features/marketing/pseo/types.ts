@@ -1,4 +1,9 @@
-export type PseoFamily = "hulul" | "namazig" | "barnamag-atelier";
+export type PseoFamily =
+  | "hulul"
+  | "namazig"
+  | "barnamag-atelier"
+  | "barnamag"
+  | "software";
 
 export type PseoSection = {
   h2: string;
@@ -27,6 +32,8 @@ export type PseoRow = {
   /** Nothing is indexed or listed until a human flips this. */
   published: boolean;
   updatedAt: string;
+  /** Labels for `comparison` (default: by hand / with the software). */
+  comparisonCols?: { heading: string; left: string; right: string };
 };
 
 export const FAMILY_META: Record<
@@ -51,7 +58,27 @@ export const FAMILY_META: Record<
     hubTitle: "برنامج إدارة أتيليه فساتين حسب المنطقة",
     hubLead: "ما نعرفه عن أتيليهات تأجير الفساتين في كل منطقة.",
   },
+  barnamag: {
+    path: "barnamag",
+    crumb: "البرنامج",
+    hubTitle: "برنامج أتيليه فساتين: كل ما تحتاج تعرفه",
+    hubLead: "إيه اللي بيعمله البرنامج، وإزاي يقارن بالبدائل.",
+  },
+  software: {
+    path: "software",
+    crumb: "Software",
+    hubTitle: "Dress rental software",
+    hubLead: "Software for dress-rental ateliers.",
+  },
 };
 
+/** English families live under `/en/...`, Arabic ones under `/ar/...`. */
+export const isEnglishFamily = (f: PseoFamily) => f === "software";
+
+export const hubPath = (f: PseoFamily) =>
+  isEnglishFamily(f) ? "/en" : `/ar/${FAMILY_META[f].path}`;
+
 export const rowPath = (r: Pick<PseoRow, "family" | "slug">) =>
-  `/ar/${FAMILY_META[r.family].path}/${r.slug}`;
+  isEnglishFamily(r.family)
+    ? `/en/${FAMILY_META[r.family].path}/${r.slug}`
+    : `/ar/${FAMILY_META[r.family].path}/${r.slug}`;

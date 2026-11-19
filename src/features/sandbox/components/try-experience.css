@@ -191,3 +191,161 @@
     transition: none;
   }
 }
+
+/*
+ * Desktop: the page is exactly one screen (svh, so browser bars never cause
+ * overflow). Header + grid share it; the phone scales to the row height and
+ * the steps column scrolls on its own if a short window cannot fit it all.
+ */
+@container try (min-width: 64rem) {
+  .try-root {
+    block-size: 100vh;
+    block-size: 100svh;
+    min-block-size: 0;
+    padding-block: 0.75rem;
+    overflow: clip;
+  }
+
+  .try-inner {
+    block-size: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .try-header {
+    flex: none;
+    margin-block-end: 0.75rem;
+  }
+
+  .try-grid {
+    flex: 1 1 0;
+    min-block-size: 0;
+    align-items: stretch;
+    gap: 2.5rem;
+  }
+
+  .try-phone-col {
+    position: static;
+    min-block-size: 0;
+    block-size: 100%;
+  }
+
+  .try-phone {
+    block-size: 100%;
+    max-block-size: 52rem;
+  }
+
+  .try-steps {
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-inline-end: 0.5rem;
+  }
+}
+
+/* The container itself cannot be styled by its own container query, so the
+   root's one-screen sizing uses a viewport query (root spans the viewport). */
+@media (min-width: 64rem) {
+  .try-root {
+    block-size: 100vh;
+    block-size: 100svh;
+    min-block-size: 0;
+    padding-block: 0.75rem;
+    overflow: clip;
+  }
+}
+
+/*
+ * Desktop steps column: compact by design so it never needs a scrollbar.
+ * Sizes follow the viewport height (svh); the extras drop away as it shrinks.
+ */
+@container try (min-width: 64rem) {
+  .try-steps {
+    overflow: visible;
+    padding-inline-end: 0;
+    align-self: center;
+    font-size: clamp(0.8rem, 1.7svh, 0.95rem);
+  }
+
+  .try-eyebrow {
+    font-size: 0.8rem;
+  }
+
+  .try-title {
+    margin-block-start: 0.15rem;
+    font-size: clamp(1.25rem, 3.4svh, 1.9rem);
+    line-height: 1.2;
+  }
+
+  .try-intro {
+    margin-block-start: 0.35rem;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .try-steps-heading {
+    display: none;
+  }
+
+  .try-step-list {
+    margin-block-start: clamp(0.5rem, 1.6svh, 1rem);
+    gap: 0.3rem;
+  }
+
+  .try-step {
+    padding: clamp(0.3rem, 0.9svh, 0.6rem) 0.65rem;
+    gap: 0.55rem;
+  }
+
+  .try-step-number {
+    inline-size: 1.4rem;
+    block-size: 1.4rem;
+    font-size: 0.8rem;
+  }
+
+  .try-nav {
+    margin-block-start: 0.5rem;
+    gap: 0.4rem;
+  }
+
+  .try-nav > button {
+    block-size: 2rem;
+    padding-inline: 0.8rem;
+  }
+
+  .try-signup {
+    margin-block-start: clamp(0.5rem, 1.6svh, 1rem);
+    padding: 0.55rem 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .try-signup > * {
+    margin: 0;
+  }
+
+  .try-signup-note {
+    display: none;
+  }
+
+  .try-signup-btns > * {
+    block-size: 2rem;
+    padding-inline: 0.8rem;
+  }
+
+  .try-saved {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) and (max-height: 760px) {
+  .try-intro {
+    display: none;
+  }
+}
