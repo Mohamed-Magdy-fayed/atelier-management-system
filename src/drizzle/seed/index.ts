@@ -8,6 +8,7 @@ import {
 } from "./constants";
 import { seedAdminProfile } from "./profiles/admin";
 import { seedBaselineProfile } from "./profiles/baseline";
+import { seedClientDemoProfile } from "./profiles/client-demo";
 import { seedDemoProfile } from "./profiles/demo";
 import { seedPerformanceProfile } from "./profiles/performance";
 import { seedSettingsProfile } from "./profiles/settings";
@@ -17,6 +18,7 @@ const profileRunners = {
   admin: seedAdminProfile,
   baseline: seedBaselineProfile,
   demo: seedDemoProfile,
+  "client-demo": seedClientDemoProfile,
   performance: seedPerformanceProfile,
 } satisfies Record<
   SeedProfileName,

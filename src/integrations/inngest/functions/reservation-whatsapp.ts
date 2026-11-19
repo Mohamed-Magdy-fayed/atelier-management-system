@@ -2,6 +2,7 @@ import { eventType } from "inngest";
 import z from "zod";
 
 import { db } from "@/drizzle";
+import { env } from "@/env/server";
 import { mainTranslations } from "@/features/core/i18n/global";
 import { createI18n } from "@/features/core/i18n/lib";
 import { getBusinessTimezone } from "@/features/public-catalog/server/queries";
@@ -56,6 +57,10 @@ export const sendReservationWhatsApp = inngest.createFunction(
   },
   async ({ event, step }) => {
     const { data } = event;
+
+    if (env.DEMO_MODE === "1") {
+      return { skipped: "demo-mode" as const };
+    }
 
     const chatId = toWhatsAppChatId(data.customerPhone);
     if (!chatId) {

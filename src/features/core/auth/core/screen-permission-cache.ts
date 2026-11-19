@@ -1,4 +1,4 @@
-import { redisClient } from "@/integrations/redis";
+import { redisClient, redisKey } from "@/integrations/redis";
 import type { ScreenPermissionMap } from "./screen-permission-map";
 
 /**
@@ -21,7 +21,7 @@ import type { ScreenPermissionMap } from "./screen-permission-map";
 const SCREEN_PERMISSIONS_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 export function screenPermissionsKey(userId: string) {
-  return `user-screen-permissions:${userId}` as const;
+  return redisKey(`user-screen-permissions:${userId}`);
 }
 
 /**

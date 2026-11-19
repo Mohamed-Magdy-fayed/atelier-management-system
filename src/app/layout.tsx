@@ -7,8 +7,14 @@ import { Suspense } from "react";
 import { Providers } from "@/app/_providers";
 import { getThemeCookie } from "@/features/core/color-theme/server";
 import { getLocaleCookie, getT } from "@/features/core/i18n/server";
-import { resolveBrandName } from "@/features/system/settings/lib/branding";
-import { getBranding } from "@/features/system/settings/server/branding";
+import {
+  buildBrandColorCss,
+  resolveBrandName,
+} from "@/features/system/settings/lib/branding";
+import {
+  getBranding,
+  isDemoMode,
+} from "@/features/system/settings/server/branding";
 import { cn } from "@/lib/utils";
 
 const openSans = Open_Sans({
@@ -37,6 +43,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: resolveBrandName(branding, locale, String(t("appName"))),
     description:
       "Browse curated evening wear, explore boutiques, check availability by date—reserve in person.",
+    // A demo is a private link for one prospect, never a search result.
+    ...(isDemoMode() && { robots: { index: false, follow: false } }),
     icons: {
       icon: [
         { url: "/logo.svg", type: "image/svg+xml" },
@@ -62,6 +70,7 @@ export default function RootLayout({
 async function Suspended({ children }: { children: React.ReactNode }) {
   const locale = await getLocaleCookie();
   const theme = await getThemeCookie();
+  const brandColorCss = buildBrandColorCss((await getBranding()).primaryColor);
 
   return (
     <html
@@ -77,6 +86,13 @@ async function Suspended({ children }: { children: React.ReactNode }) {
       suppressHydrationWarning
     >
       <body>
+        {brandColorCss && (
+          // Built only from a value that passed `isHexColor`, so it cannot
+          // carry anything but colour tokens. Rendered after the global
+          // stylesheet, so it wins over the bundled palette at equal specificity.
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: see above
+          <style dangerouslySetInnerHTML={{ __html: brandColorCss }} />
+        )}
         <Providers locale={locale} theme={theme}>
           {children}
         </Providers>

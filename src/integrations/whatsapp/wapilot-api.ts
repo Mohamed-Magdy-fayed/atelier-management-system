@@ -1,3 +1,5 @@
+import { env } from "@/env/server";
+
 import type {
   EndpointsMap,
   InstanceStatusResponse,
@@ -87,6 +89,14 @@ export function sendText({
   token: string;
   signal?: AbortSignal;
 }): Promise<SendMessageResponse> {
+  // Backstop for any caller that does not check `DEMO_MODE` itself: a demo's
+  // phone numbers are synthetic and must never receive a message.
+  if (env.DEMO_MODE === "1") {
+    return Promise.reject(
+      new WapilotHttpError(403, "Messaging is disabled in demo mode"),
+    );
+  }
+
   return wapilotRequest<SendMessageResponse>({
     endpoint: `${instanceId}/send-message`,
     method: "POST",

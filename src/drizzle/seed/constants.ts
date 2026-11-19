@@ -8,6 +8,7 @@ export const SEED_PROFILE_NAMES = [
   "admin",
   "baseline",
   "demo",
+  "client-demo",
   "performance",
 ] as const;
 

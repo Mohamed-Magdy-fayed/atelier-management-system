@@ -14,8 +14,8 @@ Never re-paste a prompt whose `Started` box is ticked — check here first.
 
 | ✅ | Step | Title | After | Started | PR | Merged |
 |---|---|---|---|---|---|---|
-| ☐ | 01 | Migration safety gate and backup | — | ☐ | ☐ | ☐ |
-| ☐ | 02 | Close the unauthenticated upload hole | — | ☐ | ☐ | ☐ |
+| ☐ | 01 | Migration safety gate and backup *(prod introspect still open)* | — | ☑ | ☑ | ☐ |
+| ☑ | 02 | Close the unauthenticated upload hole *(fixed in e2b6f1e)* | — | ☑ | ☑ | ☑ |
 | ☐ | 03 | Rename `funtastic` → `gateling-atelier` | — | ☐ | ☐ | ☐ |
 | ☐ | 04 | Break the `auth/` barrel import cycle | — | ☐ | ☐ | ☐ |
 | ☐ | 05 | Two-tenant seed profile skeleton | — | ☐ | ☐ | ☐ |

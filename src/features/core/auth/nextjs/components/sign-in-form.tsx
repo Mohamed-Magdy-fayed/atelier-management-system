@@ -34,7 +34,12 @@ import {
 } from "@/features/core/auth/schemas";
 import { useTranslation } from "@/features/core/i18n/client";
 
-export function SignInForm() {
+type SignInFormProps = {
+  /** Off on demo hosts, whose OAuth redirect URI is not registered. */
+  isOAuthEnabled?: boolean;
+};
+
+export function SignInForm({ isOAuthEnabled = true }: SignInFormProps) {
   const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
   const [step, setStep] = useState<"email" | "password">("email");
@@ -144,27 +149,31 @@ export function SignInForm() {
         <FormAlert message={searchParams.get("oauthError") || ""} />
       )}
 
-      {oAuthProviderValues.length > 0 && (
-        <div className="grid gap-2">
-          {oAuthProviderValues.map((provider) => (
-            <Button
-              className="h-11 w-full justify-center gap-2"
-              disabled={isPending}
-              key={provider}
-              onClick={async () => await handleOAuthClick(provider)}
-              type="button"
-              variant="outline"
-            >
-              {getOauthProviderIcon(provider)}
-              <span className="font-medium text-sm capitalize">{provider}</span>
-            </Button>
-          ))}
-        </div>
-      )}
+      {isOAuthEnabled && oAuthProviderValues.length > 0 && (
+        <>
+          <div className="grid gap-2">
+            {oAuthProviderValues.map((provider) => (
+              <Button
+                className="h-11 w-full justify-center gap-2"
+                disabled={isPending}
+                key={provider}
+                onClick={async () => await handleOAuthClick(provider)}
+                type="button"
+                variant="outline"
+              >
+                {getOauthProviderIcon(provider)}
+                <span className="font-medium text-sm capitalize">
+                  {provider}
+                </span>
+              </Button>
+            ))}
+          </div>
 
-      <FieldSeparator className="mb-2 *:data-[slot=field-separator-content]:bg-card">
-        {t("authTranslations.signIn.continueWith")}
-      </FieldSeparator>
+          <FieldSeparator className="mb-2 *:data-[slot=field-separator-content]:bg-card">
+            {t("authTranslations.signIn.continueWith")}
+          </FieldSeparator>
+        </>
+      )}
 
       <FieldSet className="grid gap-4" disabled={isPending}>
         <Activity mode={isEmailStep ? "visible" : "hidden"}>
