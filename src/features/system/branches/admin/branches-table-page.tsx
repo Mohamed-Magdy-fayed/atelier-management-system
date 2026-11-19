@@ -158,6 +158,7 @@ export function BranchesTablePage() {
                     className="size-8"
                     onClick={() => setCreateOpen(true)}
                     aria-label={addBranchLabel}
+                    data-tour="add-branch"
                   >
                     <PlusIcon className="size-3.5" />
                   </Button>

@@ -1,4 +1,5 @@
 import authEn from "@/features/core/auth/translations/auth-en";
+import sandboxEn from "@/features/sandbox/translations/sandbox-en";
 import { dt, type LanguageMessages } from "../lib";
 
 export default {
@@ -1207,4 +1208,5 @@ export default {
     },
   }),
   ...authEn,
+  ...sandboxEn,
 } as const satisfies LanguageMessages;

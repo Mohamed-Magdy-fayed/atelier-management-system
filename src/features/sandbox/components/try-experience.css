@@ -1,0 +1,193 @@
+/*
+ * Layout for /try. Written in plain CSS because it leans on container queries,
+ * logical properties and dvh, and because the device frame is not a component
+ * the design system provides.
+ *
+ *   >= 64rem  desktop: phone on the left, steps beside it, phone sticky
+ *   40-64rem  tablet:  steps on top, a "try it below" cue, phone underneath
+ *   < 40rem   mobile:  compact steps, phone as large as the screen allows
+ */
+
+.try-root {
+  container: try / inline-size;
+  min-block-size: 100dvh;
+  padding-block: 1.25rem 3rem;
+  padding-inline: max(1rem, env(safe-area-inset-left));
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.try-inner {
+  inline-size: min(100%, 72rem);
+  margin-inline: auto;
+}
+
+.try-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-block-end: 1.25rem;
+}
+
+.try-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-areas: "steps" "phone";
+  grid-template-columns: minmax(0, 1fr);
+  /* The phone sits physically on the left in both languages; the steps column
+     sets its own direction below. */
+  direction: ltr;
+}
+
+.try-steps {
+  grid-area: steps;
+  min-inline-size: 0;
+}
+
+.try-phone-col {
+  grid-area: phone;
+  display: flex;
+  justify-content: center;
+}
+
+.try-phone {
+  position: relative;
+  inline-size: min(100%, 26rem);
+  /* 390 x 800: a current phone's logical viewport. */
+  aspect-ratio: 390 / 800;
+  padding: 0.75rem;
+  border-radius: 3rem;
+  background: color-mix(in oklab, var(--foreground) 92%, transparent);
+  box-shadow:
+    0 1.5rem 3rem -1rem color-mix(in oklab, var(--foreground) 35%, transparent),
+    inset 0 0 0 1px color-mix(in oklab, var(--background) 25%, transparent);
+}
+
+.try-phone::before {
+  /* Speaker slot. */
+  content: "";
+  position: absolute;
+  inset-block-start: 0.4rem;
+  inset-inline: 0;
+  margin-inline: auto;
+  inline-size: 5rem;
+  block-size: 0.3rem;
+  border-radius: 1rem;
+  background: color-mix(in oklab, var(--background) 30%, transparent);
+}
+
+.try-phone iframe {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  border: 0;
+  border-radius: 2.25rem;
+  background: var(--background);
+}
+
+.try-step-list {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.try-step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card);
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.try-step[aria-current="step"] {
+  border-color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 8%, var(--card));
+}
+
+.try-step-number {
+  display: grid;
+  place-items: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  border-radius: 999px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-weight: 600;
+}
+
+.try-cue {
+  display: none;
+}
+
+/* Tablet: steps first, then a nudge to scroll down to the phone. */
+@container try (min-width: 40rem) and (max-width: 63.999rem) {
+  .try-cue {
+    display: inline-flex;
+  }
+
+  .try-phone {
+    inline-size: min(100%, 24rem);
+  }
+}
+
+/* Mobile: no bezel, the phone is as big as the screen allows. */
+@container try (max-width: 39.999rem) {
+  .try-root {
+    padding-block-start: 0.75rem;
+  }
+
+  .try-phone {
+    inline-size: 100%;
+    aspect-ratio: auto;
+    block-size: max(32rem, 82dvh);
+    padding: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    box-shadow: none;
+    border: 1px solid var(--border);
+  }
+
+  .try-phone::before {
+    display: none;
+  }
+
+  .try-phone iframe {
+    border-radius: calc(var(--radius) - 1px);
+  }
+}
+
+/* Desktop: phone left, sticky; steps beside it. */
+@container try (min-width: 64rem) {
+  .try-grid {
+    grid-template-areas: "phone steps";
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .try-phone-col {
+    position: sticky;
+    inset-block-start: 1.25rem;
+  }
+
+  .try-phone {
+    inline-size: auto;
+    /* Fit the viewport height; width follows from the aspect ratio. */
+    block-size: min(52rem, calc(100dvh - 2.5rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .try-step {
+    transition: none;
+  }
+}

@@ -214,6 +214,7 @@ export function DressesTablePage() {
                       className="size-8"
                       onClick={() => setCreateOpen(true)}
                       aria-label={addDressLabel}
+                      data-tour="add-dress"
                     >
                       <PlusIcon className="size-3.5" />
                     </Button>

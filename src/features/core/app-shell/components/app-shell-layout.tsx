@@ -26,6 +26,10 @@ type AppShellLayoutProps = {
   user: AuthUser;
   /** Resolved from the `sidebar_state` cookie on the server. */
   defaultSidebarOpen?: boolean;
+  /** Replaces the default sidebar; the sandbox uses one without server actions. */
+  sidebar?: ReactNode;
+  /** Where the brand link in the breadcrumb goes. Defaults to the public site. */
+  homeHref?: string;
   children: ReactNode;
 };
 
@@ -36,6 +40,8 @@ function navLabelKey(translationKey: SystemNavItem["translationKey"]) {
 export function AppShellLayout({
   user,
   defaultSidebarOpen = true,
+  sidebar,
+  homeHref = "/",
   children,
 }: AppShellLayoutProps) {
   const pathname = usePathname() ?? "/";
@@ -67,7 +73,7 @@ export function AppShellLayout({
       defaultOpen={defaultSidebarOpen}
       className="h-svh overflow-hidden"
     >
-      <AppSidebar user={user} />
+      {sidebar ?? <AppSidebar user={user} />}
       <SidebarInset className="flex min-h-0 flex-col overflow-hidden">
         <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-2 md:px-4">
           <SidebarTrigger className="-ms-1" />
@@ -78,7 +84,7 @@ export function AppShellLayout({
           >
             <ol className="flex items-center gap-1">
               <li>
-                <Link href="/" className="hover:text-foreground">
+                <Link href={homeHref} className="hover:text-foreground">
                   {brandName}
                 </Link>
               </li>
