@@ -767,6 +767,12 @@ export default {
     settingName00012: "Brand colour",
     settingDesc00012:
       "The colour used for buttons, links and highlights, as a hex code such as #84253D. Leave empty to keep the colours this deployment ships with.",
+    settingName00013: "Gateling lead URL",
+    settingDesc00013:
+      "Where the /try sign-up form sends its answers. Normally https://gateling.com/api/leads/self-serve — leave as is.",
+    settingName00014: "Gateling lead key",
+    settingDesc00014:
+      "The API key from gateling.com: Settings, API keys, create one with only “Self-serve leads” ticked. Stored encrypted and never shown again after saving — to change it, paste a new one.",
     settingsLogoPlaceholder: "Upload a logo, or paste its link",
     settingsBrandingLocked: "Branding is fixed on this plan",
     settingsBrandingLockedHint:

@@ -15,6 +15,7 @@ import {
   getSystemSettingDefinition,
   SECRET_SETTING_CODES,
   SYSTEM_SETTING_CODES,
+  SYSTEM_SETTINGS,
 } from "@/features/system/settings/lib/system-settings-registry";
 
 import { isBrandingEditable } from "./branding";
@@ -111,6 +112,23 @@ const settingGridSelect = {
 export async function listSettings(ctx: TRPCContext, input: ListSettingsInput) {
   const session = getRequiredSession(ctx);
   assertAdminRole(session.user.role);
+
+  // Settings added after a deployment was seeded get their row here, so a new
+  // integration field shows up without anyone running the seed.
+  await ctx.db
+    .insert(SettingsTable)
+    .values(
+      SYSTEM_SETTINGS.map((def) => ({
+        code: def.code,
+        label: def.label,
+        description: def.descriptionEn,
+        isActive: def.seed.isActive,
+        value: def.seed.value ?? null,
+        amount: def.seed.amount ?? null,
+        createdBy: session.user.id,
+      })),
+    )
+    .onConflictDoNothing({ target: SettingsTable.code });
 
   const whereClause = buildWhereClause(input);
   const [{ value: total }] = await ctx.db
