@@ -925,3 +925,69 @@
       linear-gradient(to top, rgb(23 18 14 / 0.82), rgb(23 18 14 / 0) 62%);
   }
 }
+
+/* ---- BuildOps-inspired additions ---- */
+.gg-sr{position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip-path:inset(50%);margin:0;padding:0;list-style:none}
+.gg-marq{border-block:1px solid var(--line);padding-block:18px;overflow:hidden;background:var(--paper)}
+.gg-marq-t{text-align:center;margin:0 0 10px;color:var(--mut);font-size:.85rem;font-weight:700}
+.gg-marq-track{display:flex;inline-size:max-content;direction:ltr}
+.gg-marq-track ul{display:flex;gap:12px;margin:0;padding:0 6px;list-style:none;direction:rtl}
+.gg-marq-track li{white-space:nowrap;padding:8px 18px;border:1px solid var(--mk-line);border-radius:999px;font-weight:700;background:#fff}
+@media (prefers-reduced-motion:no-preference){
+  .gg-marq-track{animation:gg-marq 38s linear infinite}
+  .gg-marq:hover .gg-marq-track{animation-play-state:paused}
+}
+@keyframes gg-marq{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){
+  .gg-marq-track{inline-size:auto;flex-wrap:wrap;justify-content:center}
+  .gg-marq-track ul:nth-child(2){display:none}
+}
+
+.gg-area-in{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.gg-area-in.flip .gg-area-vis{order:-1}
+.gg-area-vis{display:flex;flex-direction:column;gap:10px;align-items:center}
+.gg-area-vis .gg-shot{inline-size:100%}
+.gg-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;list-style:none;margin:22px 0;padding:0}
+.gg-tiles li{display:flex;flex-direction:column;gap:2px;padding:14px;border:1px solid var(--mk-line);border-radius:14px;background:#fff;transition:transform .2s,border-color .2s}
+.gg-tiles li:hover{transform:translateY(-3px);border-color:var(--o)}
+.gg-tiles span{inline-size:34px;block-size:34px;display:grid;place-items:center;border-radius:10px;background:color-mix(in oklab,var(--o) 14%,white);color:var(--o);font-weight:800;margin-block-end:6px}
+.gg-tiles b{font-size:.95rem}
+.gg-tiles small{color:var(--mut);font-size:.8rem;line-height:1.5}
+.gg-link{display:inline-flex;gap:8px;align-items:center;font-weight:800;color:var(--o)}
+.gg-arrow{display:inline-block;transition:transform .2s}
+.gg-link:hover .gg-arrow,.gg-built-card:hover .gg-arrow{transform:translateX(-5px)}
+
+.gg-diff{background:var(--mk-ink);color:#f3ece2}
+.gg-diff .gg-h2{color:#fff}
+.gg-diff-grid{display:grid;grid-template-columns:repeat(3,1fr);margin-block-start:28px}
+.gg-diff-grid>div{padding:8px 28px;border-inline-start:1px solid rgb(255 255 255 / .18)}
+.gg-diff-grid>div:first-child{border-inline-start:0;padding-inline-start:0}
+.gg-diff-grid h3{margin:0 0 8px;font-size:1.3rem;color:#fff}
+.gg-diff-grid p{margin:0;color:#d3c8bb}
+
+.gg-built-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-block-start:24px}
+.gg-built-card{position:relative;display:flex;flex-direction:column;gap:6px;min-block-size:150px;padding:18px;border:1px solid var(--mk-line);border-radius:16px;background:var(--card);transition:transform .2s,background .2s}
+.gg-built-card:hover{transform:translateY(-4px);background:#fff}
+.gg-built-card b{font-size:1.1rem}
+.gg-built-card span{color:var(--mut);font-size:.85rem;line-height:1.5}
+.gg-built-card i{margin-block-start:auto;color:var(--o);font-style:normal;font-weight:800}
+
+/* scroll reveal: scroll-driven animations, no JS, graceful fallback */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion:no-preference) {
+    .gg-rise{animation:gg-rise linear both;animation-timeline:view();animation-range:entry 0% entry 40%}
+    .gg-area-vis{animation:gg-parallax linear both;animation-timeline:view()}
+  }
+}
+@keyframes gg-rise{from{opacity:0;translate:0 36px}to{opacity:1;translate:0 0}}
+@keyframes gg-parallax{from{translate:0 24px}to{translate:0 -24px}}
+
+@media (max-width:900px){
+  .gg-area-in{grid-template-columns:1fr;gap:28px}
+  .gg-area-in.flip .gg-area-vis{order:0}
+  .gg-diff-grid{grid-template-columns:1fr}
+  .gg-diff-grid>div{border-inline-start:0;border-block-start:1px solid rgb(255 255 255 / .18);padding:18px 0}
+  .gg-diff-grid>div:first-child{border-block-start:0}
+  .gg-built-grid{grid-template-columns:1fr 1fr}
+  .gg-tiles{grid-template-columns:1fr}
+}

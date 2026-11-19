@@ -41,6 +41,79 @@ const HERO_SCREENS = [
   "/preview/phone-dashboard.jpg",
 ];
 
+const MARQUEE = [
+  "قويسنا",
+  "شبين الكوم",
+  "رسايل واتساب",
+  "العربون والمتبقي",
+  "المرتجعات",
+  "مخزون الفساتين",
+  "عربي بالكامل",
+  "فروع متعددة",
+];
+
+const AREAS = [
+  {
+    eyebrow: "الحجوزات",
+    title: "حجز بيتم مرة واحدة، من غير تضارب.",
+    lead: "اختاري الفستان والتاريخ، والبرنامج بيحميكي من الحجز المزدوج وبيحسب الباقي.",
+    shot: "/preview/reservations.jpg",
+    alt: "شاشة الحجوزات",
+    tiles: [
+      { i: "◷", t: "تقويم لكل فستان", d: "الأيام المحجوزة واضحة" },
+      { i: "٪", t: "العربون والمتبقي", d: "بيتحسبوا لوحدهم" },
+      { i: "↺", t: "المرتجعات", d: "مين يرجّع النهارده" },
+    ],
+  },
+  {
+    eyebrow: "المخزون",
+    title: "كل فستان بحالته وسعره وتاريخه.",
+    lead: "اعرفي أي فستان بيتأجّر أكتر وأي فستان محتاج مراجعة، من غير جرد بالورقة.",
+    shot: "/preview/dresses.jpg",
+    alt: "شاشة الفساتين",
+    tiles: [
+      { i: "◈", t: "كود وصور", d: "لكل فستان" },
+      { i: "↗", t: "مرات التأجير", d: "الأكثر طلباً" },
+      { i: "⌂", t: "كل الفروع", d: "مخزون واحد" },
+    ],
+  },
+  {
+    eyebrow: "العروسة",
+    title: "العروسة تعرف كل حاجة، من غير مكالمة.",
+    lead: "أول ما الحجز يتسجل، رسالة واتساب بالتفاصيل والمبالغ ومواعيد الاستلام والإرجاع.",
+    shot: null,
+    alt: "",
+    tiles: [
+      { i: "✉", t: "رسالة تأكيد", d: "بصيغة جاهزة" },
+      { i: "⏰", t: "تذكير بالإرجاع", d: "قبل الميعاد" },
+      { i: "ع", t: "بالعربي", d: "نص مناسب للعروسة" },
+    ],
+  },
+];
+
+const DIFF = [
+  {
+    t: "مبني لأتيليهات مصر",
+    d: "عربي من الأول، بالجنيه، ورسايل واتساب بدل الإيميل.",
+  },
+  {
+    t: "شغّال في أتيليه حقيقي",
+    d: "اتجرّب في فرعين في قويسنا وشبين الكوم قبل ما نعرضه عليكي.",
+  },
+  {
+    t: "شراكة مباشرة مع المؤسس",
+    d: "بتكلمي اللي بيبني البرنامج، وطلبك بيدخل الخطة.",
+  },
+];
+
+const BUILT = [
+  { t: "فساتين زفاف", d: "حجز وبروفة واستلام وإرجاع" },
+  { t: "فساتين سواريه", d: "تأجير بالليلة ومرتجعات سريعة" },
+  { t: "خطوبة وكتب كتاب", d: "حجوزات مواسم الذروة" },
+  { t: "فروع متعددة", d: "كل فرع بيشوف شغله" },
+  { t: "أتيليه جديد", d: "ابدأي بفرع و٣٠ فستان مجاناً" },
+];
+
 const STEPS = [
   {
     n: "١",
@@ -83,6 +156,7 @@ export function GlossStylePage({ preview = false }: { preview?: boolean }) {
           <nav className="gg-nav">
             <a href="#how">كيف يشتغل</a>
             <a href="#features">المميزات</a>
+            <a href="/try">جرّب البرنامج</a>
             <a href="#pricing">الأسعار</a>
             <a href="#faq">أسئلة</a>
           </nav>
@@ -159,6 +233,54 @@ export function GlossStylePage({ preview = false }: { preview?: boolean }) {
           </section>
         </div>
 
+        {/* Idea source: BuildOps (trust line + auto-scrolling logo bar). Honest version: real places and capabilities, no invented customers. */}
+        <section aria-label="شغّال فين" className="gg-marq">
+          <p className="gg-marq-t">شغّال فعلاً في</p>
+          <div aria-hidden="true" className="gg-marq-track">
+            {[0, 1].map((k) => (
+              <ul key={k}>
+                {MARQUEE.map((x) => (
+                  <li key={`${k}-${x}`}>{x}</li>
+                ))}
+              </ul>
+            ))}
+          </div>
+          <ul className="gg-sr">
+            {MARQUEE.map((x) => (
+              <li key={x}>{x}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="gg-sec gg-stats gg-rise">
+          <div className="gg-w">
+            <h2 className="gg-h2 gg-serif">أرقام تقدر تتأكد منها.</h2>
+            <div className="grid">
+              <div>
+                <div className="gg-num">
+                  ٥٠٠<sup>ج.م</sup>
+                </div>
+                <p>للفرع في الشهر. حوالي ١٠ دولار.</p>
+              </div>
+              <div>
+                <div className="gg-num">
+                  ٣٠<sup>فستان</sup>
+                </div>
+                <p>مجاناً في أول فرع، من غير كارت.</p>
+              </div>
+              <div>
+                <div className="gg-num">
+                  ٧٠٪<sup>+</sup>
+                </div>
+                <p>
+                  وقت إداري أقل، بتقدير آلاء القصري نفسها بعد ما استبدلت الورق
+                  بالنظام.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="gg-sec" id="how">
           <div className="gg-w">
             <p className="gg-eyebrow">كيف يشتغل</p>
@@ -233,48 +355,82 @@ export function GlossStylePage({ preview = false }: { preview?: boolean }) {
           </div>
         </section>
 
-        <section className="gg-sec" id="features" style={{ paddingTop: 0 }}>
-          <div className="gg-w">
-            <h2 className="gg-h2 gg-serif">كل اللي بتحتاجه، ومفيش غيره.</h2>
-            <p className="gg-sub">{c.features.lead}</p>
-            <div className="gg-cards">
-              <div className="gg-card">
-                <h3 className="gg-serif">الحجوزات في مكان واحد</h3>
-                <p>كل حجز بكوده وعربونه ومتبقيه.</p>
-                <div className="vis">
-                  <div className="gg-shot">
-                    {/* biome-ignore lint/performance/noImgElement: static review asset */}
-                    <img alt="شاشة الحجوزات" src="/preview/reservations.jpg" />
-                  </div>
-                  <span className="gg-tag">بيانات تجريبية</span>
+        {/* Idea source: BuildOps (one template per product area: eyebrow, outcome headline, feature tiles, screenshot, alternating sides) */}
+        <section id="features">
+          {AREAS.map((a, i) => (
+            <div className="gg-sec gg-area gg-rise" key={a.eyebrow}>
+              <div className={`gg-w gg-area-in${i % 2 ? " flip" : ""}`}>
+                <div className="gg-area-txt">
+                  <p className="gg-eyebrow">{a.eyebrow}</p>
+                  <h2 className="gg-h2 gg-serif">{a.title}</h2>
+                  <p className="gg-sub">{a.lead}</p>
+                  <ul className="gg-tiles">
+                    {a.tiles.map((t) => (
+                      <li key={t.t}>
+                        <span aria-hidden="true">{t.i}</span>
+                        <b>{t.t}</b>
+                        <small>{t.d}</small>
+                      </li>
+                    ))}
+                  </ul>
+                  <a className="gg-link" href="/try">
+                    جرّبي البرنامج
+                    <span aria-hidden="true" className="gg-arrow">
+                      ←
+                    </span>
+                  </a>
                 </div>
-              </div>
-              <div className="gg-card o">
-                <h3 className="gg-serif">مخزون الفساتين</h3>
-                <p>كل فستان بحالته وسعره وعدد مرات تأجيره.</p>
-                <div className="vis">
-                  <div className="gg-shot">
-                    {/* biome-ignore lint/performance/noImgElement: static review asset */}
-                    <img alt="شاشة الفساتين" src="/preview/dresses.jpg" />
-                  </div>
-                  <span className="gg-tag">بيانات تجريبية</span>
-                </div>
-              </div>
-              <div className="gg-card d">
-                <h3 className="gg-serif">العروسة تعرف كل حاجة</h3>
-                <p>رسالة واتساب أول ما الحجز يتسجل.</p>
-                <div className="vis">
-                  <div className="gg-phone">
-                    <div className="gg-phone-in">
-                      <div className="gg-phone-top">أتيليه الزمالك</div>
-                      <div className="gg-bub">{MESSAGE}</div>
+                <div className="gg-area-vis">
+                  {a.shot ? (
+                    <div className="gg-shot">
+                      {/* biome-ignore lint/performance/noImgElement: static review asset */}
+                      <img alt={a.alt} src={a.shot} />
                     </div>
-                  </div>
-                  <span className="gg-tag">
-                    نص البرنامج الفعلي، بيانات تجريبية
-                  </span>
+                  ) : (
+                    <div className="gg-phone">
+                      <div className="gg-phone-in">
+                        <div className="gg-phone-top">أتيليه الزمالك</div>
+                        <div className="gg-bub">{MESSAGE}</div>
+                      </div>
+                    </div>
+                  )}
+                  <span className="gg-tag">بيانات تجريبية</span>
                 </div>
               </div>
+            </div>
+          ))}
+        </section>
+
+        {/* Idea source: BuildOps (what makes us different: three bold-headed columns) */}
+        <section className="gg-sec gg-diff gg-rise">
+          <div className="gg-w">
+            <h2 className="gg-h2 gg-serif">ليه Gateling مختلف.</h2>
+            <div className="gg-diff-grid">
+              {DIFF.map((d) => (
+                <div key={d.t}>
+                  <h3 className="gg-serif">{d.t}</h3>
+                  <p>{d.d}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Idea source: BuildOps (built for the trades: one card per specialty) */}
+        <section className="gg-sec gg-built gg-rise">
+          <div className="gg-w">
+            <p className="gg-eyebrow">مصمّم لشغلك</p>
+            <h2 className="gg-h2 gg-serif">لكل نوع أتيليه، اللي يناسبه.</h2>
+            <div className="gg-built-grid">
+              {BUILT.map((b) => (
+                <a className="gg-built-card" href="#start" key={b.t}>
+                  <b className="gg-serif">{b.t}</b>
+                  <span>{b.d}</span>
+                  <i aria-hidden="true" className="gg-arrow">
+                    ←
+                  </i>
+                </a>
+              ))}
             </div>
           </div>
         </section>
@@ -313,34 +469,6 @@ export function GlossStylePage({ preview = false }: { preview?: boolean }) {
           </div>
         </section>
 
-        <section className="gg-sec gg-stats">
-          <div className="gg-w">
-            <h2 className="gg-h2 gg-serif">أرقام تقدر تتأكد منها.</h2>
-            <div className="grid">
-              <div>
-                <div className="gg-num">
-                  ٥٠٠<sup>ج.م</sup>
-                </div>
-                <p>للفرع في الشهر. حوالي ١٠ دولار.</p>
-              </div>
-              <div>
-                <div className="gg-num">
-                  ٣٠<sup>فستان</sup>
-                </div>
-                <p>مجاناً في أول فرع، من غير كارت.</p>
-              </div>
-              <div>
-                <div className="gg-num">
-                  ٧٠٪<sup>+</sup>
-                </div>
-                <p>
-                  وقت إداري أقل، بتقدير آلاء القصري نفسها بعد ما استبدلت الورق
-                  بالنظام.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
 
         <section className="gg-sec">
           <div className="gg-w">
