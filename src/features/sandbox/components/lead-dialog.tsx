@@ -3,6 +3,7 @@
 import { type FormEvent, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -10,9 +11,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useTranslation } from "@/features/core/i18n/client";
 
 import {
@@ -89,14 +98,6 @@ export function LeadDialog({
     useState<(typeof CONTACT_CHANNEL_VALUES)[number]>("whatsapp");
   const [consent, setConsent] = useState(false);
 
-  function toggleWorkaround(value: (typeof WORKAROUND_VALUES)[number]) {
-    setWorkaround((current) =>
-      current.includes(value)
-        ? current.filter((item) => item !== value)
-        : [...current, value],
-    );
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -159,10 +160,10 @@ export function LeadDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg" dir={dir}>
+      <DialogContent className="gap-0 p-0 sm:max-w-lg" dir={dir}>
         {phase.kind === "sent" ? (
           <>
-            <DialogHeader>
+            <DialogHeader className="p-6 pb-4 pe-12">
               <DialogTitle>
                 {String(t("sandbox.lead.successTitle"))}
               </DialogTitle>
@@ -170,13 +171,17 @@ export function LeadDialog({
                 {String(t("sandbox.lead.successBody"))}
               </DialogDescription>
             </DialogHeader>
-            <Button type="button" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              className="mx-6 mb-6"
+              onClick={() => onOpenChange(false)}
+            >
               {String(t("sandbox.lead.close"))}
             </Button>
           </>
         ) : phase.kind === "fallback" ? (
           <>
-            <DialogHeader>
+            <DialogHeader className="p-6 pb-4 pe-12">
               <DialogTitle>
                 {String(t("sandbox.lead.fallbackTitle"))}
               </DialogTitle>
@@ -185,6 +190,7 @@ export function LeadDialog({
               </DialogDescription>
             </DialogHeader>
             <Button
+              className="mx-6 mb-6"
               nativeButton={false}
               render={
                 // biome-ignore lint/a11y/useAnchorContent: Button supplies the link text through its children
@@ -200,7 +206,7 @@ export function LeadDialog({
           </>
         ) : (
           <>
-            <DialogHeader>
+            <DialogHeader className="p-6 pb-4 pe-12">
               <DialogTitle>{String(t("sandbox.lead.title"))}</DialogTitle>
               <DialogDescription>
                 {String(t("sandbox.lead.intro"))}
@@ -208,195 +214,213 @@ export function LeadDialog({
             </DialogHeader>
             <form
               onSubmit={handleSubmit}
-              className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pe-1"
+              className="flex min-h-0 flex-1 flex-col"
             >
-              <div className="space-y-1.5">
-                <Label htmlFor="lead-owner">
-                  {String(t("sandbox.lead.ownerName"))}
-                </Label>
-                <Input
-                  id="lead-owner"
-                  name="ownerName"
-                  autoComplete="name"
-                  required
-                  maxLength={160}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="lead-name">
-                  {String(t("sandbox.lead.name"))}
-                </Label>
-                <Input id="lead-name" name="name" required maxLength={160} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="lead-phone">
-                  {String(t("sandbox.lead.phone"))}
-                </Label>
-                {/* Phone numbers read left to right in both languages. */}
-                <Input
-                  id="lead-phone"
-                  name="phone"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  dir="ltr"
-                  required
-                  placeholder="01xxxxxxxxx"
-                />
-                <p className="text-muted-foreground">
-                  {String(t("sandbox.lead.phoneHint"))}
-                </p>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="lead-city">
-                  {String(t("sandbox.lead.city"))}
-                </Label>
-                <Input id="lead-city" name="city" maxLength={160} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="lead-branches">
-                    {String(t("sandbox.lead.branches"))}
-                  </Label>
-                  <Input
-                    id="lead-branches"
-                    name="branches"
-                    type="number"
-                    inputMode="numeric"
-                    min={0}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="lead-dresses">
-                    {String(t("sandbox.lead.dresses"))}
-                  </Label>
-                  <Input
-                    id="lead-dresses"
-                    name="dresses"
-                    type="number"
-                    inputMode="numeric"
-                    min={0}
-                  />
-                </div>
-              </div>
+              {/* Padded scroll body: the px/py gutter keeps focus rings (2px)
+                  and the scrollbar clear of the field edges. */}
+              <div className="min-h-0 flex-1 overflow-y-auto px-6 py-1 [scrollbar-gutter:stable]">
+                <FieldGroup className="gap-5 pb-4">
+                  <Field>
+                    <FieldLabel htmlFor="lead-owner">
+                      {String(t("sandbox.lead.ownerName"))}
+                    </FieldLabel>
+                    <Input
+                      id="lead-owner"
+                      name="ownerName"
+                      autoComplete="name"
+                      required
+                      maxLength={160}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="lead-name">
+                      {String(t("sandbox.lead.name"))}
+                    </FieldLabel>
+                    <Input
+                      id="lead-name"
+                      name="name"
+                      required
+                      maxLength={160}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="lead-phone">
+                      {String(t("sandbox.lead.phone"))}
+                    </FieldLabel>
+                    {/* Phone numbers read left to right in both languages. */}
+                    <Input
+                      id="lead-phone"
+                      name="phone"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      dir="ltr"
+                      required
+                      placeholder="01xxxxxxxxx"
+                    />
+                    <FieldDescription>
+                      {String(t("sandbox.lead.phoneHint"))}
+                    </FieldDescription>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="lead-city">
+                      {String(t("sandbox.lead.city"))}
+                    </FieldLabel>
+                    <Input id="lead-city" name="city" maxLength={160} />
+                  </Field>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field>
+                      <FieldLabel htmlFor="lead-branches">
+                        {String(t("sandbox.lead.branches"))}
+                      </FieldLabel>
+                      <Input
+                        id="lead-branches"
+                        name="branches"
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="lead-dresses">
+                        {String(t("sandbox.lead.dresses"))}
+                      </FieldLabel>
+                      <Input
+                        id="lead-dresses"
+                        name="dresses"
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                      />
+                    </Field>
+                  </div>
 
-              <fieldset className="space-y-2">
-                <legend className="font-medium">
-                  {String(t("sandbox.lead.workaround"))}
-                </legend>
-                <div className="flex flex-wrap gap-2">
-                  {WORKAROUND_VALUES.map((value) => (
-                    <Button
-                      key={value}
-                      type="button"
-                      size="sm"
-                      variant={
-                        workaround.includes(value) ? "default" : "outline"
+                  <FieldSet className="gap-2">
+                    <FieldLegend variant="label" className="mb-0">
+                      {String(t("sandbox.lead.workaround"))}
+                    </FieldLegend>
+                    <ToggleGroup
+                      multiple
+                      value={workaround}
+                      onValueChange={(next) =>
+                        setWorkaround(
+                          next as Array<(typeof WORKAROUND_VALUES)[number]>,
+                        )
                       }
-                      aria-pressed={workaround.includes(value)}
-                      onClick={() => toggleWorkaround(value)}
                     >
-                      {String(t(WORKAROUND_LABELS[value]))}
-                    </Button>
-                  ))}
-                </div>
-              </fieldset>
+                      {WORKAROUND_VALUES.map((value) => (
+                        <ToggleGroupItem key={value} value={value} size="sm">
+                          {String(t(WORKAROUND_LABELS[value]))}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </FieldSet>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="lead-incident">
-                  {String(t("sandbox.lead.incident"))}
-                </Label>
-                <Textarea
-                  id="lead-incident"
-                  name="incident"
-                  rows={3}
-                  maxLength={2000}
-                  placeholder={String(t("sandbox.lead.incidentHint"))}
-                />
+                  <Field>
+                    <FieldLabel htmlFor="lead-incident">
+                      {String(t("sandbox.lead.incident"))}
+                    </FieldLabel>
+                    <Textarea
+                      id="lead-incident"
+                      name="incident"
+                      rows={3}
+                      maxLength={2000}
+                      placeholder={String(t("sandbox.lead.incidentHint"))}
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="lead-social">
+                      {String(t("sandbox.lead.social"))}
+                    </FieldLabel>
+                    <Input
+                      id="lead-social"
+                      name="social"
+                      dir="ltr"
+                      maxLength={300}
+                    />
+                  </Field>
+
+                  <FieldSet className="gap-2">
+                    <FieldLegend variant="label" className="mb-0">
+                      {String(t("sandbox.lead.contactPreference"))}
+                    </FieldLegend>
+                    <ToggleGroup
+                      value={[contactChannel]}
+                      onValueChange={(next) => {
+                        const [first] = next;
+                        if (first)
+                          setContactChannel(
+                            first as (typeof CONTACT_CHANNEL_VALUES)[number],
+                          );
+                      }}
+                    >
+                      {CONTACT_CHANNEL_VALUES.map((value) => (
+                        <ToggleGroupItem key={value} value={value} size="sm">
+                          {String(t(CONTACT_LABELS[value]))}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </FieldSet>
+
+                  <FieldSet className="gap-2">
+                    <FieldLegend variant="label" className="mb-0">
+                      {String(t("sandbox.lead.priceReaction"))}
+                    </FieldLegend>
+                    <ToggleGroup
+                      value={priceReaction ? [priceReaction] : []}
+                      onValueChange={(next) => {
+                        const [first] = next;
+                        setPriceReaction(
+                          first as
+                            | (typeof PRICE_REACTION_VALUES)[number]
+                            | undefined,
+                        );
+                      }}
+                    >
+                      {PRICE_REACTION_VALUES.map((value) => (
+                        <ToggleGroupItem key={value} value={value} size="sm">
+                          {String(t(PRICE_LABELS[value]))}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </FieldSet>
+
+                  {/* Honeypot: hidden from people, tempting to bots. */}
+                  <input
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden="true"
+                    className="absolute h-0 w-0 opacity-0"
+                  />
+                </FieldGroup>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="lead-social">
-                  {String(t("sandbox.lead.social"))}
-                </Label>
-                <Input
-                  id="lead-social"
-                  name="social"
-                  dir="ltr"
-                  maxLength={300}
-                />
+              <div className="flex flex-col gap-3 border-t px-6 pt-4 pb-6">
+                <Field orientation="horizontal">
+                  <Checkbox
+                    id="lead-consent"
+                    checked={consent}
+                    onCheckedChange={(checked) => setConsent(checked === true)}
+                  />
+                  <FieldLabel htmlFor="lead-consent" className="font-normal">
+                    {String(t("sandbox.lead.consent"))}
+                  </FieldLabel>
+                </Field>
+
+                {error ? (
+                  <p role="alert" className="text-destructive">
+                    {error}
+                  </p>
+                ) : null}
+
+                <Button type="submit" disabled={sending}>
+                  {sending
+                    ? String(t("sandbox.lead.sending"))
+                    : String(t("sandbox.lead.submit"))}
+                </Button>
               </div>
-
-              <fieldset className="space-y-2">
-                <legend className="font-medium">
-                  {String(t("sandbox.lead.contactPreference"))}
-                </legend>
-                <div className="flex flex-wrap gap-2">
-                  {CONTACT_CHANNEL_VALUES.map((value) => (
-                    <Button
-                      key={value}
-                      type="button"
-                      size="sm"
-                      variant={contactChannel === value ? "default" : "outline"}
-                      aria-pressed={contactChannel === value}
-                      onClick={() => setContactChannel(value)}
-                    >
-                      {String(t(CONTACT_LABELS[value]))}
-                    </Button>
-                  ))}
-                </div>
-              </fieldset>
-
-              <fieldset className="space-y-2">
-                <legend className="font-medium">
-                  {String(t("sandbox.lead.priceReaction"))}
-                </legend>
-                <div className="flex flex-wrap gap-2">
-                  {PRICE_REACTION_VALUES.map((value) => (
-                    <Button
-                      key={value}
-                      type="button"
-                      size="sm"
-                      variant={priceReaction === value ? "default" : "outline"}
-                      aria-pressed={priceReaction === value}
-                      onClick={() => setPriceReaction(value)}
-                    >
-                      {String(t(PRICE_LABELS[value]))}
-                    </Button>
-                  ))}
-                </div>
-              </fieldset>
-
-              {/* Honeypot: hidden from people, tempting to bots. */}
-              <input
-                name="website"
-                tabIndex={-1}
-                autoComplete="off"
-                aria-hidden="true"
-                className="absolute h-0 w-0 opacity-0"
-              />
-
-              <label className="flex items-start gap-2">
-                <input
-                  type="checkbox"
-                  checked={consent}
-                  onChange={(event) => setConsent(event.target.checked)}
-                  className="mt-0.5 size-4 accent-primary"
-                />
-                <span>{String(t("sandbox.lead.consent"))}</span>
-              </label>
-
-              {error ? (
-                <p role="alert" className="text-destructive">
-                  {error}
-                </p>
-              ) : null}
-
-              <Button type="submit" disabled={sending}>
-                {sending
-                  ? String(t("sandbox.lead.sending"))
-                  : String(t("sandbox.lead.submit"))}
-              </Button>
             </form>
           </>
         )}
